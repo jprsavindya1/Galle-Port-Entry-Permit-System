@@ -1,3 +1,6 @@
+@extends('layouts.app')
+@section('content')
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -204,7 +207,7 @@
 
             <button type="submit" class="btn btn-primary">Add to List</button>
         </form>
-
+  <div></div>
         @if(session('permit_cart') && count(session('permit_cart')) > 0)
             <h3 class="mt-5">Current Permit Requests for Company: {{ session('company_name') }}</h3>
             <table class="table table-bordered">
@@ -252,3 +255,4 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+@endsection

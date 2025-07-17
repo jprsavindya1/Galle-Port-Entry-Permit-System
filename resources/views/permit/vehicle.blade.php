@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    
 <div class="container">
     <h2>Vehicle Permit Form</h2>
 
@@ -31,24 +34,23 @@
                 <label>Revenue License Number</label>
                 <input type="text" class="form-control" name="revenue_license_number" required value="{{ old('revenue_license_number') }}">
             </div>
-            <div class="col-md-3">
-                <label>From Date</label>
-                <input type="date" class="form-control" name="from_date" id="from_date" required value="{{ old('from_date') }}">
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="button" id="checkAvailabilityBtn" class="btn btn-info w-100">Check Availability</button>
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label>To Date</label>
-                <input type="date" class="form-control" name="to_date" id="to_date" required value="{{ old('to_date') }}">
-            </div>
             <div class="col-md-6">
                 <label>Insurance Number</label>
                 <input type="text" class="form-control" name="insurance_number" value="{{ old('insurance_number') }}">
             </div>
+            
+           <div class="row mb-3">
+    <div class="col-md-4">
+        <label>From Date</label>
+        <input type="date" class="form-control" name="from_date" id="from_date" required value="{{ old('from_date') }}">
+    </div>
+    <div class="col-md-4">
+        <label>To Date</label>
+        <input type="date" class="form-control" name="to_date" id="to_date" required value="{{ old('to_date') }}">
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+        <button type="button" id="checkAvailabilityBtn" class="btn btn-info w-100">Check Availability</button>
+    </div>
         </div>
 
         <div id="availabilityMessage" class="mb-3"></div>
@@ -89,9 +91,10 @@
         <button type="submit" class="btn btn-primary">Add to List</button>
     </form>
 
-    <hr>
-
-    <h4>Pending Vehicle Permit Entries</h4>
+    <hr><br>
+    <br>
+    <h3>Pending Vehicle Permit Entries</h3>
+    <br>
     @if(count($cart))
         <table class="table table-bordered">
             <thead>
