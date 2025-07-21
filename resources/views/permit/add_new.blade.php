@@ -8,7 +8,7 @@
 
     <div class="row g-4">
         <div class="col-md-4">
-            <a href="{{ route('permit.temporary.create') }}" class="card text-center text-decoration-none text-dark shadow-sm">
+            <a href="{{ route('permit.temporary') }}" class="card text-center text-decoration-none text-dark shadow-sm">
                 <div class="card-body">
                     <h4>Temporary Permit</h4>
                     <p>Create a new temporary permit request.</p>

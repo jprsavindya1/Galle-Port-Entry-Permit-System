@@ -27,7 +27,7 @@ Route::get('/admin/dashboard', function () {
 // ------------------------------
 // Temporary Permit Routes
 // ------------------------------
-Route::get('/temporary-permit', [PermitController::class, 'createTemporary'])->name('permit.temporary.create');
+Route::get('/temporary-permit', [PermitController::class, 'createTemporary'])->name('permit.temporary');
 Route::post('/temporary-permit/add', [PermitController::class, 'addToSession'])->name('permit.addToSession');
 Route::get('/temporary-permit/summary', [PermitController::class, 'showSummary'])->name('permit.summary');
 Route::post('/temporary-permit/submit', [PermitController::class, 'submitAll'])->name('permit.submitAll');
@@ -38,7 +38,7 @@ Route::post('/permit/checkAvailability', [PermitController::class, 'checkAvailab
 // ------------------------------
 // Monthly Permit Routes
 // ------------------------------
-Route::get('/permit/monthly', [PermitController::class, 'createMonthly'])->name('permit.monthly.create');
+Route::get('/permit/monthly', [PermitController::class, 'createMonthly'])->name('permit.monthly');
 Route::post('/permit/monthly/add', [PermitController::class, 'addMonthlyToSession'])->name('permit.monthly.addToSession');
 Route::get('/permit/monthly/summary', [PermitController::class, 'showMonthlySummary'])->name('permit.monthly.summary');
 Route::post('/permit/monthly/submit', [PermitController::class, 'submitAllMonthly'])->name('permit.monthly.submit');
@@ -49,7 +49,7 @@ Route::put('/permit/monthly/update-session-entry/{index}', [PermitController::cl
 // ------------------------------
 // Vehicle Permit Routes
 // ------------------------------
-Route::get('/permit/vehicle', [PermitController::class, 'createVehicle'])->name('permit.vehicle.create');
+Route::get('/permit/vehicle', [PermitController::class, 'createVehicle'])->name('permit.vehicle');
 Route::post('/permit/vehicle/add', [PermitController::class, 'addVehicleToSession'])->name('permit.vehicle.addToSession');
 Route::get('/permit/vehicle/edit-session-entry/{index}', [PermitController::class, 'editVehicleSessionEntry'])->name('permit.vehicle.editSessionEntry');
 Route::put('/permit/vehicle/update-session-entry/{index}', [PermitController::class, 'updateVehicleSessionEntry'])->name('permit.vehicle.updateSessionEntry');

@@ -45,17 +45,17 @@
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a class="nav-link text-dark {{ request()->routeIs('permit.temporary.create') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.temporary.create') }}">
+                <a class="nav-link text-dark {{ request()->routeIs('permit.temporary') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.temporary') }}">
                     Temporary Permit
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a class="nav-link text-dark {{ request()->routeIs('permit.monthly.create') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.monthly.create') }}">
+                <a class="nav-link text-dark {{ request()->routeIs('permit.monthly') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.monthly') }}">
                     Monthly Permit
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a class="nav-link text-dark hover:text-primary {{ request()->routeIs('permit.vehicle.create') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.vehicle.create') }}">
+                <a class="nav-link text-dark hover:text-primary {{ request()->routeIs('permit.vehicle') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.vehicle') }}">
 
                     Vehicle Permit
                 </a>

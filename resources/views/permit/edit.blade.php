@@ -1,77 +1,118 @@
 @extends('layouts.app')
 
 @section('content')
-<h1>Edit Permit</h1>
+<div class="container mt-5">
+    <h1 class="mb-4">Edit Permit</h1>
 
-@if($errors->any())
-    <div style="color:red;">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-<form method="POST" action="{{ route('permits.update', $permit) }}">
-    @csrf
-    @method('PUT')
+    <form method="POST" action="{{ route('permits.update', $permit) }}">
+        @csrf
+        @method('PUT')
 
-    <label>ID Type:</label><br>
-    <select name="id_type" required>
-        <option value="NIC" {{ $permit->id_type == 'NIC' ? 'selected' : '' }}>NIC</option>
-        <option value="Passport" {{ $permit->id_type == 'Passport' ? 'selected' : '' }}>Passport</option>
-        <option value="License" {{ $permit->id_type == 'License' ? 'selected' : '' }}>License</option>
-    </select><br><br>
+        <div class="mb-3">
+            <label class="form-label">ID Type</label>
+            <select name="id_type" class="form-select" required>
+                <option value="NIC" {{ $permit->id_type == 'NIC' ? 'selected' : '' }}>NIC</option>
+                <option value="Passport" {{ $permit->id_type == 'Passport' ? 'selected' : '' }}>Passport</option>
+                <option value="License" {{ $permit->id_type == 'License' ? 'selected' : '' }}>License</option>
+            </select>
+        </div>
 
-    <label>ID Number:</label><br>
-    <input type="text" name="id_number" value="{{ $permit->id_number }}" required><br><br>
+        <div class="mb-3">
+            <label class="form-label">ID Number</label>
+            <input type="text" name="id_number" class="form-control" value="{{ $permit->id_number }}" required>
+        </div>
 
-    <label>From Date:</label><br>
-    <input type="date" name="from_date" value="{{ $permit->from_date }}" required><br><br>
+        <div class="mb-3">
+            <label class="form-label">From Date</label>
+            <input type="date" name="from_date" class="form-control" value="{{ $permit->from_date }}" required>
+        </div>
 
-    <label>To Date:</label><br>
-    <input type="date" name="to_date" value="{{ $permit->to_date }}" required><br><br>
+        <div class="mb-3">
+            <label class="form-label">To Date</label>
+            <input type="date" name="to_date" class="form-control" value="{{ $permit->to_date }}" required>
+        </div>
 
-    <label>Full Name:</label><br>
-    <input type="text" name="full_name" value="{{ $permit->full_name }}" required><br><br>
+        <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" value="{{ $permit->full_name }}" required>
+        </div>
 
-    <label>Initials:</label><br>
-    <input type="text" name="initials" value="{{ $permit->initials }}" required><br><br>
+        <div class="mb-3">
+            <label class="form-label">Initials</label>
+            <input type="text" name="initials" class="form-control" value="{{ $permit->initials }}" required>
+        </div>
 
-    <label>Designation:</label><br>
-    <input type="text" name="designation" value="{{ $permit->designation }}"><br><br>
+        <div class="mb-3">
+            <label class="form-label">Designation</label>
+            <input type="text" name="designation" class="form-control" value="{{ $permit->designation }}">
+        </div>
 
-    <label>Company Name:</label><br>
-    <input type="text" name="company_name" value="{{ $permit->company_name }}" required><br><br>
+        <div class="mb-3">
+            <label class="form-label">Company Name</label>
+            <input type="text" name="company_name" class="form-control" value="{{ $permit->company_name }}" required>
+        </div>
 
-    <label>Company Address:</label><br>
-    <textarea name="company_address" rows="2" cols="40">{{ $permit->company_address }}</textarea><br><br>
+        <div class="mb-3">
+            <label class="form-label">Company Address</label>
+            <textarea name="company_address" class="form-control" rows="2">{{ $permit->company_address }}</textarea>
+        </div>
 
-    <label>Residence Address:</label><br>
-    <textarea name="residence_address" rows="2" cols="40">{{ $permit->residence_address }}</textarea><br><br>
+        <div class="mb-3">
+            <label class="form-label">Residence Address</label>
+            <textarea name="residence_address" class="form-control" rows="2">{{ $permit->residence_address }}</textarea>
+        </div>
 
-    <label>Pass Type:</label><br>
-    @php
-        $passTypes = explode(',', $permit->pass_type);
-    @endphp
-    <input type="checkbox" name="pass_type[]" value="onboard" {{ in_array('onboard', $passTypes) ? 'checked' : '' }}> Onboard<br>
-    <input type="checkbox" name="pass_type[]" value="afloat" {{ in_array('afloat', $passTypes) ? 'checked' : '' }}> Afloat<br>
-    <input type="checkbox" name="pass_type[]" value="ashore" {{ in_array('ashore', $passTypes) ? 'checked' : '' }}> Ashore<br><br>
+        <div class="mb-3">
+            <label class="form-label d-block">Pass Type</label>
+            @php $passTypes = explode(',', $permit->pass_type); @endphp
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="pass_type[]" value="onboard" {{ in_array('onboard', $passTypes) ? 'checked' : '' }}>
+                <label class="form-check-label">Onboard</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="pass_type[]" value="afloat" {{ in_array('afloat', $passTypes) ? 'checked' : '' }}>
+                <label class="form-check-label">Afloat</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="pass_type[]" value="ashore" {{ in_array('ashore', $passTypes) ? 'checked' : '' }}>
+                <label class="form-check-label">Ashore</label>
+            </div>
+        </div>
 
-    <label>Issue Type:</label><br>
-    <input type="radio" name="issue_type" value="free" {{ $permit->issue_type == 'free' ? 'checked' : '' }}> Free Issue
-    <input type="radio" name="issue_type" value="payment" {{ $permit->issue_type == 'payment' ? 'checked' : '' }}> On Payment<br><br>
+        <div class="mb-3">
+            <label class="form-label d-block">Issue Type</label>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="issue_type" value="free" {{ $permit->issue_type == 'free' ? 'checked' : '' }}>
+                <label class="form-check-label">Free Issue</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="issue_type" value="payment" {{ $permit->issue_type == 'payment' ? 'checked' : '' }}>
+                <label class="form-check-label">On Payment</label>
+            </div>
+        </div>
 
-    <label>Reason for Visit:</label><br>
-    <select name="reason" required>
-        <option value="inspection" {{ $permit->reason == 'inspection' ? 'selected' : '' }}>Inspection</option>
-        <option value="delivery" {{ $permit->reason == 'delivery' ? 'selected' : '' }}>Delivery</option>
-        <option value="official_visit" {{ $permit->reason == 'official_visit' ? 'selected' : '' }}>Official Visit</option>
-        <option value="maintenance" {{ $permit->reason == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-        <option value="other" {{ $permit->reason == 'other' ? 'selected' : '' }}>Other</option>
-    </select><br><br>
+        <div class="mb-4">
+            <label class="form-label">Reason for Visit</label>
+            <select name="reason" class="form-select" required>
+                <option value="inspection" {{ $permit->reason == 'inspection' ? 'selected' : '' }}>Inspection</option>
+                <option value="delivery" {{ $permit->reason == 'delivery' ? 'selected' : '' }}>Delivery</option>
+                <option value="official_visit" {{ $permit->reason == 'official_visit' ? 'selected' : '' }}>Official Visit</option>
+                <option value="maintenance" {{ $permit->reason == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                <option value="other" {{ $permit->reason == 'other' ? 'selected' : '' }}>Other</option>
+            </select>
+        </div>
 
-    <button type="submit">Update Permit</button>
-</form>
+        <button type="submit" class="btn btn-primary">Update Permit</button>
+    </form>
+</div>
 @endsection

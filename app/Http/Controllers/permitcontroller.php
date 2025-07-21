@@ -214,27 +214,32 @@ class PermitController extends Controller
      * Update a permit entry with validated data.
      */
     public function update(Request $request, Permit $permit)
-    {
-        $validated = $request->validate([
-            'id_type' => 'required|string',
-            'id_number' => 'required|string',
-            'from_date' => 'required|date',
-            'to_date' => 'required|date|after_or_equal:from_date',
-            'full_name' => 'required|string',
-            'initials' => 'required|string',
-            'designation' => 'nullable|string',
-            'company_name' => 'required|string',
-            'company_address' => 'nullable|string',
-            'residence_address' => 'nullable|string',
-            'pass_type' => 'required|string',
-            'issue_type' => 'required|string|in:free,payment',
-            'reason' => 'required|string',
-        ]);
+{
+    $validated = $request->validate([
+        'id_type' => 'required|string',
+        'id_number' => 'required|string',
+        'from_date' => 'required|date',
+        'to_date' => 'required|date|after_or_equal:from_date',
+        'full_name' => 'required|string',
+        'initials' => 'required|string',
+        'designation' => 'nullable|string',
+        'company_name' => 'required|string',
+        'company_address' => 'nullable|string',
+        'residence_address' => 'nullable|string',
+        'pass_type' => 'required|array',          
+        'pass_type.*' => 'in:onboard,afloat,ashore', 
+        'issue_type' => 'required|string|in:free,payment',
+        'reason' => 'required|string',
+    ]);
 
-        $permit->update($validated);
+   
+    $validated['pass_type'] = implode(',', $validated['pass_type']);
 
-        return redirect()->route('permits.submitted')->with('success', 'Permit updated successfully.');
-    }
+    $permit->update($validated);
+
+    return redirect()->route('permits.submitted')->with('success', 'Permit updated successfully.');
+}
+
 
     /*
      * Delete a permit entry from DB
