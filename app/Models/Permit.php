@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Permit extends Model
 {
     protected $fillable = [
+    'permit_id',
     'type',
     'vehicle_number',
     'vehicle_type',
