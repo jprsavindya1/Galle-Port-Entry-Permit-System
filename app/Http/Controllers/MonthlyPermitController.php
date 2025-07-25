@@ -121,39 +121,44 @@ class MonthlyPermitController extends PermitController
     }
 
     public function checkMonthlyAvailability(Request $request)
-    {
-        $data = $request->validate([
-            'id_number' => 'required|string',
-            'full_name' => 'required|string',
-            'initials' => 'required|string',
-            'from_date' => 'required|date',
-            'to_date' => 'required|date',
-        ]);
+{
+    $data = $request->validate([
+        'id_number' => 'required|string',
+        'full_name' => 'required|string',
+        'initials' => 'required|string',
+        'from_date' => 'required|date',
+        'to_date' => 'required|date',
+        'company_name' => 'nullable|string',
+    ]);
 
-        $conflict = Permit::where('type', 'MP') // monthly permits only
-            ->where(function ($query) use ($data) {
-                $query->where(function ($q) use ($data) {
-                    $q->where('full_name', $data['full_name'])
-                      ->where('initials', $data['initials']);
-                })
-                ->orWhere('id_number', $data['id_number']);
-            })
-            ->where(function ($query) use ($data) {
-                $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
-                      ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
-                      ->orWhere(function ($q) use ($data) {
-                          $q->where('from_date', '<=', $data['from_date'])
-                            ->where('to_date', '>=', $data['to_date']);
-                      });
-            })
-            ->exists();
-
-        if ($conflict) {
-            return response()->json(['available' => false, 'message' => 'Monthly permit NOT available for this period or person.']);
-        }
-
-        return response()->json(['available' => true, 'message' => 'Monthly permit available!']);
+    if ($reason = $this->isBlacklisted($data)) {
+        return response()->json(['available' => false, 'message' => "Blacklisted: $reason"]);
     }
+
+    $conflict = Permit::where('type', 'MP')
+        ->where(function ($query) use ($data) {
+            $query->where(function ($q) use ($data) {
+                $q->where('full_name', $data['full_name'])
+                  ->where('initials', $data['initials']);
+            })
+            ->orWhere('id_number', $data['id_number']);
+        })
+        ->where(function ($query) use ($data) {
+            $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
+                  ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
+                  ->orWhere(function ($q) use ($data) {
+                      $q->where('from_date', '<=', $data['from_date'])
+                        ->where('to_date', '>=', $data['to_date']);
+                  });
+        })
+        ->exists();
+
+    if ($conflict) {
+        return response()->json(['available' => false, 'message' => 'Monthly permit NOT available for this period or person.']);
+    }
+
+    return response()->json(['available' => true, 'message' => 'Monthly permit available!']);
+}
 
     public function submitAllMonthly(Request $request)
 {

@@ -83,7 +83,12 @@ public function checkVehicleAvailability(Request $request)
         'vehicle_number' => 'required|string',
         'from_date' => 'required|date',
         'to_date' => 'required|date|after_or_equal:from_date',
+        'company_name' => 'nullable|string',
     ]);
+
+    if ($reason = $this->isBlacklisted($data)) {
+        return response()->json(['available' => false, 'message' => "Blacklisted: $reason"]);
+    }
 
     $conflict = Permit::where('type', 'VP')
         ->where('vehicle_number', $data['vehicle_number'])
@@ -103,6 +108,7 @@ public function checkVehicleAvailability(Request $request)
 
     return response()->json(['available' => true, 'message' => 'Vehicle permit available.']);
 }
+
 public function submitAllVehicle(Request $request)
 {
     $cart = session()->get('vehicle_permit_cart', []);

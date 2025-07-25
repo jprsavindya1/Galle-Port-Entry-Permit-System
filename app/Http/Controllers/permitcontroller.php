@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Permit;
-
+use App\Models\Blacklist;
 class PermitController extends Controller
 {
     /*
@@ -101,7 +101,96 @@ class PermitController extends Controller
 }
 
 
-    
+
+protected function isBlacklisted(array $data, string $type = null): ?string
+{
+    \Log::info('Checking blacklist for:', $data);
+
+    $query = \App\Models\Blacklist::query();
+
+    $query->where(function ($q) use ($data) {
+        $nic = trim($data['id_number'] ?? '');
+        $fullName = trim($data['full_name'] ?? '');
+        $company = strtolower(trim($data['company_name'] ?? ''));
+        $vehicle = trim($data['vehicle_number'] ?? '');
+
+        if (!empty($fullName)) {
+            $q->orWhere('full_name', $fullName);
+        }
+
+        if (!empty($nic)) {
+            $q->orWhereRaw('BINARY `nic` = ?', [$nic]);
+        }
+
+        if (!empty($company)) {
+            $q->orWhereRaw('LOWER(TRIM(company_name)) = ?', [$company]);
+        }
+
+        if (!empty($vehicle)) {
+            $q->orWhere('vehicle_number', $vehicle);
+        }
+    });
+
+    if (!empty($type)) {
+        $query->where('type', $type);
+    }
+
+    $entry = $query->first();
+
+    \Log::info('Blacklist matched entry:', [$entry]);
+
+    return $entry ? ($entry->reason ?? 'Blacklisted') : null;
+}
+
+
+
+    public function checkAvailability(Request $request)
+{
+    try {
+        \Log::info('Availability Check Request:', $request->all());
+
+        $data = $request->validate([
+            'id_type' => 'required|string',
+            'id_number' => 'required|string',
+            'full_name' => 'required|string',
+            'initials' => 'required|string',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date',
+            'company_name' => 'nullable|string',
+        ]);
+
+        if ($reason = $this->isBlacklisted($data)) {
+            return response()->json(['available' => false, 'message' => "Blacklisted: $reason"]);
+        }
+
+        $conflict = Permit::where(function ($query) use ($data) {
+            $query->where(function ($q) use ($data) {
+                $q->where('full_name', $data['full_name'])
+                  ->where('initials', $data['initials']);
+            })
+            ->orWhere('id_number', $data['id_number']);
+        })
+        ->where(function ($query) use ($data) {
+            $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
+                  ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
+                  ->orWhere(function ($q) use ($data) {
+                      $q->where('from_date', '<=', $data['from_date'])
+                        ->where('to_date', '>=', $data['to_date']);
+                  });
+        })
+        ->exists();
+
+        if ($conflict) {
+            return response()->json(['available' => false, 'message' => 'Permit NOT available for this period or person.']);
+        }
+
+        return response()->json(['available' => true, 'message' => 'Permit available!']);
+    } catch (\Exception $e) {
+        \Log::error('Availability check failed: ' . $e->getMessage());
+        return response()->json(['available' => false, 'message' => 'Server error occurred.'], 500);
+    }
+}
+
 
 
    

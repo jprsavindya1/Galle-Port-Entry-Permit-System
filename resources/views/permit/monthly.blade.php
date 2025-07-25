@@ -61,6 +61,14 @@
             <input type="text" class="form-control" name="initials" value="{{ old('initials') }}" required>
         </div>
 
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="company_name" class="form-label">Company Name</label>
+                <input type="text" class="form-control" name="company_name" value="{{ old('company_name', $companyName ?? '') }}" required>
+            </div>
+
+        </div>
+
         <!-- Availability Check Button -->
         <button type="button" onclick="checkMonthlyAvailability()" class="btn btn-info mb-3">Check Availability</button>
         <p id="monthly-availability-msg" class="fw-bold"></p>
@@ -69,18 +77,10 @@
             <label for="designation" class="form-label">Designation</label>
             <input type="text" class="form-control" name="designation" value="{{ old('designation') }}">
         </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="company_name" class="form-label">Company Name</label>
-                <input type="text" class="form-control" name="company_name" value="{{ old('company_name', $companyName ?? '') }}" required>
-            </div>
-            <div class="col-md-6">
+  <div class="col-md-6">
                 <label for="company_address" class="form-label">Company Address</label>
                 <textarea class="form-control" name="company_address" rows="2">{{ old('company_address', $companyAddress ?? '') }}</textarea>
             </div>
-        </div>
-
         <div class="mb-3">
             <label for="residence_address" class="form-label">Residence Address</label>
             <textarea class="form-control" name="residence_address" rows="2">{{ old('residence_address') }}</textarea>
@@ -196,6 +196,8 @@ function checkMonthlyAvailability() {
     const initials = document.querySelector('input[name="initials"]').value;
     const fromDate = document.querySelector('input[name="from_date"]').value;
     const toDate = document.querySelector('input[name="to_date"]').value;
+    const companyName = document.querySelector('input[name="company_name"]').value;
+    const vehicleNumber = ""; // optional — if you add a vehicle number field, grab its value here
 
     if (!idNumber || !fullName || !initials || !fromDate || !toDate) {
         alert("Please fill in ID Number, Full Name, Initials, and both From and To dates.");
@@ -213,7 +215,9 @@ function checkMonthlyAvailability() {
             full_name: fullName,
             initials: initials,
             from_date: fromDate,
-            to_date: toDate
+            to_date: toDate,
+            company_name: companyName,
+            vehicle_number: vehicleNumber // optional
         })
     })
     .then(res => res.json())
@@ -225,7 +229,7 @@ function checkMonthlyAvailability() {
     .catch(error => {
         console.error("Availability check failed:", error);
     });
-
 }
+
 </script>
 @endsection

@@ -9,11 +9,6 @@ use App\Http\Controllers\VehiclePermitController;
 Route::get('/', fn () => redirect()->route('dashboard'));
 Route::get('/dashboard', fn () => view('dashboard'))->middleware('auth')->name('dashboard');
 
-Route::get('/admin/dashboard', function () {
-    return view('admin.dashboard');
-})->middleware(['auth', 'is_admin'])->name('admin.dashboard');
-
-
 // ------------------------------
 // Temporary Permit Routes
 // ------------------------------
@@ -25,7 +20,8 @@ Route::prefix('temporary-permit')->controller(TemporaryPermitController::class)-
     Route::get('/edit/{index}', 'editSessionEntry')->name('permit.editSessionEntry');
     Route::put('/edit/{index}', 'updateSessionEntry')->name('permit.updateSessionEntry');
 });
-Route::post('/permit/checkAvailability', [TemporaryPermitController::class, 'checkAvailability'])->name('permit.checkAvailability');
+
+Route::post('/permits/check-availability', [PermitController::class, 'checkAvailability'])->name('permit.checkAvailability');
 
 
 // ------------------------------
@@ -74,6 +70,18 @@ Route::delete('/permits/{permit}', [PermitController::class, 'destroy'])->name('
 // Search
 // ------------------------------
 Route::get('/permits/search', [PermitController::class, 'search'])->name('permits.search');
+
+use App\Http\Controllers\Admin\BlacklistController;
+
+Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(function () {
+    Route::get('/', [BlacklistController::class, 'index'])->name('index');
+    Route::get('/create', [BlacklistController::class, 'create'])->name('create');
+    Route::post('/', [BlacklistController::class, 'store'])->name('store');
+    Route::get('/{blacklist}/edit', [BlacklistController::class, 'edit'])->name('edit');
+    Route::put('/{blacklist}', [BlacklistController::class, 'update'])->name('update');
+    Route::delete('/{blacklist}', [BlacklistController::class, 'destroy'])->name('destroy');
+});
+
 
 require __DIR__.'/auth.php';
 

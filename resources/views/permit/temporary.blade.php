@@ -43,43 +43,59 @@
         }
 
         function checkAvailability() {
-            const idType = document.getElementById('id_type').value;
-            const idNumber = document.querySelector('input[name="id_number"]').value;
-            const fullName = document.querySelector('input[name="full_name"]').value;
-            const initials = document.querySelector('input[name="initials"]').value;
-            const fromDate = document.getElementById('from_date').value;
-            const toDate = document.getElementById('to_date').value;
+    const idType = document.getElementById('id_type').value;
+    const idNumber = document.querySelector('input[name="id_number"]').value;
+    const fullName = document.querySelector('input[name="full_name"]').value;
+    const initials = document.querySelector('input[name="initials"]').value;
+    const fromDate = document.getElementById('from_date').value;
+    const toDate = document.getElementById('to_date').value;
+    const companyName = document.getElementById('company_name').value; // ✅ Add this line
 
-            if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
-                alert("Please fill in ID type, ID number, full name, initials, and both from and to dates.");
-                return;
-            }
+    const msg = document.getElementById('availability-msg');
+    msg.innerText = ''; // Reset previous message
 
-            fetch("{{ route('permit.checkAvailability') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    id_type: idType,
-                    id_number: idNumber,
-                    full_name: fullName,
-                    initials: initials,
-                    from_date: fromDate,
-                    to_date: toDate
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                const msg = document.getElementById('availability-msg');
-                msg.innerText = data.message;
-                msg.style.color = data.available ? 'green' : 'red';
-            })
-            .catch(error => {
-                console.error("Availability check failed:", error);
+    if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
+        msg.innerText = "Please fill in all required fields.";
+        msg.style.color = 'red';
+        return;
+    }
+
+    fetch("{{ route('permit.checkAvailability') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({
+            id_type: idType,
+            id_number: idNumber,
+            full_name: fullName,
+            initials: initials,
+            from_date: fromDate,
+            to_date: toDate,
+            company_name: companyName 
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.text().then(text => {
+                throw new Error(`Server error: ${text}`);
             });
         }
+        return res.json();
+    })
+    .then(data => {
+        msg.innerText = data.message;
+        msg.style.color = data.available ? 'green' : 'red';
+    })
+    .catch(error => {
+        console.error("Availability check failed:", error);
+        msg.innerText = "Something went wrong during availability check.";
+        msg.style.color = 'red';
+    });
+}
+
+
     </script>
 </head>
 <body>
@@ -139,18 +155,19 @@
                 <input type="text" name="initials" id="initials" value="{{ old('initials') }}" class="form-control" required>
             </div>
 
+               <div class="mb-3">
+                <label for="company_name" class="form-label">Company Name</label>
+                <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $companyName ?? '') }}" class="form-control">
+            </div>
+            
             <button type="button" onclick="checkAvailability()" class="btn btn-info mb-3">Check Availability</button>
             <p id="availability-msg" class="fw-bold"></p>
-
             <div class="mb-3">
                 <label for="designation" class="form-label">Designation</label>
                 <input type="text" name="designation" id="designation" value="{{ old('designation') }}" class="form-control">
             </div>
 
-            <div class="mb-3">
-                <label for="company_name" class="form-label">Company Name</label>
-                <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $companyName ?? '') }}" class="form-control">
-            </div>
+         
 
             <div class="mb-3">
                 <label for="company_address" class="form-label">Company Address</label>
