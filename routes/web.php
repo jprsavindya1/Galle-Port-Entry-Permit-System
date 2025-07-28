@@ -5,6 +5,17 @@ use App\Http\Controllers\PermitController;
 use App\Http\Controllers\TemporaryPermitController;
 use App\Http\Controllers\MonthlyPermitController;
 use App\Http\Controllers\VehiclePermitController;
+use App\Http\Controllers\UserController;
+
+Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+});
+
 
 Route::get('/', fn () => redirect()->route('dashboard'));
 Route::get('/dashboard', fn () => view('dashboard'))->middleware('auth')->name('dashboard');
@@ -82,6 +93,19 @@ Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(
     Route::delete('/{blacklist}', [BlacklistController::class, 'destroy'])->name('destroy');
 });
 
+
+
+Route::middleware(['role:admin'])->group(function () {
+    Route::get('/admin', function () {
+        return 'Welcome Admin!';
+    });
+});
+
+Route::middleware(['role:admin,staff'])->group(function () {
+    Route::get('/admin-or-staff', function () {
+        return 'Admins and Staff only!';
+    });
+});
 
 require __DIR__.'/auth.php';
 

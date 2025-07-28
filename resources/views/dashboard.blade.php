@@ -22,6 +22,12 @@
 <div class="container">
     <h2 class="mb-4">Dashboard</h2>
 
+    @auth
+    <div class="alert alert-info">
+        Logged in as: {{ Auth::user()->name }} (Role: {{ Auth::user()->role }})
+    </div>
+@endauth
+
     <div class="row g-4">
         <div class="col-md-4">
             <a href="{{ route('permit.temporary') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
@@ -85,6 +91,21 @@
                 </div>
             </a>
         </div>
+
+        @auth
+  @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
+        <div class="col-md-4">
+            <a href="{{ route('users.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h4>Manage Users</h4>
+                    <p>Create, edit, and delete system users</p>
+                </div>
+            </a>
+        </div>
+    @endif
+@endauth
+
+
     </div>
 </div>
 @endsection
