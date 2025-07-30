@@ -6,6 +6,7 @@ use App\Http\Controllers\TemporaryPermitController;
 use App\Http\Controllers\MonthlyPermitController;
 use App\Http\Controllers\VehiclePermitController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\PaymentSettingController;
 
 Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -14,11 +15,20 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::get('/payment-settings/edit', [PaymentSettingController::class, 'edit'])->name('admin.payment_settings.edit');
+    Route::put('/payment-settings/update', [PaymentSettingController::class, 'update'])->name('admin.payment_settings.update');
+
 });
 
 
 Route::get('/', fn () => redirect()->route('dashboard'));
 Route::get('/dashboard', fn () => view('dashboard'))->middleware('auth')->name('dashboard');
+
+
+Route::get('/payment/summary', [\App\Http\Controllers\PaymentController::class, 'summary'])->name('payment.summary');
+Route::post('/payment/submit', [\App\Http\Controllers\PaymentController::class, 'submit'])->name('payment.submit');
+
+
 
 // ------------------------------
 // Temporary Permit Routes

@@ -83,14 +83,15 @@
             </a>
         </div>
 
-        <div class="col-md-4">
-            <a href="{{ route('permits.submitted') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm  rounded-3 h-100">
-                <div class="card-body">
-                    <h4>Edit Payment information</h4>
-                    <p>Payment calculation</p>
-                </div>
-            </a>
+ <div class="col-md-4">
+    <a href="{{ route('admin.payment_settings.edit') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm  rounded-3 h-100">
+        <div class="card-body">
+            <h4>Edit Payment Information</h4>
+            <p>Configure rates, taxes and pass pricing</p>
         </div>
+    </a>
+</div>
+
 
         @auth
   @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')

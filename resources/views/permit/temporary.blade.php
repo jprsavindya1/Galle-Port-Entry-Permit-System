@@ -157,7 +157,9 @@
 
                <div class="mb-3">
                 <label for="company_name" class="form-label">Company Name</label>
-                <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $companyName ?? '') }}" class="form-control">
+                <input type="text" name="company_name" id="company_name" 
+    value="{{ old('company_name', $companyName) }}" 
+    class="form-control" required>
             </div>
             
             <button type="button" onclick="checkAvailability()" class="btn btn-info mb-3">Check Availability</button>
@@ -171,7 +173,7 @@
 
             <div class="mb-3">
                 <label for="company_address" class="form-label">Company Address</label>
-                <textarea name="company_address" id="company_address" rows="2" class="form-control">{{ old('company_address', $companyAddress ?? '') }}</textarea>
+                <textarea name="company_address" id="company_address" rows="2" class="form-control" required>{{ old('company_address', $companyAddress) }}</textarea>
             </div>
 
             <div class="mb-3">
