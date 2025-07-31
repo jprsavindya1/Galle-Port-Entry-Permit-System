@@ -12,6 +12,7 @@ class Payment extends Model
     // Fillable fields for mass assignment
     protected $fillable = [
         'submission_id',
+         'invoice_id',
         'permit_type',
         'entry_count',
         'rate_total',

@@ -29,6 +29,7 @@ Route::get('/dashboard', fn () => view('dashboard'))->middleware('auth')->name('
 Route::get('/payment/summary', [\App\Http\Controllers\PaymentController::class, 'summary'])->name('payment.summary');
 Route::post('/payment/submit', [\App\Http\Controllers\PaymentController::class, 'submit'])->name('payment.submit');
 
+Route::get('/payment/invoice/{submission_id}', [\App\Http\Controllers\PaymentController::class, 'invoice'])->name('payment.invoice');
 
 
 // ------------------------------
