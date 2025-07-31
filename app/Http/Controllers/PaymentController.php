@@ -61,28 +61,73 @@ class PaymentController extends Controller
 }
 
 
-
-
     public function submit(Request $request)
-    {
-        $cart = session('payment_cart', []);
-        $submissionId = session('payment_submission_id');
+{
+    $cart = session('payment_cart', []);
+    $submissionId = session('payment_submission_id');
 
-        if (empty($cart) || !$submissionId) {
-            return redirect()->route('permit.temporary')->with('error', 'No permit data found.');
-        }
-
-        foreach ($cart as $entry) {
-            $entry['permit_id'] = $this->generatePermitId($entry['type']);
-            $entry['pass_type'] = is_array($entry['pass_type']) ? implode(',', $entry['pass_type']) : $entry['pass_type'];
-            Permit::create($entry);
-        }
-
-        // Clear payment cart
-        session()->forget(['payment_cart', 'payment_submission_id']);
-
-        return redirect()->route('permit.temporary')->with('success', 'Payment successful and permits submitted!');
+    if (empty($cart) || !$submissionId) {
+        return redirect()->route('permit.temporary')->with('error', 'No permit data found.');
     }
+
+    $permitType = $cart[0]['type'] ?? 'unknown';
+
+    // Save all permits
+    foreach ($cart as $entry) {
+        $entry['permit_id'] = $this->generatePermitId($entry['type']);
+        $entry['pass_type'] = is_array($entry['pass_type']) ? implode(',', $entry['pass_type']) : $entry['pass_type'];
+        Permit::create($entry);
+    }
+
+    // Get settings
+    $settings = PaymentSetting::first();
+    $rate = $settings->rate ?? 0;
+    $nbtRate = $settings->nbt ?? 0;
+    $vatRate = $settings->vat ?? 0;
+
+    // Calculate totals
+    $entryCount = 0;
+    $rateTotal = 0;
+    $nbtTotal = 0;
+    $vatTotal = 0;
+
+    foreach ($cart as $entry) {
+        if ($entry['issue_type'] !== 'free') {
+            $entryCount++;
+
+            $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays($entry['to_date']) + 1;
+            $baseRate = $rate * $days;
+            $nbt = ($baseRate * $nbtRate) / 100;
+            $vat = (($baseRate + $nbt) * $vatRate) / 100;
+
+            $rateTotal += $baseRate;
+            $nbtTotal += $nbt;
+            $vatTotal += $vat;
+        }
+    }
+
+    $amountTotal = $rateTotal + $nbtTotal + $vatTotal;
+
+    // Save to payments table
+    Payment::create([
+        'submission_id' => $submissionId,
+        'permit_type' => $permitType,
+        'entry_count' => $entryCount,
+        'rate_total' => $rateTotal,
+        'nbt_total' => $nbtTotal,
+        'vat_total' => $vatTotal,
+        'amount_total' => $amountTotal,
+        'status' => 'Paid',
+        'payment_date' => now(),
+        'paid_at' => now(),
+    ]);
+
+    // Clear session
+    session()->forget(['payment_cart', 'payment_submission_id']);
+
+    return redirect()->route('permit.temporary')->with('success', 'Payment successful and permits submitted!');
+}
+
 
     // Moved here from PermitController
     private function generatePermitId($type)
