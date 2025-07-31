@@ -202,6 +202,31 @@ if (session()->has('company_name')) {
         return view('permit.payment_summary', compact('cart', 'detailedPayments', 'totalPayment', 'submissionId'));
     }
 
+public function removeEntry($index)
+{
+    $cart = session('payment_cart', []);
+
+    if (isset($cart[$index])) {
+        unset($cart[$index]);
+    }
+
+    // Clean and reindex the array
+    $cart = array_values(array_filter($cart));
+
+    // Update session
+    session(['payment_cart' => $cart]);
+
+    if (count($cart) === 0) {
+        // Clear submission ID if needed
+        session()->forget('payment_submission_id');
+        return redirect()->route('permit.temporary')->with('message', 'All entries removed.');
+    }
+
+    return redirect()->route('payment.summary')->with('message', 'Entry removed.');
+}
+
+
+
 
     /*
      * Submit all permit entries stored in the session cart to the database.
@@ -360,5 +385,29 @@ public function editSessionEntry($index)
 
     return redirect()->route('permit.temporary')->with('success', 'Permit entry updated successfully.');
 }
+
+public function removeTemporaryEntry($index)
+{
+    $cart = session('permit_cart', []);
+
+    if (isset($cart[$index])) {
+        unset($cart[$index]);
+    }
+
+    // Reindex the array
+    $cart = array_values($cart);
+
+    session(['permit_cart' => $cart]);
+
+    if (count($cart) === 0) {
+        return redirect()->route('permit.temporary')->with('message', 'All entries removed.');
+    }
+
+    return redirect()->route('permit.temporary')->with('message', 'Entry removed.');
+}
+
+
+
+
 
 }

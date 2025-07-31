@@ -17,6 +17,7 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get('/payment-settings/edit', [PaymentSettingController::class, 'edit'])->name('admin.payment_settings.edit');
     Route::put('/payment-settings/update', [PaymentSettingController::class, 'update'])->name('admin.payment_settings.update');
+    Route::delete('/permit/remove/{index}', [TemporaryPermitController::class, 'removeEntry'])->name('permit.remove');
 
 });
 
@@ -40,6 +41,8 @@ Route::prefix('temporary-permit')->controller(TemporaryPermitController::class)-
     Route::post('/submit', 'submitAll')->name('permit.submitAll');
     Route::get('/edit/{index}', 'editSessionEntry')->name('permit.editSessionEntry');
     Route::put('/edit/{index}', 'updateSessionEntry')->name('permit.updateSessionEntry');
+    Route::delete('/remove/{index}', 'removeTemporaryEntry')->name('permit.removeSessionEntry');
+
 });
 
 Route::post('/permits/check-availability', [PermitController::class, 'checkAvailability'])->name('permit.checkAvailability');
@@ -56,6 +59,7 @@ Route::prefix('permit/monthly')->controller(MonthlyPermitController::class)->gro
     Route::post('/checkAvailability', 'checkMonthlyAvailability')->name('permit.monthly.checkAvailability');
     Route::get('/edit-session-entry/{index}', 'editMonthlySessionEntry')->name('permit.monthly.editSessionEntry');
     Route::put('/update-session-entry/{index}', 'updateMonthlySessionEntry')->name('permit.monthly.updateSessionEntry');
+    
 });
 
 

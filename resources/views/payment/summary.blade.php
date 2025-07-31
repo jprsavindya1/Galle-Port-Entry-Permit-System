@@ -30,7 +30,8 @@
                 $vatTotal = 0;
             @endphp
 
-            @foreach ($detailedPayments as $payment)
+            @foreach ($detailedPayments as $index => $payment)
+
                 @php
                     $entry = $payment['entry'];
                     $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays(\Carbon\Carbon::parse($entry['to_date'])) + 1;
@@ -54,6 +55,14 @@
                     <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($payment['nbt'], 2) }}</td>
                     <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($payment['vat'], 2) }}</td>
                     <td><strong>{{ number_format($payment['total'], 2) }}</strong></td>
+                      <td>
+        <form method="POST" action="{{ route('permit.remove', $index) }}">
+    @csrf
+    @method('DELETE')
+    <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Remove</button>
+</form>
+
+    </td>
                 </tr>
             @endforeach
         </tbody>

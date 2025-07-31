@@ -258,6 +258,15 @@
                             <td>{{ $permit['reason'] }}</td>
                              <td><a href="{{ route('permit.editSessionEntry', $index) }}" class="btn btn-sm btn-warning">Edit</a>
                 </td>
+                <td>
+
+    <form method="POST" action="{{ route('permit.removeSessionEntry', $index) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to remove this entry?');">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+    </form>
+</td>
+
                         </tr>
                     @endforeach
                 </tbody>
