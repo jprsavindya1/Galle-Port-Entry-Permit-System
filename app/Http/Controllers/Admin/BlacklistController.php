@@ -18,7 +18,9 @@ class BlacklistController extends Controller
     {
         return view('admin.blacklist.create');
     }
-
+    /*
+     ***********  blacklist check info *********   
+    */
     public function store(Request $request)
     {
         $data = $request->validate([

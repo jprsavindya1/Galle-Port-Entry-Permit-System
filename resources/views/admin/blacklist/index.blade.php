@@ -6,11 +6,9 @@
 <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     
+    <!-- Blaklist dispaly table setup -->
 <div class="container">
 <h3 class="fw-bold">Blacklist Entries</h3><br>
-
-
-    
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>

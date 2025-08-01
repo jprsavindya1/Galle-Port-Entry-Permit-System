@@ -5,7 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class MonthlyPermit extends Model
-{
+{    /*
+     ***********  monthly fill data *********   
+    */
     protected $fillable = [
         'id_type',
         'id_number',

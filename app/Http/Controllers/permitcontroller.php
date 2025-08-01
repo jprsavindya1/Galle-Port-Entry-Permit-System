@@ -31,7 +31,7 @@ class PermitController extends Controller
     }
 
     /*
-     * Show the edit form for a single permit entry (from DB).
+     * Show the edit form for a single permit entry from DB.
      */
     public function edit(Permit $permit)
     {
@@ -83,7 +83,7 @@ class PermitController extends Controller
      */
     protected function generatePermitId(string $type): string
 {
-    $datePrefix = now()->format('ym'); // e.g., '2508' for August 2025
+    $datePrefix = now()->format('ym'); // '2508'  August 2025
 
     $latest = Permit::where('permit_id', 'like', $type . $datePrefix . '%')
         ->orderBy('permit_id', 'desc')
@@ -101,7 +101,10 @@ class PermitController extends Controller
 }
 
 
-
+    /*
+     ***********  blacklist check *********   
+    */
+     
 protected function isBlacklisted(array $data, string $type = null): ?string
 {
     \Log::info('Checking blacklist for:', $data);

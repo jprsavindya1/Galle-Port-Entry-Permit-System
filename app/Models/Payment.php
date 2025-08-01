@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-    // Table name (optional if it's not the plural of 'Payment')
+   
     protected $table = 'payments';
 
-    // Fillable fields for mass assignment
+    // Fillable fields 
     protected $fillable = [
         'submission_id',
          'invoice_id',
@@ -24,7 +24,7 @@ class Payment extends Model
         'paid_at',
     ];
 
-    // Optional: if you want to cast some columns
+    
     protected $casts = [
         'payment_date' => 'datetime',
         'paid_at' => 'datetime',

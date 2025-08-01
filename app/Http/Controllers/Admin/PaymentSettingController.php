@@ -19,7 +19,9 @@ class PaymentSettingController extends Controller
 
         return view('admin.payment_settings.edit', compact('settings'));
     }
-
+    /*
+     ***********  Payment setttngs dynamic variables *********   
+    */
    public function update(Request $request)
 {
     $validated = $request->validate([

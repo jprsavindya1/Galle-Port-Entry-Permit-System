@@ -19,9 +19,9 @@ class PaymentController extends Controller
 
     // Get settings from DB
     $settings = PaymentSetting::first();
-    $baseRate = $settings->rate;  // Set by admin, no default
-    $nbtRate = $settings->nbt;         // Set by admin, no default
-    $vatRate = $settings->vat;         // Set by admin, no default
+    $baseRate = $settings->rate;  // All values Set by admin
+    $nbtRate = $settings->nbt;        
+    $vatRate = $settings->vat;         
 
     $detailedPayments = [];
     $totalPayment = 0;
@@ -105,7 +105,7 @@ class PaymentController extends Controller
             $vatTotal += $vat;
         }
     }
-$yearMonth = now()->format('Ym'); // e.g., "202507"
+$yearMonth = now()->format('Ym'); // "202507"
 $prefix = 'INV-' . $yearMonth . '-';
 
 // Get latest invoice for the month

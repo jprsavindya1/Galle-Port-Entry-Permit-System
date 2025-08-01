@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
-{
+{    /*
+     ***********  middleware setup *********   
+    */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         $user = $request->user();

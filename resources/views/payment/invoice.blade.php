@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Payment Invoice')
-
+<!-- invoice setup with inline styling ***********************************************************change separate file later -->
 @section('content')
 <div id="print-area" class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">

@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 class UserController extends Controller
-{
+{   /*
+     ***********  User Crud functions *********   
+    */
     public function index()
     {
         $users = User::all();

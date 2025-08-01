@@ -8,8 +8,8 @@ use Illuminate\Support\Str;
 
 class MonthlyPermitController extends PermitController
 {
-  /*********************************************************
-     * Monthly Permits
+    /*********************************************************
+     ****************** Monthly Permits***********************
      *********************************************************/
 
     public function createMonthly()
@@ -119,6 +119,9 @@ class MonthlyPermitController extends PermitController
 
         return redirect()->route('permit.monthly')->with('success', 'Monthly permit entry updated successfully.');
     }
+        /*
+     ***********  monthly avilability check *********   
+       */
 
     public function checkMonthlyAvailability(Request $request)
 {
@@ -160,6 +163,9 @@ class MonthlyPermitController extends PermitController
     return response()->json(['available' => true, 'message' => 'Monthly permit available!']);
 }
 
+     /*
+     ***********  monthly session submission *********   
+    */
     public function submitAllMonthly(Request $request)
 {
     $cart = session()->get('monthly_permit_cart', []);
@@ -168,7 +174,7 @@ class MonthlyPermitController extends PermitController
         return redirect()->route('permit.monthly')->with('error', 'No permit entries to submit.');
     }
 
-    $datePrefix = now()->format('Ymd'); // Example: 20250720
+    $datePrefix = now()->format('Ymd'); // 20250720
     $type = 'MP';
 
     // Find the latest submission ID for this date and type

@@ -54,11 +54,12 @@ class TemporaryPermitController extends PermitController
         $cart = session()->get('permit_cart', []);
 
         // If company info already stored in session, enforce consistency across entries
-    $sessionCompanyName = strtolower(trim(session('company_name')));
-$sessionCompanyAddress = strtolower(trim(session('company_address') ?? ''));
 
-$newCompanyName = strtolower(trim($validated['company_name']));
-$newCompanyAddress = strtolower(trim($validated['company_address'] ?? ''));
+    $sessionCompanyName = strtolower(trim(session('company_name')));
+    $sessionCompanyAddress = strtolower(trim(session('company_address') ?? ''));
+
+    $newCompanyName = strtolower(trim($validated['company_name']));
+    $newCompanyAddress = strtolower(trim($validated['company_address'] ?? ''));
 
 if (session()->has('company_name')) {
     if ($newCompanyName !== $sessionCompanyName || $newCompanyAddress !== $sessionCompanyAddress) {
@@ -225,9 +226,6 @@ public function removeEntry($index)
     return redirect()->route('payment.summary')->with('message', 'Entry removed.');
 }
 
-
-
-
     /*
      * Submit all permit entries stored in the session cart to the database.
      * Generates a unique submission ID to group these permits as a chunk.
@@ -269,7 +267,7 @@ public function removeEntry($index)
     session(['payment_cart' => $cart]);
     session(['payment_submission_id' => $submissionId]);
 
-    // Optional: Clear original cart but keep payment flow
+    // Clear original cart but keep payment flow
     session()->forget(['permit_cart', 'company_name', 'company_address']);
 
     return redirect()->route('payment.summary');

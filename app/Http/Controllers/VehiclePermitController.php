@@ -77,6 +77,9 @@ public function updateVehicleSessionEntry(Request $request, $index)
     return redirect()->route('permit.vehicle')->with('success', 'Vehicle permit updated.');
 }
 
+    /*
+     ***********  vehicle availability check with number and date *********   
+    */
 public function checkVehicleAvailability(Request $request)
 {
     $data = $request->validate([

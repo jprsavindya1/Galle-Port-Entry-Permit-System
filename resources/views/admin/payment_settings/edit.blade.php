@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <h2>Edit Payment Information</h2>
-
+<!-- payment variables edit interface, rate - nbt - vat -->
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
