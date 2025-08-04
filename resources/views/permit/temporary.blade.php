@@ -130,7 +130,7 @@
             </div>
 
             <div class="mb-3">
-                <label for="id_number" class="form-label">ID Number</label>
+                <label for="id_number" class="form-label">Identificaton Number</label>
                 <input type="text" name="id_number" id="id_number" value="{{ old('id_number') }}" class="form-control" required>
             </div>
 

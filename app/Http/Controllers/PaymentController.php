@@ -196,7 +196,7 @@ $invoiceId = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     // ==== Save Payment ====
     Payment::create([
        'submission_id' => $submissionId,
-    'invoice_id' => $invoiceId, 
+    'invoice_id' => $invoiceId,  
     'amount_total' => $totalAmount,
     'rate_total' => 0,
     'nbt_total' => 0,

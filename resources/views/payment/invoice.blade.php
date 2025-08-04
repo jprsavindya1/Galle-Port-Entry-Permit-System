@@ -64,6 +64,13 @@
 
     <a href="{{ route('permit.temporary') }}" class="btn btn-secondary mt-4">Back to Temporary Permit Form</a>
 </div>
+
+<!-- Print Permit Button -->
+<a href="{{ route('permit.print', ['submission_id' => $payment->submission_id]) }}" target="_blank" class="btn btn-primary">
+    Print Permit
+</a>
+
+
 @endsection
 
 <style>

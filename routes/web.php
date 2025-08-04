@@ -7,6 +7,7 @@ use App\Http\Controllers\MonthlyPermitController;
 use App\Http\Controllers\VehiclePermitController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Admin\PaymentSettingController;
+use App\Http\Controllers\PrintController;
 
 Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -74,7 +75,7 @@ Route::prefix('permit/vehicle')->controller(VehiclePermitController::class)->gro
     Route::put('/update-session-entry/{index}', 'updateVehicleSessionEntry')->name('permit.vehicle.updateSessionEntry');
     Route::post('/submit', 'submitAllVehicle')->name('permit.vehicle.submitAll');
     Route::post('/checkAvailability', 'checkVehicleAvailability')->name('permit.vehicle.checkAvailability');
-});
+}); 
 
 
 // ------------------------------
@@ -108,6 +109,7 @@ Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(
     Route::delete('/{blacklist}', [BlacklistController::class, 'destroy'])->name('destroy');
 });
 
+Route::get('/permit/print/{submission_id}', [PrintController::class, 'show'])->name('permit.print');
 
 
 Route::middleware(['role:admin'])->group(function () {
@@ -125,3 +127,4 @@ Route::middleware(['role:admin,staff'])->group(function () {
 require __DIR__.'/auth.php';
 
 Route::get('/profile/edit', fn () => 'Edit profile page coming soon')->name('profile.edit');
+
