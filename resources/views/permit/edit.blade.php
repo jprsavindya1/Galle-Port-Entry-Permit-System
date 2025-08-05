@@ -21,9 +21,10 @@
         <div class="mb-3">
             <label class="form-label">ID Type</label>
             <select name="id_type" class="form-select" required>
-                <option value="NIC" {{ $permit->id_type == 'NIC' ? 'selected' : '' }}>NIC</option>
-                <option value="Passport" {{ $permit->id_type == 'Passport' ? 'selected' : '' }}>Passport</option>
-                <option value="License" {{ $permit->id_type == 'License' ? 'selected' : '' }}>License</option>
+                <option value="NIC" {{ old('id_type', $permit->id_type ?? '') == 'NIC' ? 'selected' : '' }}>NIC</option>
+<option value="Passport" {{ old('id_type', $permit->id_type ?? '') == 'Passport' ? 'selected' : '' }}>Passport</option>
+<option value="Driving License" {{ old('id_type', $permit->id_type ?? '') == 'Driving License' ? 'selected' : '' }}>Driving License</option>
+
             </select>
         </div>
 

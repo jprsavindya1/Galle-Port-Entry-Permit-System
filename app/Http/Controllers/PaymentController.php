@@ -140,7 +140,7 @@ $invoiceId = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     ]);
 
     // Clear session
-    session()->forget(['payment_cart', 'payment_submission_id']);
+    session()->forget(['permit_cart', 'payment_cart', 'payment_submission_id', 'company_name', 'company_address']);
 
     return redirect()->route('payment.invoice', ['submission_id' => $submissionId]);
 

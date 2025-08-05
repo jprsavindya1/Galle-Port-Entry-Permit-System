@@ -267,8 +267,7 @@ public function removeEntry($index)
     session(['payment_cart' => $cart]);
     session(['payment_submission_id' => $submissionId]);
 
-    // Clear original cart but keep payment flow
-    session()->forget(['permit_cart', 'company_name', 'company_address']);
+
 
     return redirect()->route('payment.summary');
 }

@@ -123,9 +123,10 @@
             <div class="mb-3">
                 <label for="id_type" class="form-label">Identification Type</label>
                 <select name="id_type" id="id_type" onchange="setMaxToDate()" class="form-select" required>
-                    <option value="NIC" {{ old('id_type') == 'NIC' ? 'selected' : '' }}>NIC Number</option>
-                    <option value="Passport" {{ old('id_type') == 'Passport' ? 'selected' : '' }}>Passport Number</option>
-                    <option value="License" {{ old('id_type') == 'License' ? 'selected' : '' }}>Driving Licence</option>
+                   <option value="NIC" {{ old('id_type', $permit->id_type ?? '') == 'NIC' ? 'selected' : '' }}>NIC</option>
+<option value="Passport" {{ old('id_type', $permit->id_type ?? '') == 'Passport' ? 'selected' : '' }}>Passport</option>
+<option value="Driving License" {{ old('id_type', $permit->id_type ?? '') == 'Driving License' ? 'selected' : '' }}>Driving License</option>
+
                 </select>
             </div>
 
