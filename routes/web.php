@@ -9,6 +9,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Admin\PaymentSettingController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\Admin\DesignationController;
 
 Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -23,7 +24,10 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::delete('/permit/remove/{index}', [TemporaryPermitController::class, 'removeEntry'])->name('permit.remove');
     
     Route::resource('companies', CompanyController::class)->names('admin.companies');
-
+    Route::resource('designations', DesignationController::class)->names('admin.designations');
+    Route::get('/admin/masterdata', function () {
+        return view('admin.masterdata.index');
+    })->name('admin.masterdata');
 });
 
 

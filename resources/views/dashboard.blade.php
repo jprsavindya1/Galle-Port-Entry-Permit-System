@@ -75,6 +75,23 @@
             </a>
         </div>
 
+<div class="col-md-4">
+    <a href="{{ route('admin.payment_settings.edit') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm  rounded-3 h-100">
+        <div class="card-body">
+            <h4>Edit Payment Information</h4>
+            <p>Configure rates, taxes and pass pricing</p>
+        </div>
+    </a>
+</div>
+  <div class="col-md-4">
+            <a href="{{ route('users.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h4>Manage Users</h4>
+                    <p>Create, edit, and delete system users</p>
+                </div>
+            </a>
+        </div>
+<!--  
         <div class="col-md-4">
             <a href="{{ route('permits.submitted') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
@@ -84,22 +101,8 @@
             </a>
         </div>
 
- <div class="col-md-4">
-    <a href="{{ route('admin.payment_settings.edit') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm  rounded-3 h-100">
-        <div class="card-body">
-            <h4>Edit Payment Information</h4>
-            <p>Configure rates, taxes and pass pricing</p>
-        </div>
-    </a>
-</div>
-        <div class="col-md-4">
-            <a href="{{ route('users.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h4>Manage Users</h4>
-                    <p>Create, edit, and delete system users</p>
-                </div>
-            </a>
-        </div>
+ 
+      
           <div class="col-md-4">
             <a href="{{ route('admin.companies.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
@@ -108,6 +111,32 @@
                 </div>
             </a>
         </div>
+        <div class="col-md-4">
+            <a href="{{ route('admin.designations.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h4>Edit Designation List</h4>
+                    <p>Create, edit, and delete Designation Information</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ route('admin.designations.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h4>Edit Reasons List</h4>
+                    <p>Create, edit, and delete Reasons to entry</p>
+                </div>
+            </a>
+        </div>-->
+
+        {{-- Combined Card --}}
+<div class="col-md-4">
+    <a href="{{ route('admin.masterdata') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+        <div class="card-body">
+            <h4>Edit Master Data</h4>
+            <p>companies, designations, vehicles, reasons</p>
+        </div>
+    </a>
+</div>
     @endif
 @endauth
 

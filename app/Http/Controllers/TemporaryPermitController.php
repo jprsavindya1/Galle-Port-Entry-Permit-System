@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Permit; 
 use App\Models\Company;
 use Illuminate\Support\Str;
-
+use App\Models\Designation;
 
 class TemporaryPermitController extends PermitController
 {
@@ -27,9 +27,10 @@ class TemporaryPermitController extends PermitController
     }
 
     $companies = Company::all(); // fetching companies
+    $designations = Designation::all();// fetching designations
 
     // Add companies to the compact array
-    return view('permit.temporary', compact('cart', 'companyName', 'companyAddress', 'companies'));
+    return view('permit.temporary', compact('cart', 'companyName', 'companyAddress', 'companies', 'designations'));
 }
 
     /*
@@ -348,7 +349,7 @@ public function editSessionEntry($index)
         'to_date' => 'required|date|after_or_equal:from_date',
         'full_name' => 'required|string',
         'initials' => 'required|string',
-        'designation' => 'nullable|string',
+        'designation' => 'required|string',
         'company_name' => 'required|string',
         'company_address' => 'nullable|string',
         'residence_address' => 'nullable|string',

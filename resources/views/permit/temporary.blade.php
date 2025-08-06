@@ -3,7 +3,7 @@
 @section('content')
 <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    
+
 <div class="container my-4">
     <h1 class="mb-4">Sri Lanka Ports Authority - Temporary Permit Form</h1>
 
@@ -81,10 +81,18 @@
         <button type="button" onclick="checkAvailability()" class="btn btn-info mb-3">Check Availability</button>
         <p id="availability-msg" class="fw-bold"></p>
 
-        <div class="mb-3">
-            <label for="designation" class="form-label">Designation</label>
-            <input type="text" name="designation" id="designation" value="{{ old('designation') }}" class="form-control">
-        </div>
+     <div class="mb-3">
+    <label for="designation" class="form-label">Designation</label>
+    <select name="designation" id="designation" class="form-select" required>
+        <option value="">-- Select Designation --</option>
+        @foreach($designations as $designation)
+            <option value="{{ $designation->name }}" {{ old('designation') == $designation->name ? 'selected' : '' }}>
+                {{ $designation->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
 
         <div class="mb-3">
             <label for="company_address" class="form-label">Company Address</label>
@@ -241,6 +249,18 @@
         var address = $(this).find('option:selected').data('address') || '';
         $('#company_address').val(address);
     });
+
+    $('#designation').select2({
+    placeholder: "-- Select Designation --",
+    allowClear: true
+    });
+        // Set search input placeholder when dropdown opens
+    $('#designation').on('select2:open', function () {
+        setTimeout(() => {
+            document.querySelector('.select2-search__field').placeholder = 'Search Designation...';
+        }, 10);
+    });
+
 });
 
    
