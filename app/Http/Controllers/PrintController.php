@@ -19,6 +19,7 @@ class PrintController extends Controller
             abort(404, 'No permits found for this submission.');
         }
 
-         return view('permit.print', compact('permits', 'payment'));
+        return view('permit.print', compact('permits', 'payment', 'submission_id'));
+
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\VehiclePermitController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Admin\PaymentSettingController;
 use App\Http\Controllers\PrintController;
+use App\Http\Controllers\CompanyController;
 
 Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -16,9 +17,12 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    
     Route::get('/payment-settings/edit', [PaymentSettingController::class, 'edit'])->name('admin.payment_settings.edit');
     Route::put('/payment-settings/update', [PaymentSettingController::class, 'update'])->name('admin.payment_settings.update');
     Route::delete('/permit/remove/{index}', [TemporaryPermitController::class, 'removeEntry'])->name('permit.remove');
+    
+    Route::resource('companies', CompanyController::class)->names('admin.companies');
 
 });
 
@@ -128,3 +132,6 @@ require __DIR__.'/auth.php';
 
 Route::get('/profile/edit', fn () => 'Edit profile page coming soon')->name('profile.edit');
 
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    
+});

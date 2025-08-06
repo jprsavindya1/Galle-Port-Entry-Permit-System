@@ -55,7 +55,8 @@
                 </div>
             </a>
         </div>
-
+        @auth
+  @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
         <div class="col-md-4">
             <a href="{{ route('permits.submitted') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
@@ -91,15 +92,19 @@
         </div>
     </a>
 </div>
-
-
-        @auth
-  @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
         <div class="col-md-4">
             <a href="{{ route('users.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
                     <h4>Manage Users</h4>
                     <p>Create, edit, and delete system users</p>
+                </div>
+            </a>
+        </div>
+          <div class="col-md-4">
+            <a href="{{ route('admin.companies.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h4>Edit Company List</h4>
+                    <p>Create, edit, and delete Company Information</p>
                 </div>
             </a>
         </div>

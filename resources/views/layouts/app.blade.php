@@ -10,10 +10,6 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
     <!-- Tailwind / Laravel Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -34,36 +30,32 @@
 
     <!-- Layout Row -->
     <div class="d-flex">
-     <!-- Sidebar -->
-<div class="bg-white text-dark" style="min-width: 220px; min-height: 100vh;">
-    <div class="p-4">
-        <h5 class="text-dark mb-4">Navigation</h5>
-        <ul class="nav flex-column">
-            <li class="nav-item mb-2">
-                <a class="nav-link text-dark {{ request()->routeIs('dashboard') ? 'active bg-secondary rounded' : '' }}" href="{{ route('dashboard') }}">
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link text-dark {{ request()->routeIs('permit.temporary') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.temporary') }}">
-                    Temporary Permit
-                </a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link text-dark {{ request()->routeIs('permit.monthly') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.monthly') }}">
-                    Monthly Permit
-                </a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link text-dark hover:text-primary {{ request()->routeIs('permit.vehicle') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.vehicle') }}">
-
-                    Vehicle Permit
-                </a>
-            </li>
-        </ul>
-    </div>
-</div>
-
+        <!-- Sidebar -->
+        <div class="text-white shadow p-4" style="min-width: 220px; min-height: 100vh; background: linear-gradient(to bottom, #002b5c, #00bfff);">
+            <h5 class="mb-4">Navigation</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white {{ request()->routeIs('dashboard') ? 'active bg-secondary rounded' : '' }}" href="{{ route('dashboard') }}">
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white {{ request()->routeIs('permit.temporary') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.temporary') }}">
+                        Temporary Permit
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white {{ request()->routeIs('permit.monthly') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.monthly') }}">
+                        Monthly Permit
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white {{ request()->routeIs('permit.vehicle') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.vehicle') }}">
+                        Vehicle Permit
+                    </a>
+                </li>
+            </ul>
+        </div>
 
         <!-- Main Content -->
         <main class="flex-grow-1 p-4">
@@ -73,5 +65,6 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @stack('scripts')
 </body>
 </html>

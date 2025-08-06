@@ -4,19 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Permit; 
+use App\Models\Company;
 use Illuminate\Support\Str;
+
 
 class TemporaryPermitController extends PermitController
 {
     /*
      * Show the temporary permit form along with permits currently in session cart.
      */
-    public function createTemporary()
+ public function createTemporary()
 {
     $cart = session()->get('permit_cart', []);
 
     if (empty($cart)) {
-        // Clear leftover company info from session
         session()->forget(['company_name', 'company_address']);
         $companyName = null;
         $companyAddress = null;
@@ -25,7 +26,10 @@ class TemporaryPermitController extends PermitController
         $companyAddress = session('company_address');
     }
 
-    return view('permit.temporary', compact('cart', 'companyName', 'companyAddress'));
+    $companies = Company::all(); // fetching companies
+
+    // Add companies to the compact array
+    return view('permit.temporary', compact('cart', 'companyName', 'companyAddress', 'companies'));
 }
 
     /*
@@ -404,6 +408,15 @@ public function removeTemporaryEntry($index)
 }
 
 
+
+public function createTemporaryPermit()
+{
+    $companies = Company::all(); // Fetch all companies
+    $companyName = old('company_name', session('company_name')); // Optional
+    $companyAddress = old('company_address', session('company_address')); // Optional
+
+    return view('permits.temporary', compact('companies', 'companyName', 'companyAddress'));
+}
 
 
 

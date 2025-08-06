@@ -107,6 +107,14 @@
         background-color: #5c636a;
         box-shadow: 0 5px 12px rgba(108, 117, 125, 0.4);
     }
+    /* Back button - secondary style (gray) */
+    #btnBackInvoice{
+        background-color: #5e8eb8ff; /* Bootstrap secondary gray */
+    }
+    #btnBackInvoice:hover {
+        background-color: #5c636a;
+        box-shadow: 0 5px 12px rgba(108, 117, 125, 0.4);
+    }
 </style>
 
     </style>
@@ -139,6 +147,7 @@
     <!-- Print Controls -->
     <div id="printControls">
         <button id="btnPrintAgain">Print Again</button>
+        <button id="btnBackInvoice">Back to Invoice Page</button>
         <button id="btnBack">Back to Temporary Permit Form</button>
     </div>
 
@@ -154,6 +163,10 @@
         document.getElementById('btnBack').addEventListener('click', function() {
             window.location.href = "{{ route('permit.temporary') }}";
         });
+        document.getElementById('btnBackInvoice').addEventListener('click', function() {
+            window.location.href = "{{ route('payment.invoice', ['submission_id' => $submission_id]) }}";
+        });
+
     </script>
 </body>
 </html>
