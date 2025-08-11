@@ -16,6 +16,10 @@
         font-weight: 700;
         font-size: 1.2rem;
     }
+    .mb-4 {
+       font-weight: 700;
+        font-size: 1.2rem;
+    }
 </style>
 
 @section('content')
@@ -28,7 +32,7 @@
                  data-url="{{ route('admin.companies.index') }}">
                 <div class="card-body">
                     <h4>Companies</h4>
-                    <p>Manage company info</p>
+                    <p>Manage company Info</p>
                 </div>
             </div>
         </div>
@@ -38,12 +42,32 @@
                  data-url="{{ route('admin.designations.index') }}">
                 <div class="card-body">
                     <h4>Designations</h4>
-                    <p>Manage job titles</p>
+                    <p>Manage Job Titles</p>
                 </div>
             </div>
         </div>
 
-        <!-- Add other cards as needed -->
+         <div class="col-md-3">
+            <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
+                 data-url="{{ route('admin.designations.index') }}">
+                <div class="card-body">
+                    <h4>Reasons</h4>
+                    <p>Manage Entry Reasons</p>
+                </div>
+            </div>
+        </div>
+
+          <div class="col-md-3">
+            <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
+                 data-url="{{ route('admin.designations.index') }}">
+                <div class="card-body">
+                    <h4>Vehicle List</h4>
+                    <p>Manage List of Vehicles</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add other cards -->
 
     </div>
 

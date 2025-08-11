@@ -5,11 +5,12 @@ use App\Http\Controllers\PermitController;
 use App\Http\Controllers\TemporaryPermitController;
 use App\Http\Controllers\MonthlyPermitController;
 use App\Http\Controllers\VehiclePermitController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PaymentSettingController;
 use App\Http\Controllers\PrintController;
-use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\DesignationController;
+use App\Http\Controllers\Admin\PaymentController;
 
 Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -35,10 +36,9 @@ Route::get('/', fn () => redirect()->route('dashboard'));
 Route::get('/dashboard', fn () => view('dashboard'))->middleware('auth')->name('dashboard');
 
 
-Route::get('/payment/summary', [\App\Http\Controllers\PaymentController::class, 'summary'])->name('payment.summary');
-Route::post('/payment/submit', [\App\Http\Controllers\PaymentController::class, 'submit'])->name('payment.submit');
-
-Route::get('/payment/invoice/{submission_id}', [\App\Http\Controllers\PaymentController::class, 'invoice'])->name('payment.invoice');
+Route::get('/payment/summary', [PaymentController::class, 'summary'])->name('payment.summary');
+Route::post('/payment/submit', [PaymentController::class, 'submit'])->name('payment.submit');
+Route::get('/payment/invoice/{submission_id}', [PaymentController::class, 'invoice'])->name('payment.invoice');
 
 
 // ------------------------------
