@@ -11,6 +11,7 @@ use App\Http\Controllers\PrintController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\ReasonController;
 
 Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -23,7 +24,7 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/payment-settings/edit', [PaymentSettingController::class, 'edit'])->name('admin.payment_settings.edit');
     Route::put('/payment-settings/update', [PaymentSettingController::class, 'update'])->name('admin.payment_settings.update');
     Route::delete('/permit/remove/{index}', [TemporaryPermitController::class, 'removeEntry'])->name('permit.remove');
-    
+    Route::resource('reasons', ReasonController::class)->names('admin.reasons');
     Route::resource('companies', CompanyController::class)->names('admin.companies');
     Route::resource('designations', DesignationController::class)->names('admin.designations');
     Route::get('/admin/masterdata', function () {

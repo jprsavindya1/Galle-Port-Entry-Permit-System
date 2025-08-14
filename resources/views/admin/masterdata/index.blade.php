@@ -47,15 +47,15 @@
             </div>
         </div>
 
-         <div class="col-md-3">
-            <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
-                 data-url="{{ route('admin.designations.index') }}">
-                <div class="card-body">
-                    <h4>Reasons</h4>
-                    <p>Manage Entry Reasons</p>
-                </div>
-            </div>
+       <div class="col-md-3">
+    <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
+         data-url="{{ route('admin.reasons.index') }}">
+        <div class="card-body">
+            <h4>Reasons</h4>
+            <p>Manage Entry Reasons</p>
         </div>
+    </div>
+</div>
 
           <div class="col-md-3">
             <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
@@ -93,40 +93,40 @@ $(function(){
         loadAjaxContent(url);
     });
 
-    // Ajax link clicks inside dynamic content
+    // Ajax link clicks inside dynamic content (Add/Edit links)
     $('#dynamic-content').on('click', '.ajax-link', function(e){
         e.preventDefault();
         loadAjaxContent($(this).attr('href'));
     });
-$('#dynamic-content').on('submit', '.ajax-delete', function(e){
-    e.preventDefault();
-    if (!confirm('Are you sure you want to delete this item?')) return;
 
-    let form = $(this);
-    let reloadUrl = form.data('reload-url');  // get URL to reload after delete
+    // Ajax delete inside dynamic content
+    $('#dynamic-content').on('submit', '.ajax-delete', function(e){
+        e.preventDefault();
+        if (!confirm('Are you sure you want to delete this item?')) return;
 
-    $.ajax({
-        url: form.attr('action'),
-        type: 'POST',
-        data: form.serialize(),
-        success: function(response){
-            if(response.success){
-                if(reloadUrl){
-                    loadAjaxContent(reloadUrl);
+        let form = $(this);
+        let reloadUrl = form.data('reload-url');  // URL to reload after delete
+
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response){
+                if(response.success){
+                    if(reloadUrl){
+                        loadAjaxContent(reloadUrl);
+                    } else {
+                        alert('Reload URL not specified.');
+                    }
                 } else {
-                    alert('Reload URL not specified.');
+                    alert(response.message || 'Delete failed.');
                 }
-            } else {
-                alert(response.message || 'Delete failed.');
+            },
+            error: function(){
+                alert('An error occurred while deleting.');
             }
-        },
-        error: function(){
-            alert('An error occurred while deleting.');
-        }
+        });
     });
-});
-
-   
 
     // Ajax form submit (create/edit) inside dynamic content
     $('#dynamic-content').on('submit', 'form.ajax-form', function(e){
@@ -149,14 +149,15 @@ $('#dynamic-content').on('submit', '.ajax-delete', function(e){
         });
     });
 
-    // Ajax search form submit inside dynamic content
-    $('#dynamic-content').on('submit', '#designation-search-form', function(e){
+    // Universal AJAX search submit for any form with class 'ajax-search-form' inside dynamic content
+    $('#dynamic-content').on('submit', 'form.ajax-search-form', function(e){
         e.preventDefault();
         let url = $(this).attr('action');
         let query = $(this).serialize();
         loadAjaxContent(url + '?' + query);
     });
 });
+
 </script>
 
 @endsection

@@ -135,17 +135,17 @@
             </div>
         </fieldset>
 
-        <div class="mb-3">
-            <label for="reason" class="form-label">Reason for Visit</label>
-            <select name="reason" id="reason" class="form-select" required>
-                <option value="">-- Select --</option>
-                <option value="inspection" {{ old('reason') == 'inspection' ? 'selected' : '' }}>Inspection</option>
-                <option value="delivery" {{ old('reason') == 'delivery' ? 'selected' : '' }}>Delivery</option>
-                <option value="official_visit" {{ old('reason') == 'official_visit' ? 'selected' : '' }}>Official Visit</option>
-                <option value="maintenance" {{ old('reason') == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                <option value="other" {{ old('reason') == 'other' ? 'selected' : '' }}>Other</option>
-            </select>
-        </div>
+       <div class="mb-3">
+    <label for="reason" class="form-label">Reason for Visit</label>
+    <select name="reason" id="reason" class="form-select" required>
+        <option value="">-- Select --</option>
+        @foreach($reasons as $reason)
+            <option value="{{ $reason->name }}" {{ old('reason') == $reason->name ? 'selected' : '' }}>
+                {{ ucfirst($reason->name) }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
         <button type="submit" class="btn btn-primary">Add to List</button>
     </form>

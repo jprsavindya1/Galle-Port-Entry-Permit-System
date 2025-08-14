@@ -1,0 +1,13 @@
+<form action="{{ $action }}" method="POST" class="ajax-form">
+    @csrf
+    @if($method === 'PUT') @method('PUT') @endif
+
+    <div class="mb-3">
+        <label class="form-label">Reason Name <span class="text-danger">*</span></label>
+        <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $reason->name ?? '') }}" required>
+        @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="{{ route('admin.reasons.index') }}" class="btn btn-secondary ajax-link">Cancel</a>
+</form>

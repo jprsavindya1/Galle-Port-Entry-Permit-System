@@ -5,12 +5,12 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <form id="designation-search-form" method="GET" action="{{ route('admin.designations.index') }}" class="d-flex mb-3">
-        <input type="text" name="search" value="{{ request('search') }}" 
-               class="form-control me-2" placeholder="Search designation...">
-        <button type="submit" class="btn btn-outline-primary">Search</button>
-    </form>
+  <form id="company-search-form" method="GET" action="{{ route('admin.designations.index') }}" class="d-flex mb-3 ajax-search-form">
+    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search companies..." class="form-control me-2" />
+    <button type="submit" class="btn btn-outline-primary">Search</button>
+</form>
 
+   
     <a href="{{ route('admin.designations.create') }}" 
        class="btn btn-primary mb-3 ajax-link">Add New Designation</a>
 
@@ -19,7 +19,7 @@
             <tr>
                 <th>#</th>
                 <th>Name</th>
-                <th>Actions</th>
+                <th width="140">Actions</th>
             </tr>
         </thead>
         <tbody>

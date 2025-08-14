@@ -7,7 +7,7 @@ use App\Models\Permit;
 use App\Models\Company;
 use Illuminate\Support\Str;
 use App\Models\Designation;
-
+use App\Models\Reason;
 class TemporaryPermitController extends PermitController
 {
     /*
@@ -28,9 +28,9 @@ class TemporaryPermitController extends PermitController
 
     $companies = Company::all(); // fetching companies
     $designations = Designation::all();// fetching designations
-
+    $reasons = Reason::orderBy('name')->get();
     // Add companies to the compact array
-    return view('permit.temporary', compact('cart', 'companyName', 'companyAddress', 'companies', 'designations'));
+    return view('permit.temporary', compact('cart', 'companyName', 'companyAddress', 'companies', 'designations', 'reasons'));
 }
 
     /*

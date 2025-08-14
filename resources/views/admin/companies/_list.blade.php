@@ -5,10 +5,9 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-  <form id="company-search-form" method="GET" action="{{ route('admin.companies.index') }}" class="d-flex mb-3">
-    <input type="text" name="search" value="{{ request('search') }}" 
-           class="form-control me-2" placeholder="Search company...">
-    <button type="submit" class="btn btn-outline-primary">Search</button>
+   <form id="reason-search-form" method="GET" action="{{ route('admin.companies.index') }}" class="d-flex mb-3 ajax-search-form">
+    <input type="text" name="search" value="{{ request('search') }}" class="form-control me-2" placeholder="Search reasons...">
+    <button type="submit" class="btn btn-outline-primary">Search</button>   
 </form>
 
     <a href="{{ route('admin.companies.create') }}" 
@@ -20,7 +19,7 @@
                 <th>#</th>
                 <th>Company Name</th>
                 <th>Address</th>
-                <th>Actions</th>
+             <th width="140">Actions</th>
             </tr>
         </thead>
         <tbody>
