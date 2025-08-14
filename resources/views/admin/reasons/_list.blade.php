@@ -10,11 +10,11 @@
     <input type="text" name="search" value="{{ request('search') }}" class="form-control me-2" placeholder="Search reasons...">
     <button type="submit" class="btn btn-outline-primary">Search</button>   
 </form>
-    <a href="{{ route('admin.reasons.create') }}" class="btn btn-primary ms-2 ajax-link">Add New Reason</a>
+<a href="{{ route('admin.reasons.create') }}" class="btn btn-primary mb-3 ajax-link">Add New Reasons</a>
 
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
                 <th>#</th>
                 <th>Name</th>
                 <th width="140">Actions</th>

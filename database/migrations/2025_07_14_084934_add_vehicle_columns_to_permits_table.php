@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
 {
     Schema::table('permits', function (Blueprint $table) {
-        $table->string('vehicle_type')->nullable();
+        $table->string('vehicle_name')->nullable();
         $table->string('vehicle_number')->nullable();
         $table->string('revenue_license_number')->nullable();
         $table->string('owner_name')->nullable();
@@ -22,7 +22,7 @@ public function down()
 {
     Schema::table('permits', function (Blueprint $table) {
         $table->dropColumn([
-            'vehicle_type',
+            'vehicle_name',
             'vehicle_number',
             'revenue_license_number',
             'owner_name',

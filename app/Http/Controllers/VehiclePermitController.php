@@ -5,20 +5,21 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Permit; 
 use Illuminate\Support\Str;
-
+use App\Models\Vehicle; 
 class VehiclePermitController extends PermitController
 {
    ////////////////////////////////////vehicle////////////////////////////
 
    public function createVehicle()
 {
-    $cart = session()->get('vehicle_permit_cart', []);
-    return view('permit.vehicle', compact('cart'));
+     $cart = session()->get('vehicle_permit_cart', []);
+    $vehicles = Vehicle::all(); // fetch all vehicles for dropdown
+    return view('permit.vehicle', compact('cart', 'vehicles'));
 }
 public function addVehicleToSession(Request $request)
 {
     $validated = $request->validate([
-        'vehicle_type' => 'required|string',
+        'vehicle_name' => 'required|string',
         'vehicle_number' => 'required|string',
         'revenue_license_number' => 'required|string',
         'from_date' => 'required|date',
@@ -52,7 +53,7 @@ public function editVehicleSessionEntry($index)
 public function updateVehicleSessionEntry(Request $request, $index)
 {
     $validated = $request->validate([
-        'vehicle_type' => 'required|string',
+        'vehicle_name' => 'required|string',
         'vehicle_number' => 'required|string',
         'revenue_license_number' => 'required|string',
         'from_date' => 'required|date',

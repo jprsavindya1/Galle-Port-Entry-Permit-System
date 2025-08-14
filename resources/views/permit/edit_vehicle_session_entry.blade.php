@@ -23,7 +23,7 @@
 
         <div class="mb-3">
             <label>Vehicle Type</label>
-            <input type="text" name="vehicle_type" class="form-control" value="{{ old('vehicle_type', $entry['vehicle_type']) }}" required>
+            <input type="text" name="vehicle_type" class="form-control" value="{{ old('vehicle_name', $entry['vehicle_name']) }}" required>
         </div>
 
         <div class="mb-3">

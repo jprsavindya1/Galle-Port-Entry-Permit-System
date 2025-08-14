@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ReasonController;
+use App\Http\Controllers\Admin\VehicleController;
 
 Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -20,11 +21,11 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-    
     Route::get('/payment-settings/edit', [PaymentSettingController::class, 'edit'])->name('admin.payment_settings.edit');
     Route::put('/payment-settings/update', [PaymentSettingController::class, 'update'])->name('admin.payment_settings.update');
     Route::delete('/permit/remove/{index}', [TemporaryPermitController::class, 'removeEntry'])->name('permit.remove');
     Route::resource('reasons', ReasonController::class)->names('admin.reasons');
+    Route::resource('vehicles', VehicleController::class)->names('admin.vehicles');
     Route::resource('companies', CompanyController::class)->names('admin.companies');
     Route::resource('designations', DesignationController::class)->names('admin.designations');
     Route::get('/admin/masterdata', function () {

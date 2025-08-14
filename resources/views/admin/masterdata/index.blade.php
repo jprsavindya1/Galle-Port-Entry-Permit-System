@@ -57,15 +57,15 @@
     </div>
 </div>
 
-          <div class="col-md-3">
-            <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
-                 data-url="{{ route('admin.designations.index') }}">
-                <div class="card-body">
-                    <h4>Vehicle List</h4>
-                    <p>Manage List of Vehicles</p>
-                </div>
-            </div>
+<div class="col-md-3">
+    <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
+         data-url="{{ route('admin.vehicles.index') }}">
+        <div class="card-body">
+            <h4>Vehicles</h4>
+            <p>Manage Vehicles</p>
         </div>
+    </div>
+</div>
 
         <!-- Add other cards -->
 

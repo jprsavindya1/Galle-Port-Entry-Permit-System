@@ -18,11 +18,17 @@
 
         @csrf
 
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label>Vehicle Type</label>
-                <input type="text" class="form-control" name="vehicle_type" required value="{{ old('vehicle_type') }}">
-            </div>
+     <div class="col-md-6">
+    <label>Vehicle Name</label>
+    <select name="vehicle_name" class="form-control" required>
+        <option value="">-- Select Vehicle --</option>
+        @foreach($vehicles as $vehicle)
+            <option value="{{ $vehicle->name }}" {{ old('vehicle_name') == $vehicle->name ? 'selected' : '' }}>
+                {{ $vehicle->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
             <div class="col-md-6">
                 <label>Vehicle Number</label>
                 <input type="text" class="form-control" name="vehicle_number" id="vehicle_number" required value="{{ old('vehicle_number') }}">

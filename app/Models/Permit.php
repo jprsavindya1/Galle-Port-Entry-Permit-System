@@ -10,7 +10,7 @@ class Permit extends Model
     'permit_id',
     'type',
     'vehicle_number',
-    'vehicle_type',
+    'vehicle_name',
     'entry_date',
     'entry_time',
     'id_document',
