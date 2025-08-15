@@ -35,6 +35,11 @@ class Permit extends Model
     'remarks',
 ];
 
+public function payment()
+{
+    return $this->hasOne(\App\Models\Payment::class, 'submission_id', 'submission_id');
+}
+
 
 
 }

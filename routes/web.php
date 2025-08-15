@@ -119,7 +119,14 @@ Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(
     Route::delete('/{blacklist}', [BlacklistController::class, 'destroy'])->name('destroy');
 });
 
-Route::get('/permit/print/{submission_id}', [PrintController::class, 'show'])->name('permit.print');
+// Batch print (by submission_id)
+Route::get('/permit/print/batch/{submission_id}', [PrintController::class, 'show'])
+    ->name('permit.print');
+
+// Single print (by permit ID)
+Route::get('/permit/print/single/{id}', [PrintController::class, 'showSingle'])
+    ->name('permit.print.single');
+
 
 
 Route::middleware(['role:admin'])->group(function () {

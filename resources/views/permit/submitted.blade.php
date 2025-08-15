@@ -10,8 +10,13 @@
         </div>
     @endif
 
-    <form method="GET" action="{{ route('permits.submitted') }}" class="row g-3 mb-4">
-        <div class="col-md-6">
+    <form id="filter-form" method="GET" action="{{ route('permits.submitted') }}" class="row g-3 mb-4">
+        <div class="col-md-3">
+            <input type="date" name="date" class="form-control" 
+                   value="{{ request('date', \Carbon\Carbon::today()->toDateString()) }}" 
+                   onchange="document.getElementById('filter-form').submit();">
+        </div>
+        <div class="col-md-3">
             <input type="text" name="q" class="form-control" placeholder="Search by Company, ID, or Name" value="{{ request('q') }}">
         </div>
         <div class="col-md-auto">
@@ -84,6 +89,10 @@
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                         </form>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('payment.invoice', $permit->submission_id) }}" class="btn btn-sm btn-info">View Group</a>
+                                        <a href="{{ route('permit.print.single', $permit->id) }}" target="_blank" class="btn btn-sm btn-primary">Print</a>
                                     </td>
                                 </tr>
                                 @endforeach

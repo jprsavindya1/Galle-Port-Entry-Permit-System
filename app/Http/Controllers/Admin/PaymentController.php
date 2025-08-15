@@ -215,12 +215,12 @@ $invoiceId = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 }
 
 
-public function invoice($submissionId)
+public function invoice($submission_id)
 {
-    $payment = Payment::where('submission_id', $submissionId)->firstOrFail();
-    $permits = Permit::where('submission_id', $submissionId)->get();
+    $payment = Payment::where('submission_id', $submission_id)->firstOrFail();
+    $permits = Permit::where('submission_id', $submission_id)->get();
 
-    return view('payment.invoice', compact('payment', 'permits'));
+    return view('payment.invoice', compact('payment', 'permits', 'submission_id'));
 }
 
 }

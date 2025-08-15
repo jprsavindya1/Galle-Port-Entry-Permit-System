@@ -66,8 +66,10 @@
 </div>
 
 <!-- Print Permit Button -->
-<a href="{{ route('permit.print', ['submission_id' => $payment->submission_id]) }}" target="_blank" class="btn btn-primary">
-    Print Permit
+
+    <a href="{{ route('permit.print', $submission_id) }}" target="_blank" class="btn btn-primary" >Batch Print</a>
+
+    
 </a>
 
 

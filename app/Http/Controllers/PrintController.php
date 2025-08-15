@@ -22,4 +22,13 @@ class PrintController extends Controller
         return view('permit.print', compact('permits', 'payment', 'submission_id'));
 
     }
+    public function showSingle($id)
+{
+    $permit = Permit::findOrFail($id);
+     $submission_id = $permit->submission_id; 
+    $payment = Payment::where('submission_id', $permit->submission_id)->first();
+
+    return view('permit.print_single', compact('permit', 'payment','submission_id'));
+}
+
 }

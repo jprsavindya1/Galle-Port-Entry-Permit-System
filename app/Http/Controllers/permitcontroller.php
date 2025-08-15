@@ -12,23 +12,32 @@ class PermitController extends Controller
      * Show list of submitted permits.
      * Supports search filtering by company name, ID number, or full name.
      */
-    public function submittedList(Request $request)
-    {
-        $query = Permit::query();
+   public function submittedList(Request $request)
+{
+    $query = Permit::query()->with('payment');
 
-        if ($request->has('q')) {
-            $search = $request->input('q');
-            $query->where(function($q) use ($search) {
-                $q->where('company_name', 'like', "%$search%")
-                  ->orWhere('id_number', 'like', "%$search%")
-                  ->orWhere('full_name', 'like', "%$search%");
-            });
-        }
-
-        $permits = $query->orderBy('created_at', 'desc')->paginate(10);
-
-        return view('permit.submitted', compact('permits'));
+    // Search by company, ID, or name
+    if ($request->filled('q')) {
+        $search = $request->q;
+        $query->where(function($q) use ($search) {
+            $q->where('company_name', 'like', "%$search%")
+              ->orWhere('id_number', 'like', "%$search%")
+              ->orWhere('full_name', 'like', "%$search%");
+        });
     }
+
+    // Filter by Payment Date
+    $filterDate = $request->filled('date') ? $request->date : now()->toDateString();
+
+    $query->whereHas('payment', function($q) use ($filterDate) {
+        $q->whereDate('payment_date', $filterDate);
+    });
+
+    $permits = $query->orderBy('submission_id', 'desc')->paginate(15);
+
+    return view('permit.submitted', compact('permits'));
+}
+
 
     /*
      * Show the edit form for a single permit entry from DB.
