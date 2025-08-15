@@ -33,12 +33,18 @@ class Permit extends Model
     'revenue_license_number',
     'insurance_number',
     'remarks',
+    'status',
 ];
 
 public function payment()
 {
     return $this->hasOne(\App\Models\Payment::class, 'submission_id', 'submission_id');
 }
+ // Scope to only active permits
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 
 
 

@@ -57,7 +57,9 @@
                                         <th>Pass Type</th>
                                         <th>From Date</th>
                                         <th>To Date</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
+                                        <th>View</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -83,16 +85,31 @@
                                         <td>{{ $permit->to_date }}</td>
                                     @endif
                                     <td>
-                                        <a href="{{ route('permits.edit', $permit) }}" class="btn btn-sm btn-warning">Edit</a>
-                                        <form action="{{ route('permits.destroy', $permit) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this permit?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                        </form>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('payment.invoice', $permit->submission_id) }}" class="btn btn-sm btn-info">View Group</a>
-                                        <a href="{{ route('permit.print.single', $permit->id) }}" target="_blank" class="btn btn-sm btn-primary">Print</a>
+    @if($permit->status === 'active')
+        <form action="{{ route('permits.cancel', $permit) }}" method="POST" class="d-inline">
+            @csrf
+            <button type="submit" class="btn btn-sm btn-success">Active</button>
+        </form>
+    @else
+        <form action="{{ route('permits.activate', $permit) }}" method="POST" class="d-inline">
+            @csrf
+            <button type="submit" class="btn btn-sm btn-danger">Cancelled</button>
+        </form>
+    @endif
+</td>
+         <td>
+            <a href="{{ route('permits.edit', $permit) }}" class="btn btn-sm btn-warning">Edit</a>
+           @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
+        <form action="{{ route('permits.destroy', $permit) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this permit?');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+        </form>
+    @endif
+             </td>
+                <td>
+                    <a href="{{ route('payment.invoice', $permit->submission_id) }}" class="btn btn-sm btn-info">View Group</a>
+                     <a href="{{ route('permit.print.single', $permit->id) }}" target="_blank" class="btn btn-sm btn-primary">Print</a>
                                     </td>
                                 </tr>
                                 @endforeach

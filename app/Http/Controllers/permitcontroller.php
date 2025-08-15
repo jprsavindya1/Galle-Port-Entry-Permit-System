@@ -154,6 +154,17 @@ protected function isBlacklisted(array $data, string $type = null): ?string
     return $entry ? ($entry->reason ?? 'Blacklisted') : null;
 }
 
+public function cancel(Permit $permit)
+{
+    $permit->update(['status' => 'cancelled']);
+    return redirect()->back()->with('success', 'Permit cancelled successfully.');
+}
+
+public function activate(Permit $permit)
+{
+    $permit->update(['status' => 'active']);
+    return redirect()->back()->with('success', 'Permit activated successfully.');
+}
 
 
     public function checkAvailability(Request $request)
@@ -171,26 +182,29 @@ protected function isBlacklisted(array $data, string $type = null): ?string
             'company_name' => 'nullable|string',
         ]);
 
+        // Check blacklist first
         if ($reason = $this->isBlacklisted($data)) {
             return response()->json(['available' => false, 'message' => "Blacklisted: $reason"]);
         }
 
-        $conflict = Permit::where(function ($query) use ($data) {
-            $query->where(function ($q) use ($data) {
-                $q->where('full_name', $data['full_name'])
-                  ->where('initials', $data['initials']);
+        // Check for conflicts only with active permits
+        $conflict = Permit::where('status', 'active')
+            ->where(function ($query) use ($data) {
+                $query->where(function ($q) use ($data) {
+                    $q->where('full_name', $data['full_name'])
+                      ->where('initials', $data['initials']);
+                })
+                ->orWhere('id_number', $data['id_number']);
             })
-            ->orWhere('id_number', $data['id_number']);
-        })
-        ->where(function ($query) use ($data) {
-            $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
-                  ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
-                  ->orWhere(function ($q) use ($data) {
-                      $q->where('from_date', '<=', $data['from_date'])
-                        ->where('to_date', '>=', $data['to_date']);
-                  });
-        })
-        ->exists();
+            ->where(function ($query) use ($data) {
+                $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
+                      ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
+                      ->orWhere(function ($q) use ($data) {
+                          $q->where('from_date', '<=', $data['from_date'])
+                            ->where('to_date', '>=', $data['to_date']);
+                      });
+            })
+            ->exists();
 
         if ($conflict) {
             return response()->json(['available' => false, 'message' => 'Permit NOT available for this period or person.']);
@@ -202,7 +216,6 @@ protected function isBlacklisted(array $data, string $type = null): ?string
         return response()->json(['available' => false, 'message' => 'Server error occurred.'], 500);
     }
 }
-
 
 
    

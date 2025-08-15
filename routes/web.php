@@ -93,6 +93,8 @@ Route::prefix('permit/vehicle')->controller(VehiclePermitController::class)->gro
 // ------------------------------
 Route::get('/permits/submitted', [PermitController::class, 'submittedList'])->name('permits.submitted');
 Route::get('/permits/submitted/{submissionId}', [PermitController::class, 'viewSubmissionGroup'])->name('permit.submission.view');
+Route::post('permits/{permit}/cancel', [PermitController::class, 'cancel'])->name('permits.cancel');
+Route::post('permits/{permit}/activate', [PermitController::class, 'activate'])->name('permits.activate');
 
 
 // ------------------------------

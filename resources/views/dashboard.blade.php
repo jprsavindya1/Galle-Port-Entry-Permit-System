@@ -55,8 +55,8 @@
                 </div>
             </a>
         </div>
-        @auth
-  @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
+        
+
         <div class="col-md-4">
             <a href="{{ route('permits.submitted') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
@@ -65,7 +65,9 @@
                 </div>
             </a>
         </div>
-
+        
+        @auth
+  @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
         <div class="col-md-4">
             <a href="{{ route('blacklist.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm  rounded-3 h-100">
                 <div class="card-body">
