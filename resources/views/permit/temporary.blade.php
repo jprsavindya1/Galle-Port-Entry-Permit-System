@@ -54,10 +54,14 @@
             </div>
         </div>
 
-        <div class="mb-3">
-            <label for="full_name" class="form-label">Full Name</label>
-            <input type="text" name="full_name" id="full_name" value="{{ old('full_name') }}" class="form-control" required>
-        </div>
+      <div class="mb-3">
+    <label for="full_name" class="form-label">Full Name</label>
+    <input type="text" name="full_name" id="full_name" 
+           value="{{ old('full_name') }}" 
+           class="form-control" 
+           required
+           oninput="this.value = this.value.toUpperCase();">
+    </div>
 
         <div class="mb-3">
             <label for="initials" class="form-label">Name with Initials</label>

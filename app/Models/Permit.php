@@ -34,6 +34,7 @@ class Permit extends Model
     'insurance_number',
     'remarks',
     'status',
+    'cancel_reason',
 ];
 
 public function payment()

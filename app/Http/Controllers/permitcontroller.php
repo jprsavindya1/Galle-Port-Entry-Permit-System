@@ -16,28 +16,32 @@ class PermitController extends Controller
 {
     $query = Permit::query()->with('payment');
 
-    // Search by company, ID, or name
+    // ---  Search (NOT affected by date filter) ---
     if ($request->filled('q')) {
         $search = $request->q;
         $query->where(function($q) use ($search) {
             $q->where('company_name', 'like', "%$search%")
               ->orWhere('id_number', 'like', "%$search%")
-              ->orWhere('full_name', 'like', "%$search%");
+              ->orWhere('full_name', 'like', "%$search%")
+              ->orWhere('permit_id', 'like', "%$search%")
+              ->orWhereHas('payment', function($sub) use ($search) {
+                  $sub->where('invoice_id', 'like', "%$search%");
+              });
         });
     }
 
-    // Filter by Payment Date
-    $filterDate = $request->filled('date') ? $request->date : now()->toDateString();
-
-    $query->whereHas('payment', function($q) use ($filterDate) {
-        $q->whereDate('payment_date', $filterDate);
-    });
+    // --- Date filter  ---
+    if (!$request->filled('q')) {
+        $filterDate = $request->filled('date') ? $request->date : now()->toDateString();
+        $query->whereHas('payment', function($q) use ($filterDate) {
+            $q->whereDate('payment_date', $filterDate);
+        });
+    }
 
     $permits = $query->orderBy('submission_id', 'desc')->paginate(15);
 
     return view('permit.submitted', compact('permits'));
 }
-
 
     /*
      * Show the edit form for a single permit entry from DB.
@@ -154,19 +158,35 @@ protected function isBlacklisted(array $data, string $type = null): ?string
     return $entry ? ($entry->reason ?? 'Blacklisted') : null;
 }
 
-public function cancel(Permit $permit)
+public function cancel(Request $request, Permit $permit)
 {
-    $permit->update(['status' => 'cancelled']);
-    return redirect()->back()->with('success', 'Permit cancelled successfully.');
+    $reason = $request->cancel_reason_select === 'Other'
+        ? $request->cancel_reason_other
+        : $request->cancel_reason_select;
+
+    $permit->status = 'cancelled';
+    $permit->cancel_reason = $reason;
+    $permit->save();
+
+    return response()->json([
+        'id' => $permit->id,
+        'status' => 'cancelled',
+    ]);
 }
+
+
 
 public function activate(Permit $permit)
 {
-    $permit->update(['status' => 'active']);
+    $permit->update([
+        'status' => 'active',
+        'cancel_reason' => null, // Remove previous cancel reason
+    ]);
+
     return redirect()->back()->with('success', 'Permit activated successfully.');
 }
 
-
+   // Check check Availability
     public function checkAvailability(Request $request)
 {
     try {
