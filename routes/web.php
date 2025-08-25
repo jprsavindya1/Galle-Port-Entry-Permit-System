@@ -13,7 +13,11 @@ use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ReasonController;
 use App\Http\Controllers\Admin\VehicleController;
+use App\Http\Controllers\Admin\BlacklistController;
 
+// ------------------------------
+//Admin Routes
+// ------------------------------
 Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
@@ -21,9 +25,14 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
     Route::get('/payment-settings/edit', [PaymentSettingController::class, 'edit'])->name('admin.payment_settings.edit');
     Route::put('/payment-settings/update', [PaymentSettingController::class, 'update'])->name('admin.payment_settings.update');
+    
+// active permit delete Routes
     Route::delete('/permit/remove/{index}', [TemporaryPermitController::class, 'removeEntry'])->name('permit.remove');
+    
+// Master Data Routes
     Route::resource('reasons', ReasonController::class)->names('admin.reasons');
     Route::resource('vehicles', VehicleController::class)->names('admin.vehicles');
     Route::resource('companies', CompanyController::class)->names('admin.companies');
@@ -38,6 +47,9 @@ Route::get('/', fn () => redirect()->route('dashboard'));
 Route::get('/dashboard', fn () => view('dashboard'))->middleware('auth')->name('dashboard');
 
 
+// ------------------------------
+// invoice Routes
+// ------------------------------
 Route::get('/payment/summary', [PaymentController::class, 'summary'])->name('payment.summary');
 Route::post('/payment/submit', [PaymentController::class, 'submit'])->name('payment.submit');
 Route::get('/payment/invoice/{submission_id}', [PaymentController::class, 'invoice'])->name('payment.invoice');
@@ -59,20 +71,21 @@ Route::prefix('temporary-permit')->controller(TemporaryPermitController::class)-
 
 Route::post('/permits/check-availability', [PermitController::class, 'checkAvailability'])->name('permit.checkAvailability');
 
-
 // ------------------------------
 // Monthly Permit Routes
 // ------------------------------
-Route::prefix('permit/monthly')->controller(MonthlyPermitController::class)->group(function () {
-    Route::get('/', 'createMonthly')->name('permit.monthly');
-    Route::post('/add', 'addMonthlyToSession')->name('permit.monthly.addToSession');
+
+Route::prefix('monthly-permit')->controller(MonthlyPermitController::class)->group(function () {
+    Route::get('/', 'createMonthly')->name('permit.monthly'); // Main page
+    Route::post('/add', 'addMonthlyToSession')->name('permit.monthly.addMonthlyToSession');
     Route::get('/summary', 'showMonthlySummary')->name('permit.monthly.summary');
-    Route::post('/submit', 'submitAllMonthly')->name('permit.monthly.submit');
-    Route::post('/checkAvailability', 'checkMonthlyAvailability')->name('permit.monthly.checkAvailability');
-    Route::get('/edit-session-entry/{index}', 'editMonthlySessionEntry')->name('permit.monthly.editSessionEntry');
-    Route::put('/update-session-entry/{index}', 'updateMonthlySessionEntry')->name('permit.monthly.updateSessionEntry');
-    
+    Route::post('/submit', 'submitAllMonthly')->name('permit.monthly.submitAll');
+    Route::get('/edit/{index}', 'editMonthlySessionEntry')->name('permit.monthly.editMonthlySessionEntry');
+    Route::put('/edit/{index}', 'updateMonthlySessionEntry')->name('permit.monthly.updateMonthlySessionEntry');
+    Route::delete('/remove/{index}', 'removeMonthlySessionEntry')->name('permit.monthly.removeMonthlySessionEntry');
+    Route::post('/check-availability', 'checkMonthlyAvailability')->name('permit.monthly.checkMonthlyAvailability');
 });
+
 
 
 // ------------------------------
@@ -89,7 +102,7 @@ Route::prefix('permit/vehicle')->controller(VehiclePermitController::class)->gro
 
 
 // ------------------------------
-// Submitted Permits (Admin)
+// Submitted Permits (clerks)
 // ------------------------------
 Route::get('/permits/submitted', [PermitController::class, 'submittedList'])->name('permits.submitted');
 Route::get('/permits/submitted/{submissionId}', [PermitController::class, 'viewSubmissionGroup'])->name('permit.submission.view');
@@ -98,7 +111,7 @@ Route::post('permits/{permit}/activate', [PermitController::class, 'activate'])-
 
 
 // ------------------------------
-// Edit/Delete Individual Permits (DB Records)
+// Edit/Delete Individual Permits (DB Records clerk edits)
 // ------------------------------
 Route::get('/permits/{permit}/edit', [PermitController::class, 'edit'])->name('permits.edit');
 Route::put('/permits/{permit}', [PermitController::class, 'update'])->name('permits.update');
@@ -110,8 +123,10 @@ Route::delete('/permits/{permit}', [PermitController::class, 'destroy'])->name('
 // ------------------------------
 Route::get('/permits/search', [PermitController::class, 'search'])->name('permits.search');
 
-use App\Http\Controllers\Admin\BlacklistController;
 
+// ------------------------------
+// Black
+// ------------------------------
 Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(function () {
     Route::get('/', [BlacklistController::class, 'index'])->name('index');
     Route::get('/create', [BlacklistController::class, 'create'])->name('create');

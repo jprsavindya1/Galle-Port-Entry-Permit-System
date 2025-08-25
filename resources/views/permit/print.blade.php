@@ -120,11 +120,35 @@
     </style>
 </head>
 <body>
+
     @foreach ($permits as $permit)
+
+@php
+    switch ($permit->type) {
+        case 'MP':
+            $title_en = "Monthly Permit";
+            $title_si = "මාසික බලපත්‍රය";
+            $person_label = "Person පුද්ගල";
+            break;
+
+        case 'VP':
+            $title_en = "Vehicle Permit";
+            $title_si = "රථවාහන බලපත්‍රය";
+            $person_label = "Vehicle රථවාහන";
+            break;
+
+        default: // TP
+            $title_en = "Temporary Permit";
+            $title_si = "තාවකාලික බලපත්‍රය";
+            $person_label = "Person පුද්ගල";
+            break;
+    }
+@endphp
+
         <div class="permit-container">
-            <div class="field temporary-permit">Temporary Permit</div>
-            <div class="field person-label">Person පුද්ගල</div>
-            <div class="field permit-title">තාවකාලික බලපත්‍රය</div>
+           <div class="field temporary-permit">{{ $title_en }}</div>
+            <div class="field person-label">{{ $person_label }}</div>
+            <div class="field permit-title">{{ $title_si }}</div>
             <div class="field permit-number">{{ $permit->permit_id }}</div>
 
             <div class="field name">{{ $permit->full_name }}</div>

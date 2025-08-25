@@ -40,9 +40,6 @@
     <input type="text" name="id_number" id="id_number" value="{{ old('id_number') }}" class="form-control" required>
   </div>
 </div>
-
-
-
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="from_date" class="form-label">From Date</label>
@@ -154,7 +151,7 @@
         <button type="submit" class="btn btn-primary">Add to List</button>
     </form>
 
-    @if(session('permit_cart') && count(session('permit_cart')) > 0)
+    @if(session('temporary_permit_cart') && count(session('temporary_permit_cart')) > 0)
         <h3 class="mt-5">Current Permit Requests for Company: {{ session('company_name') }}</h3>
         <table class="table table-bordered">
             <thead class="table-light">
@@ -173,7 +170,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach(session('permit_cart') as $index => $permit)
+                @foreach(session('temporary_permit_cart') as $index => $permit)
                     <tr>
                         <td>{{ $permit['id_type'] }}</td>
                         <td>{{ $permit['id_number'] }}</td>
@@ -297,58 +294,50 @@
     }
 
     function checkAvailability() {
-        const idType = document.getElementById('id_type').value;
-        const idNumber = document.querySelector('input[name="id_number"]').value;
-        const fullName = document.querySelector('input[name="full_name"]').value;
-        const initials = document.querySelector('input[name="initials"]').value;
-        const fromDate = document.getElementById('from_date').value;
-        const toDate = document.getElementById('to_date').value;
-        const companyName = document.getElementById('company_name').value;
+    const idType = document.getElementById('id_type').value;
+    const idNumber = document.getElementById('id_number').value;
+    const fullName = document.getElementById('full_name').value;
+    const initials = document.getElementById('initials').value;
+    const fromDate = document.getElementById('from_date').value;
+    const toDate = document.getElementById('to_date').value;
+    const companyName = document.getElementById('company_name').value;
 
-        const msg = document.getElementById('availability-msg');
-        msg.innerText = '';
+    const msg = document.getElementById('availability-msg');
+    msg.innerText = '';
 
-        if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
-            msg.innerText = "Please fill in all required fields.";
-            msg.style.color = 'red';
-            return;
-        }
-
-        fetch("{{ route('permit.checkAvailability') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({
-                id_type: idType,
-                id_number: idNumber,
-                full_name: fullName,
-                initials: initials,
-                from_date: fromDate,
-                to_date: toDate,
-                company_name: companyName
-            })
-        })
-        .then(res => {
-            if (!res.ok) {
-                return res.text().then(text => {
-                    throw new Error(`Server error: ${text}`);
-                });
-            }
-            return res.json();
-        })
-        .then(data => {
-            msg.innerText = data.message;
-            msg.style.color = data.available ? 'green' : 'red';
-        })
-        .catch(error => {
-            console.error("Availability check failed:", error);
-            msg.innerText = "Something went wrong during availability check.";
-            msg.style.color = 'red';
-        });
+    if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
+        msg.innerText = "Please fill in all required fields.";
+        msg.style.color = 'red';
+        return;
     }
 
+    fetch("{{ route('permit.checkAvailability') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({
+            id_type: idType,
+            id_number: idNumber,
+            full_name: fullName,
+            initials: initials,
+            from_date: fromDate,
+            to_date: toDate,
+            company_name: companyName
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        msg.innerText = data.message;
+        msg.style.color = data.available ? 'green' : 'red';
+    })
+    .catch(error => {
+        console.error("Availability check failed:", error);
+        msg.innerText = "Something went wrong during availability check.";
+        msg.style.color = 'red';
+    });
+}
    function setCompanyAddress() {
         const select = document.getElementById('company_name');
         const selectedOption = select.options[select.selectedIndex];

@@ -62,7 +62,16 @@
         <h4 class="mt-3"><strong>Total Amount: Rs. {{ number_format($payment->amount_total, 2) }}</strong></h4>
     </div>
 
+    
+    <!-- Dynamic Back Button -->
+@if($payment->permit_type === 'TP')
     <a href="{{ route('permit.temporary') }}" class="btn btn-secondary mt-4">Back to Temporary Permit Form</a>
+@elseif($payment->permit_type === 'MP')
+    <a href="{{ route('permit.monthly') }}" class="btn btn-secondary mt-4">Back to Monthly Permit Form</a>
+@else
+    <a href="{{ url()->previous() }}" class="btn btn-secondary mt-4">Back</a>
+@endif
+
 </div>
 
 <!-- Print Permit Button -->

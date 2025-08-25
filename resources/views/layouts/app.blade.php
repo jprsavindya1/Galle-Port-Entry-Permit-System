@@ -45,7 +45,7 @@
                     </a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a class="nav-link text-white {{ request()->routeIs('permit.monthly') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.monthly') }}">
+                    <a class="nav-link text-white {{ request()->routeIs('permit.monthly-permit') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.monthly') }}">
                         Monthly Permit
                     </a>
                 </li>

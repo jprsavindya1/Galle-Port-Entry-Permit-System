@@ -15,15 +15,15 @@ class TemporaryPermitController extends PermitController
      */
  public function createTemporary()
 {
-    $cart = session()->get('permit_cart', []);
+    $cart = session()->get('temporary_permit_cart', []);
 
     if (empty($cart)) {
-        session()->forget(['company_name', 'company_address']);
+        session()->forget(['temporary_company_name', 'temporary_company_address']);
         $companyName = null;
         $companyAddress = null;
     } else {
-        $companyName = session('company_name');
-        $companyAddress = session('company_address');
+        $companyName = session('temporary_company_name');
+        $companyAddress = session('temporary_company_address');
     }
 
     $companies = Company::all(); // fetching companies
@@ -56,25 +56,25 @@ class TemporaryPermitController extends PermitController
             'reason' => 'required|string',
         ]);
 
-        $cart = session()->get('permit_cart', []);
+        $cart = session()->get('temporary_permit_cart', []);
 
         // If company info already stored in session, enforce consistency across entries
 
-    $sessionCompanyName = strtolower(trim(session('company_name')));
-    $sessionCompanyAddress = strtolower(trim(session('company_address') ?? ''));
+    $sessionCompanyName = strtolower(trim(session('temporary_company_name')));
+    $sessionCompanyAddress = strtolower(trim(session('temporary_company_address') ?? ''));
 
     $newCompanyName = strtolower(trim($validated['company_name']));
     $newCompanyAddress = strtolower(trim($validated['company_address'] ?? ''));
 
-if (session()->has('company_name')) {
+if (session()->has('temporary_company_name')) {
     if ($newCompanyName !== $sessionCompanyName || $newCompanyAddress !== $sessionCompanyAddress) {
         return redirect()->route('permit.temporary')
             ->withErrors(['company_name' => 'All entries must have the same company name and address.'])
             ->withInput();
     }
 } else {
-    session(['company_name' => $validated['company_name']]);
-    session(['company_address' => $validated['company_address']]);
+    session(['temporary_company_name' => $validated['company_name']]);
+    session(['temporary_company_address' => $validated['company_address']]);
 }
 
 
@@ -83,7 +83,7 @@ if (session()->has('company_name')) {
 
         // Add the validated permit entry to session cart
         $cart[] = $validated;
-        session(['permit_cart' => $cart]);
+        session(['temporary_permit_cart' => $cart]);
 
         return redirect()->route('permit.temporary')->with('success', 'Permit entry added to list.');
     }
@@ -94,7 +94,7 @@ if (session()->has('company_name')) {
      */
     public function showSummary()
     {
-        $cart = session()->get('permit_cart', []);
+        $cart = session()->get('temporary_permit_cart', []);
 
         $totalPayment = 0;
         $detailedPayments = [];
@@ -148,6 +148,11 @@ if (session()->has('company_name')) {
         return view('permit.summary', compact('cart', 'detailedPayments', 'totalPayment'));
     }
 
+    /*
+     * Submit all permit entries stored in the session cart to the database.
+     * Generates a unique submission ID to group these permits as a chunk.
+     * Clears the session cart and company info after successful submission.
+     */
     public function paymentSummary()
     {
         $cart = session()->get('payment_cart', []);
@@ -238,7 +243,7 @@ public function removeEntry($index)
      */
    public function submitAll(Request $request)
 {
-    $cart = session()->get('permit_cart', []);
+    $cart = session()->get('temporary_permit_cart', []);
 
     if (empty($cart)) {
         return redirect()->route('permit.temporary')->with('error', 'No permit entries to submit.');
@@ -276,14 +281,13 @@ public function removeEntry($index)
 
     return redirect()->route('payment.summary');
 }
-
-
-
     /**
      * Check if a permit can be issued without conflicts.
      */
-    public function checkAvailability(Request $request)
+   public function checkAvailability(Request $request)
 {
+    $isEditSession = $request->has('session_edit') && $request->session_edit;
+
     $data = $request->validate([
         'id_type' => 'required|string',
         'id_number' => 'required|string',
@@ -291,7 +295,7 @@ public function removeEntry($index)
         'initials' => 'required|string',
         'from_date' => 'required|date',
         'to_date' => 'required|date',
-        'company_name' => 'nullable|string',
+        'company_name' => $isEditSession ? 'nullable|string' : 'required|string',
     ]);
 
     // Blacklist check
@@ -299,49 +303,72 @@ public function removeEntry($index)
         return response()->json(['available' => false, 'message' => "Blacklisted: $reason"]);
     }
 
-    $conflict = Permit::where(function ($query) use ($data) {
-        $query->where(function ($q) use ($data) {
-            $q->where('full_name', $data['full_name'])
-              ->where('initials', $data['initials']);
+    // Conflict check for TEMP permits
+    $conflict = Permit::where('type', 'TP')
+        ->where(function ($query) use ($data) {
+            $query->where(function ($q) use ($data) {
+                $q->where('full_name', $data['full_name'])
+                  ->where('initials', $data['initials']);
+            })
+            ->orWhere('id_number', $data['id_number']);
         })
-        ->orWhere('id_number', $data['id_number']);
-    })
-    ->where(function ($query) use ($data) {
-        $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
-              ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
-              ->orWhere(function ($q) use ($data) {
-                  $q->where('from_date', '<=', $data['from_date'])
-                    ->where('to_date', '>=', $data['to_date']);
-              });
-    })
-    ->exists();
+        ->where(function ($query) use ($data) {
+            $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
+                  ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
+                  ->orWhere(function ($q) use ($data) {
+                      $q->where('from_date', '<=', $data['from_date'])
+                        ->where('to_date', '>=', $data['to_date']);
+                  });
+        })
+        ->exists();
 
     if ($conflict) {
-        return response()->json(['available' => false, 'message' => 'Permit NOT available for this period or person.']);
+        return response()->json([
+            'available' => false,
+            'message' => 'Temporary permit NOT available for this person or date range.'
+        ]);
     }
 
-    return response()->json(['available' => true, 'message' => 'Permit available!']);
+    return response()->json(['available' => true, 'message' => 'Temporary permit available!']);
 }
 
+
 public function editSessionEntry($index)
-    {
-        $cart = session()->get('permit_cart', []);
+{
+    // Get the temporary permit cart from session
+    $cart = session()->get('temporary_permit_cart', []);
 
-        if (!isset($cart[$index])) {
-            return redirect()->route('permit.temporary')->with('error', 'Permit entry not found.');
-        }
-
-        $permit = $cart[$index];
-
-        // Pass $index to form for PUT route
-        return view('permit.edit_session_entry', compact('permit', 'index'));
+    // Check if the index exists in the cart
+    if (!isset($cart[$index])) {
+        return redirect()->route('permit.temporary')->with('error', 'Permit entry not found.');
     }
+
+    // Get the specific permit entry
+    $permit = $cart[$index];
+
+    // Fetch dropdown data
+    $reasons = Reason::orderBy('name')->get();
+    $companies = Company::all();
+    $designations = Designation::all();
+
+    // Get company name and address from the permit entry (fallback to session if needed)
+    $companyName = $permit['company_name'] ?? session('temporary_company_name', null);
+    $companyAddress = $permit['company_address'] ?? session('temporary_company_address', null);
+
+    // Pass all necessary variables to the edit view
+    return view('permit.edit_session_entry', compact(
+        'permit','index','reasons','companies','designations','companyName','companyAddress'));
+}
+
 
     /*
      * Update the permit entry in session cart by index (Temporary permits).
      */
     public function updateSessionEntry(Request $request, $index)
 {
+    // Detect if this is an edit session
+    $isEditSession = $request->has('session_edit') && $request->session_edit;
+
     $validated = $request->validate([
         'id_type' => 'required|string',
         'id_number' => 'required|string',
@@ -350,7 +377,7 @@ public function editSessionEntry($index)
         'full_name' => 'required|string',
         'initials' => 'required|string',
         'designation' => 'required|string',
-        'company_name' => 'required|string',
+        'company_name' => $isEditSession ? 'nullable|string' : 'required|string', // <-- changed
         'company_address' => 'nullable|string',
         'residence_address' => 'nullable|string',
         'pass_type' => 'required|array|min:1',
@@ -359,23 +386,25 @@ public function editSessionEntry($index)
         'reason' => 'required|string',
     ]);
 
-    $cart = session()->get('permit_cart', []);
+    $cart = session()->get('temporary_permit_cart', []);
 
     if (!isset($cart[$index])) {
         return redirect()->route('permit.temporary')->with('error', 'Permit entry not found.');
     }
 
-    // Normalize company info for comparison
-    $sessionCompanyName = strtolower(trim(session('company_name')));
-    $sessionCompanyAddress = strtolower(trim(session('company_address') ?? ''));
+    // Only check company consistency if NOT edit session
+    if (!$isEditSession) {
+        $sessionCompanyName = strtolower(trim(session('temporary_company_name')));
+        $sessionCompanyAddress = strtolower(trim(session('temporary_company_address') ?? ''));
 
-    $newCompanyName = strtolower(trim($validated['company_name']));
-    $newCompanyAddress = strtolower(trim($validated['company_address'] ?? ''));
+        $newCompanyName = strtolower(trim($validated['company_name']));
+        $newCompanyAddress = strtolower(trim($validated['company_address'] ?? ''));
 
-    if ($newCompanyName !== $sessionCompanyName || $newCompanyAddress !== $sessionCompanyAddress) {
-        return redirect()->route('permit.temporary')
-            ->withErrors(['company_name' => 'Company name and address must match existing entries.'])
-            ->withInput();
+        if ($newCompanyName !== $sessionCompanyName || $newCompanyAddress !== $sessionCompanyAddress) {
+            return redirect()->route('permit.temporary')
+                ->withErrors(['company_name' => 'Company name and address must match existing entries.'])
+                ->withInput();
+        }
     }
 
     // Implode pass_type array to string
@@ -383,14 +412,15 @@ public function editSessionEntry($index)
 
     // Update the session entry
     $cart[$index] = $validated;
-    session(['permit_cart' => $cart]);
+    session(['temporary_permit_cart' => $cart]);
 
     return redirect()->route('permit.temporary')->with('success', 'Permit entry updated successfully.');
 }
 
+
 public function removeTemporaryEntry($index)
 {
-    $cart = session('permit_cart', []);
+    $cart = session('temporary_permit_cart', []);
 
     if (isset($cart[$index])) {
         unset($cart[$index]);
@@ -399,7 +429,7 @@ public function removeTemporaryEntry($index)
     // Reindex the array
     $cart = array_values($cart);
 
-    session(['permit_cart' => $cart]);
+    session(['temporary_permit_cart' => $cart]);
 
     if (count($cart) === 0) {
         return redirect()->route('permit.temporary')->with('message', 'All entries removed.');
@@ -413,8 +443,8 @@ public function removeTemporaryEntry($index)
 public function createTemporaryPermit()
 {
     $companies = Company::all(); // Fetch all companies
-    $companyName = old('company_name', session('company_name')); // Optional
-    $companyAddress = old('company_address', session('company_address')); // Optional
+    $companyName = old('company_name', session('temporary_company_name')); // Optional
+    $companyAddress = old('company_address', session('temporary_company_address')); // Optional
 
     return view('permits.temporary', compact('companies', 'companyName', 'companyAddress'));
 }
