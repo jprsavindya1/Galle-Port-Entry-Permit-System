@@ -363,6 +363,32 @@
         });
     });
 
+// date auto-fill logic
+    document.addEventListener('DOMContentLoaded', function() {
+    const fromInput = document.getElementById('from_date');
+    const toInput = document.getElementById('to_date');
+
+    // Disable manual entry
+    toInput.readOnly = true;
+
+    fromInput.addEventListener('change', function() {
+        if (!this.value) return;
+
+        let fromDate = new Date(this.value);
+        let toDate = new Date(fromDate);
+
+        // Add 29 days
+        toDate.setDate(fromDate.getDate() + 29);
+
+        // Format as YYYY-MM-DD
+        let month = (toDate.getMonth() + 1).toString().padStart(2, '0');
+        let day = toDate.getDate().toString().padStart(2, '0');
+        let year = toDate.getFullYear();
+
+        toInput.value = `${year}-${month}-${day}`;
+    });
+});
+
 
 </script>
 @endpush

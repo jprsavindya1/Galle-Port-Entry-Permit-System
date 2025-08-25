@@ -169,29 +169,42 @@ $permit = $permit; // already exists
         </div>
     
 
-    <!-- Print Controls -->
-    <div id="printControls">
-        <button id="btnPrintAgain">Print Again</button>
-        <button id="btnBackInvoice">Back to Invoice Page</button>
+   <!-- Print Controls -->
+<div id="printControls">
+    <button id="btnPrintAgain">Print Again</button>
+    <button id="btnBackInvoice">Back to Invoice Page</button>
+
+    @if($payment->permit_type === 'TP')
         <button id="btnBack">Back to Temporary Permit Form</button>
-    </div>
+    @elseif($payment->permit_type === 'MP')
+        <button id="btnBack">Back to Monthly Permit Form</button>
+    @else
+        <button id="btnBack">Back</button>
+    @endif
+</div>
 
-    <script>
-        window.onload = function() {
-            window.print();
-        };
+<script>
+    window.onload = function() {
+        window.print();
+    };
 
-        document.getElementById('btnPrintAgain').addEventListener('click', function() {
-            window.print();
-        });
+    document.getElementById('btnPrintAgain').addEventListener('click', function() {
+        window.print();
+    });
 
-        document.getElementById('btnBack').addEventListener('click', function() {
+    document.getElementById('btnBack').addEventListener('click', function() {
+        @if($payment->permit_type === 'TP')
             window.location.href = "{{ route('permit.temporary') }}";
-        });
-        document.getElementById('btnBackInvoice').addEventListener('click', function() {
-            window.location.href = "{{ route('payment.invoice', ['submission_id' => $submission_id]) }}";
-        });
+        @elseif($payment->permit_type === 'MP')
+            window.location.href = "{{ route('permit.monthly') }}";
+        @else
+            window.location.href = "{{ url()->previous() }}";
+        @endif
+    });
 
-    </script>
+    document.getElementById('btnBackInvoice').addEventListener('click', function() {
+        window.location.href = "{{ route('payment.invoice', ['submission_id' => $submission_id]) }}";
+    });
+</script>
 </body>
 </html>
