@@ -93,6 +93,15 @@
                 </div>
             </a>
         </div>
+<div class="col-md-4">
+             <a href="{{ route('admin.cancelled_permits.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h4>Cancelled Permits</h4>
+                    <p>View and manage cancelled permit requests.</p>
+                </div>
+            </a>
+        </div>
+  
 <!--  
         <div class="col-md-4">
             <a href="{{ route('permits.submitted') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">

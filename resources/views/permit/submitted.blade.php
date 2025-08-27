@@ -53,7 +53,7 @@
                                         <th>Pass Type</th>
                                         <th>From Date</th>
                                         <th>To Date</th>
-                                         <th>issue type</th>
+                                        <th>Issue Type</th>
                                     @endif
                                     <th class="sticky-col status-col" style="width:120px;">Status</th>
                                     <th class="sticky-col actions-col" style="width:120px;">Actions</th>
@@ -62,7 +62,7 @@
                             </thead>
                             <tbody>
                                 @foreach($group as $permit)
-                                    <tr>
+                                    <tr id="permit-row-{{ $permit->id }}">
                                         @if($permit->type === 'VP')
                                             <td>{{ $permit->vehicle_number }}</td>
                                             <td>{{ $permit->owner_name }}</td>
@@ -84,7 +84,7 @@
                                         @endif
 
                                         <!-- Status -->
-                                        <td class="sticky-col status-col">
+                                        <td class="sticky-col status-col" id="status-col-{{ $permit->id }}">
                                             @if($permit->status === 'active')
                                                 <button type="button" 
                                                         class="btn btn-sm btn-success w-100" 
@@ -97,9 +97,7 @@
                                                 <div class="modal fade" id="cancelModal{{ $permit->id }}" tabindex="-1" aria-hidden="true">
                                                     <div class="modal-dialog">
                                                         <div class="modal-content">
-                                                            <form action="{{ route('permits.cancel', $permit) }}" 
-                                                                  method="POST" 
-                                                                  class="cancel-permit-form">
+                                                            <form action="{{ route('permits.cancel', $permit) }}" method="POST" class="cancel-permit-form">
                                                                 @csrf
                                                                 <div class="modal-header">
                                                                     <h5 class="modal-title">Cancel Permit</h5>
@@ -107,7 +105,7 @@
                                                                 </div>
                                                                 <div class="modal-body">
                                                                     <label class="form-label">Reason</label>
-                                                                    <select name="cancel_reason_select" class="form-select">
+                                                                    <select name="cancel_reason_select" class="form-select" {{ (!in_array(Auth::user()->role, ['admin','super-admin'])) ? 'disabled' : '' }}>
                                                                         <option value="Expired Date">Expired Date</option>
                                                                         <option value="Lost Permit">Lost Permit</option>
                                                                         <option value="Security Concern">Security Concern</option>
@@ -115,19 +113,28 @@
                                                                         <option value="Fraudulent">Fraudulent</option>
                                                                         <option value="Other">Other</option>
                                                                     </select>
-                                                                    <input type="text" name="cancel_reason_other" class="form-control mt-2" placeholder="If Other, type here">
+                                                                    <input type="text" name="cancel_reason_other" class="form-control mt-2" placeholder="If Other, type here"
+                                                                           {{ (!in_array(Auth::user()->role, ['admin','super-admin'])) ? 'disabled' : '' }}>
                                                                 </div>
                                                                 <div class="modal-footer">
-                                                                    <button type="submit" class="btn btn-danger w-100">Confirm Cancel</button>
+                                                                    @if(in_array(Auth::user()->role, ['admin','super-admin']))
+                                                                        <button type="submit" class="btn btn-danger w-100">Confirm Cancel</button>
+                                                                    @else
+                                                                        <button type="button" class="btn btn-danger w-100" disabled>
+                                                                            Confirm Cancel (Admins Only)
+                                                                        </button>
+                                                                    @endif
                                                                 </div>
                                                             </form>
                                                         </div>
                                                     </div>
                                                 </div>
                                             @else
-                                                <form action="{{ route('permits.activate', $permit) }}" method="POST">
+                                                <form action="{{ route('admin.cancelled_permits.activate', ['permit' => $permit->id]) }}" method="POST" class="activate-permit-form">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-sm btn-danger w-100">Cancelled</button>
+                                                    <button type="submit" class="btn btn-sm btn-danger w-100" {{ (!in_array(Auth::user()->role, ['admin','super-admin'])) ? 'disabled' : '' }}>
+                                                        Cancelled
+                                                    </button>
                                                 </form>
                                             @endif
                                         </td>
@@ -135,7 +142,7 @@
                                         <!-- Actions -->
                                         <td class="sticky-col actions-col">
                                             <a href="{{ route('permits.edit', $permit) }}" class="btn btn-sm btn-warning w-100 mb-1">Edit</a>
-                                            @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
+                                            @if(in_array(Auth::user()->role, ['admin','super-admin']))
                                                 <form action="{{ route('permits.destroy', $permit) }}" method="POST" onsubmit="return confirm('Delete this permit?');">
                                                     @csrf
                                                     @method('DELETE')
@@ -181,41 +188,141 @@
     border-right: 1px solid #dee2e6;
 }
 .status-col { left: 0; }
-.actions-col { left: 120px; } /* adjust width if button width changes */
-.view-col { left: 240px; } /* adjust width if previous two columns width changes */
+.actions-col { left: 120px; }
+.view-col { left: 240px; }
 </style>
 @endpush
 
 @push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll('.cancel-permit-form').forEach(form => {
-        form.addEventListener('submit', function (e) {
+
+    const container = document.querySelector('.container');
+
+    // Delegate Cancel Permit
+    container.addEventListener('submit', async function(e){
+        if(e.target.classList.contains('cancel-permit-form')){
             e.preventDefault();
+
+            @if(!in_array(Auth::user()->role, ['admin','super-admin']))
+                alert("Only admins can cancel permits.");
+                return;
+            @endif
+
+            let form = e.target;
             let actionUrl = form.getAttribute('action');
             let formData = new FormData(form);
-            fetch(actionUrl, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
+
+            try {
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                const data = await response.json();
                 if (data.status === 'cancelled') {
+                    // hide modal
                     let modal = bootstrap.Modal.getInstance(form.closest('.modal'));
                     modal.hide();
-                    let btn = document.querySelector('button[data-bs-target="#cancelModal' + data.id + '"]');
-                    btn.outerHTML = `
-                        <form action="/permits/${data.id}/activate" method="POST">
-                            <input type="hidden" name="_token" value="${form.querySelector('input[name="_token"]').value}">
-                            <button type="submit" class="btn btn-sm btn-danger w-100">Cancelled</button>
+
+                    // Replace Active button with Cancelled form
+                    const statusCol = document.querySelector(`#status-col-${data.id}`);
+                    statusCol.innerHTML = `
+                        <form action="/admin/cancelled_permits/${data.id}/activate" method="POST" class="activate-permit-form">
+                            <input type="hidden" name="_token" value="${form.querySelector('input[name=_token]').value}">
+                            <button type="submit" class="btn btn-sm btn-danger w-100" ${!['admin','super-admin'].includes("{{ Auth::user()->role }}") ? 'disabled' : ''}>
+                                Cancelled
+                            </button>
                         </form>
                     `;
                 }
-            })
-            .catch(err => console.error(err));
-        });
+
+            } catch(err) {
+                console.error(err);
+                alert("Network error. Check console.");
+            }
+        }
     });
+
+    // Delegate Activate Permit
+    container.addEventListener('submit', async function(e){
+        if(e.target.classList.contains('activate-permit-form')){
+            e.preventDefault();
+
+            @if(!in_array(Auth::user()->role, ['admin','super-admin']))
+                alert("Only admins can activate cancelled permits.");
+                return;
+            @endif
+
+            let form = e.target;
+            let actionUrl = form.getAttribute('action');
+            let formData = new FormData(form);
+
+            try {
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                const data = await response.json();
+                if (data.status === 'activated') {
+                    // Replace Cancelled button with Active + Modal
+                    const statusCol = document.querySelector(`#status-col-${data.id}`);
+                    statusCol.innerHTML = `
+                        <button type="button" class="btn btn-sm btn-success w-100" data-bs-toggle="modal" data-bs-target="#cancelModal${data.id}">
+                            Active
+                        </button>
+
+                        <div class="modal fade" id="cancelModal${data.id}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form action="/permits/${data.id}/cancel" method="POST" class="cancel-permit-form">
+                                        <input type="hidden" name="_token" value="${form.querySelector('input[name=_token]').value}">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Cancel Permit</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <label class="form-label">Reason</label>
+                                            <select name="cancel_reason_select" class="form-select">
+                                                <option value="Expired Date">Expired Date</option>
+                                                <option value="Lost Permit">Lost Permit</option>
+                                                <option value="Security Concern">Security Concern</option>
+                                                <option value="Expired Police Report / Insurance">Expired Police Report / Insurance</option>
+                                                <option value="Fraudulent">Fraudulent</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                            <input type="text" name="cancel_reason_other" class="form-control mt-2" placeholder="If Other, type here">
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit" class="btn btn-danger w-100">Confirm Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+            } catch(err) {
+                console.error(err);
+                alert("Network error. Check console.");
+            }
+        }
+    });
+
 });
 </script>
 @endpush

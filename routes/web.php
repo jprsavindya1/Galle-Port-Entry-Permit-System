@@ -14,7 +14,7 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ReasonController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\BlacklistController;
-
+use App\Http\Controllers\Admin\CancelledPermitController;
 // ------------------------------
 //Admin Routes
 // ------------------------------
@@ -25,10 +25,12 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    
 
     Route::get('/payment-settings/edit', [PaymentSettingController::class, 'edit'])->name('admin.payment_settings.edit');
     Route::put('/payment-settings/update', [PaymentSettingController::class, 'update'])->name('admin.payment_settings.update');
-    
+
+
 // active permit delete Routes
     Route::delete('/permit/remove/{index}', [TemporaryPermitController::class, 'removeEntry'])->name('permit.remove');
     
@@ -40,8 +42,53 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::get('/admin/masterdata', function () {
         return view('admin.masterdata.index');
     })->name('admin.masterdata');
+
+    Route::prefix('admin/cancelled_permits')
+    ->name('admin.cancelled_permits.') // This is the prefix
+    ->group(function () {
+
+        // List cancelled permits
+        Route::get('/', [CancelledPermitController::class, 'index'])->name('index');
+
+        // Export routes
+        Route::get('/export-excel', [CancelledPermitController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('/export-pdf', [CancelledPermitController::class, 'exportPdf'])->name('exportPdf');
+
+        // Show single cancelled permit
+        Route::get('/{id}', [CancelledPermitController::class, 'show'])->name('show');
+
+        // Delete a cancelled permit entry
+        Route::delete('/{id}', [CancelledPermitController::class, 'destroy'])->name('destroy');
+
+        // Activate a cancelled permit (admin only)
+        Route::post('/{permit}/activate', [CancelledPermitController::class, 'activate'])->name('activate');
+
+        // Cancel an active permit (admin only)
+        Route::post('/{permit}/cancel', [CancelledPermitController::class, 'cancel'])->name('cancel');
+    });
+
 });
 
+// ------------------------------
+// Cancelled Permits 
+// ------------------------------
+
+/*
+Route::prefix('cancelled_permits')
+    ->middleware('auth')
+    ->name('cancelled_permits.')
+    ->group(function () {
+        Route::get('/', [CancelledPermitController::class, 'index'])->name('index');
+
+        // Export routes go first
+        Route::get('/export-excel', [CancelledPermitController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('/export-pdf', [CancelledPermitController::class, 'exportPdf'])->name('exportPdf');
+
+        // Then the {id} route
+        Route::get('/{id}', [CancelledPermitController::class, 'show'])->name('show');
+        Route::delete('/{id}', [CancelledPermitController::class, 'destroy'])->name('destroy');
+    });
+*/
 
 Route::get('/', fn () => redirect()->route('dashboard'));
 Route::get('/dashboard', fn () => view('dashboard'))->middleware('auth')->name('dashboard');
@@ -125,7 +172,7 @@ Route::get('/permits/search', [PermitController::class, 'search'])->name('permit
 
 
 // ------------------------------
-// Black
+// Black list Management
 // ------------------------------
 Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(function () {
     Route::get('/', [BlacklistController::class, 'index'])->name('index');
