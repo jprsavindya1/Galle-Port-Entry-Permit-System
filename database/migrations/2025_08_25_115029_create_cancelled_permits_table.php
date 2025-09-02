@@ -61,6 +61,7 @@ return new class extends Migration
             $table->string('blacklist_reason')->nullable();
 
             $table->timestamps();
+            
         });
     }
 

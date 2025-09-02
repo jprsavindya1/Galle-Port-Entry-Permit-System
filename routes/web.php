@@ -43,8 +43,8 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
         return view('admin.masterdata.index');
     })->name('admin.masterdata');
 
-    Route::prefix('admin/cancelled_permits')
-    ->name('admin.cancelled_permits.') // This is the prefix
+   Route::prefix('admin/cancelled_permits')
+    ->name('admin.cancelled_permits.')
     ->group(function () {
 
         // List cancelled permits
@@ -54,18 +54,29 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
         Route::get('/export-excel', [CancelledPermitController::class, 'exportExcel'])->name('exportExcel');
         Route::get('/export-pdf', [CancelledPermitController::class, 'exportPdf'])->name('exportPdf');
 
+        // Show only trashed (soft deleted) permits
+        Route::get('/trash', [CancelledPermitController::class, 'trash'])->name('trash');
+
+        // Permanently delete a trashed permit (DELETE)
+        Route::delete('/{id}/force-delete', [CancelledPermitController::class, 'forceDelete'])->name('forceDelete');
+
+        // Restore a trashed permit (POST)
+        Route::post('/{id}/restore', [CancelledPermitController::class, 'restore'])->name('restore');
+
+        // Activate a cancelled permit (POST)
+        Route::post('/{permit}/activate', [CancelledPermitController::class, 'activate'])->name('activate');
+
+        // Cancel an active permit (POST)
+        Route::post('/{permit}/cancel', [CancelledPermitController::class, 'cancel'])->name('cancel');
+
         // Show single cancelled permit
         Route::get('/{id}', [CancelledPermitController::class, 'show'])->name('show');
 
-        // Delete a cancelled permit entry
+        // Delete a cancelled permit entry (soft delete)
         Route::delete('/{id}', [CancelledPermitController::class, 'destroy'])->name('destroy');
 
-        // Activate a cancelled permit (admin only)
-        Route::post('/{permit}/activate', [CancelledPermitController::class, 'activate'])->name('activate');
-
-        // Cancel an active permit (admin only)
-        Route::post('/{permit}/cancel', [CancelledPermitController::class, 'cancel'])->name('cancel');
     });
+
 
 });
 

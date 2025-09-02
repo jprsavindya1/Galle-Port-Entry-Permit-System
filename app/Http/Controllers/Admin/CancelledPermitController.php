@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller; 
 use Illuminate\Http\Request;
 use App\Models\CancelledPermit;
-use App\Models\Permit; // Main permit model
+use App\Models\Permit; 
+use App\Models\Payment;// Main permit model
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
@@ -48,22 +49,87 @@ class CancelledPermitController extends Controller
         return view('admin.cancelled_permits.show', compact('cancelledPermit'));
     }
 
+    // Soft delete cancelled permit
     public function destroy($id)
     {
         $permit = CancelledPermit::findOrFail($id);
+
+        $permit->addLog('soft_deleted', auth()->id(), [
+            'permit_id' => $permit->permit_id,
+            'full_name' => $permit->full_name,
+            'company_name' => $permit->company_name,
+            'vehicle_number' => $permit->vehicle_number,
+            'cancel_reason' => $permit->cancel_reason,
+        ]);
+
         $permit->delete();
 
         return redirect()->route('admin.cancelled_permits.index')
-                         ->with('success', 'Cancelled permit deleted successfully.');
+                         ->with('success', 'Cancelled permit soft-deleted and logged.');
     }
 
+    // Restore trashed permit
+    public function restore($id)
+    {
+        $permit = CancelledPermit::onlyTrashed()->findOrFail($id);
+
+        $permit->addLog('restored', auth()->id(), [
+            'permit_id' => $permit->permit_id,
+            'full_name' => $permit->full_name,
+            'company_name' => $permit->company_name,
+            'vehicle_number' => $permit->vehicle_number,
+        ]);
+
+        $permit->restore();
+
+        return redirect()->route('admin.cancelled_permits.trash')
+            ->with('success', 'Permit restored successfully.');
+    }
+
+    // Show trashed permits
+    public function trash(Request $request)
+    {
+        $search = $request->input('search');
+
+        $trashedPermits = CancelledPermit::onlyTrashed()
+            ->when($search, function ($query) use ($search) {
+                $query->where('permit_id', 'like', "%{$search}%")
+                      ->orWhere('full_name', 'like', "%{$search}%")
+                      ->orWhere('company_name', 'like', "%{$search}%")
+                      ->orWhere('vehicle_number', 'like', "%{$search}%");
+            })
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(15);
+
+        return view('admin.cancelled_permits.trash', compact('trashedPermits'));
+    }
+
+    // Permanently delete
+    public function forceDelete($id)
+    {
+        $permit = CancelledPermit::onlyTrashed()->findOrFail($id);
+
+        $permit->addLog('force_deleted', auth()->id(), [
+            'permit_id' => $permit->permit_id,
+            'full_name' => $permit->full_name,
+            'company_name' => $permit->company_name,
+            'vehicle_number' => $permit->vehicle_number,
+            'cancel_reason' => $permit->cancel_reason,
+        ]);
+
+        $permit->forceDelete();
+
+        return redirect()->route('admin.cancelled_permits.trash')
+            ->with('success', 'Permit permanently deleted.');
+    }
+
+    // Export PDF
     public function exportPdf(Request $request)
     {
         $fromDate = $request->from_date ?: null;
         $toDate   = $request->to_date ?: null;
 
         $query = CancelledPermit::query();
-
         if ($fromDate && $toDate) {
             $query->whereBetween('cancelled_at', [
                 $fromDate . ' 00:00:00',
@@ -79,13 +145,13 @@ class CancelledPermitController extends Controller
         return $pdf->download('cancelled_permits.pdf');
     }
 
+    // Export Excel
     public function exportExcel(Request $request)
     {
         $fromDate = $request->input('from_date');
         $toDate   = $request->input('to_date');
 
         $query = CancelledPermit::query();
-
         if ($fromDate && $toDate) {
             $query->whereBetween('cancelled_at', [
                 $fromDate . ' 00:00:00',
@@ -96,23 +162,15 @@ class CancelledPermitController extends Controller
         $cancelledPermits = $query->get();
 
         $fileName = 'cancelled_permits.csv';
-
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$fileName\"",
         ];
 
         $columns = [
-            'Permit ID',
-            'Invoice ID',
-            'Submission ID',
-            'ID Number',
-            'Full Name',
-            'Company Name',
-            'Vehicle Number',
-            'Cancel Reason',
-            'Cancelled At',
-            'Cancelled By'
+            'Permit ID','Invoice ID','Submission ID','ID Number',
+            'Full Name','Company Name','Vehicle Number',
+            'Cancel Reason','Cancelled At','Cancelled By'
         ];
 
         $callback = function() use ($cancelledPermits, $columns) {
@@ -133,29 +191,20 @@ class CancelledPermitController extends Controller
                     $permit->cancelled_by
                 ]);
             }
-
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
     }
 
-    /**
-     * Cancel a permit (admin only, AJAX)
-     */
+    // Cancel a permit (AJAX)
     public function cancel(Request $request, $permitId)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'super-admin'])) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
-        }
-
         $permit = Permit::findOrFail($permitId);
 
-        // Update permit status to cancelled
         $permit->status = 'cancelled';
         $permit->save();
 
-        // Add entry to cancelled_permits table
         $cancelled = new CancelledPermit();
         $cancelled->permit_id = $permit->permit_id;
         $cancelled->invoice_id = $permit->invoice_id ?? null;
@@ -169,30 +218,38 @@ class CancelledPermitController extends Controller
         $cancelled->cancelled_by = auth()->user()->name;
         $cancelled->save();
 
+        // Log activity
+        $cancelled->addLog('cancelled', auth()->id(), [
+            'permit_id' => $cancelled->permit_id,
+            'full_name' => $cancelled->full_name,
+            'company_name' => $cancelled->company_name,
+            'vehicle_number' => $cancelled->vehicle_number,
+            'cancel_reason' => $cancelled->cancel_reason
+        ]);
+
         return response()->json([
             'status' => 'cancelled',
             'id' => $permit->id,
         ]);
     }
 
-    /**
-     * Activate a cancelled permit (admin only, AJAX)
-     */
+    // Activate a cancelled permit (AJAX)
     public function activate(Request $request, $permitId)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'super-admin'])) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
-        }
-
         $permit = Permit::findOrFail($permitId);
 
-        // Update permit status to active
         $permit->status = 'active';
         $permit->save();
 
-        // Remove from cancelled_permits table if exists
         $cancelled = CancelledPermit::where('permit_id', $permit->permit_id)->first();
         if ($cancelled) {
+            $cancelled->addLog('activated', auth()->id(), [
+                'permit_id' => $cancelled->permit_id,
+                'full_name' => $cancelled->full_name,
+                'company_name' => $cancelled->company_name,
+                'vehicle_number' => $cancelled->vehicle_number,
+            ]);
+
             $cancelled->delete();
         }
 

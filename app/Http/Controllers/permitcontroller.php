@@ -18,7 +18,9 @@ class PermitController extends Controller
      */
    public function submittedList(Request $request)
 {
-    $query = Permit::query()->with('payment');
+       $query = Permit::with('payment')
+        ->whereDoesntHave('cancelledPermitTrashed'); 
+
 
     // ---  Search (NOT affected by date filter) ---
     if ($request->filled('q')) {

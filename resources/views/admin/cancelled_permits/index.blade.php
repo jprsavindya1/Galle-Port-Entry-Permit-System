@@ -73,12 +73,20 @@
 
     <!-- Export Buttons -->
     <div class="mb-3">
-        <a href="{{ route('admin.cancelled_permits.exportPdf', request()->only('from_date','to_date')) }}" class="btn btn-danger">
+        <a href="{{ route('admin.cancelled_permits.exportPdf', request()->only('from_date','to_date')) }}" class="btn btn-warning">
             Export PDF
         </a>
 
         <a href="{{ route('admin.cancelled_permits.exportExcel', request()->only('from_date','to_date')) }}" class="btn btn-success">
             Export Excel
+        </a>
+
+
+    </div>
+
+    <div class="mb-3">
+        <a href="{{ route('admin.cancelled_permits.trash') }}" class=" btn btn-danger mb-3">
+            View Trash
         </a>
     </div>
 </div>
