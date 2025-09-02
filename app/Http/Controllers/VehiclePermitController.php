@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Permit; 
+use App\Models\MonthlyPermit;  
 use Illuminate\Support\Str;
 use App\Models\Vehicle; 
 class VehiclePermitController extends PermitController

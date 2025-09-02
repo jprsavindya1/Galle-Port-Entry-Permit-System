@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Permit; 
+use App\Models\Permit;
+use App\Models\MonthlyPermit;  
 use Illuminate\Support\Str;
 use App\Models\Company;
 use App\Models\Designation;
 use App\Models\Reason;
+use App\Models\Payment;
 class MonthlyPermitController extends PermitController
 {
     /*********************************************************
@@ -190,24 +192,36 @@ public function removeEntry($index)
         return redirect()->route('permit.monthly')->with('error', 'No permit entries to submit.');
     }
 
-    // Create unique submission ID to group permits
-    $datePrefix = now()->format('Ymd'); //20250728
+    $datePrefix = now()->format('Ymd'); // e.g., 20250901
     $type = 'MP'; // Monthly Permit
 
-    $latest = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
+    $nextNumber = 1001;
+
+    // Find the latest submission_id in BOTH permits and payments
+    $latestPermit = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
         ->orderBy('submission_id', 'desc')
         ->first();
 
-    $nextNumber = 1001;
-    if ($latest) {
-        $lastId = $latest->submission_id;
-        $lastCounter = (int)substr($lastId, -4);
-        $nextNumber = $lastCounter + 1;
+    $latestPayment = Payment::where('submission_id', 'like', $datePrefix . $type . '%')
+        ->orderBy('submission_id', 'desc')
+        ->first();
+
+    // Determine the highest counter used
+    $lastCounter = 0;
+    if ($latestPermit) {
+        $lastCounter = (int) substr($latestPermit->submission_id, -4);
+    }
+    if ($latestPayment) {
+        $paymentCounter = (int) substr($latestPayment->submission_id, -4);
+        if ($paymentCounter > $lastCounter) {
+            $lastCounter = $paymentCounter;
+        }
     }
 
+    $nextNumber = $lastCounter + 1;
     $submissionId = $datePrefix . $type . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-    // Add submission ID and permit type to each entry, don't save yet
+    // Add submission ID and permit type to each entry
     foreach ($cart as $index => $entry) {
         $entry['submission_id'] = $submissionId;
         $entry['type'] = $type;
@@ -218,10 +232,9 @@ public function removeEntry($index)
     session(['payment_cart' => $cart]);
     session(['payment_submission_id' => $submissionId]);
 
-
-
     return redirect()->route('payment.summary');
 }
+
 
     /**
      * Check if a permit can be issued without conflicts.

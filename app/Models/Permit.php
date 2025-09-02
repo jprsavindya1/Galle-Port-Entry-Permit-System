@@ -35,6 +35,8 @@ class Permit extends Model
     'remarks',
     'status',
     'cancel_reason',
+     'police_issue_date',
+    'police_expire_date',
 ];
 
 public function payment()

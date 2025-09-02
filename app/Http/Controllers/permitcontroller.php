@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Permit;
+use App\Models\Designation;
+use App\Models\Reason;
 use App\Models\Blacklist;
+use App\Models\Company;
 use App\Models\CancelledPermit;
 class PermitController extends Controller
 {
@@ -47,10 +50,27 @@ class PermitController extends Controller
     /*
      * Show the edit form for a single permit entry from DB.
      */
-    public function edit(Permit $permit)
-    {
-        return view('permit.edit', compact('permit'));
-    }
+public function edit(Permit $permit)
+{
+    // load required dropdown data
+    $designations = Designation::orderBy('name')->get();
+    $reasons = Reason::orderBy('name')->get();
+    $companies = Company::orderBy('name')->get();
+
+    // preselect company name & address based on current permit
+    $companyName = $permit->company_name ?? '';
+    $companyAddress = $permit->company_address ?? '';
+
+    return view('permit.edit', compact(
+        'permit',
+        'designations',
+        'reasons',
+        'companies',
+        'companyName',
+        'companyAddress'
+    ));
+}
+
 
     /*
      * Update a permit entry with validated data.
@@ -217,7 +237,8 @@ public function activate(Permit $permit)
 }
 
    // Check check Availability
-    public function checkAvailability(Request $request)
+  
+public function checkAvailability(Request $request)
 {
     try {
         \Log::info('Availability Check Request:', $request->all());
@@ -230,15 +251,19 @@ public function activate(Permit $permit)
             'from_date' => 'required|date',
             'to_date' => 'required|date',
             'company_name' => 'nullable|string',
+            'current_permit_id' => 'nullable|integer', 
         ]);
 
         // Check blacklist first
         if ($reason = $this->isBlacklisted($data)) {
-            return response()->json(['available' => false, 'message' => "Blacklisted: $reason"]);
+            return response()->json([
+                'available' => false, 
+                'message' => "Blacklisted: $reason"
+            ]);
         }
 
         // Check for conflicts only with active permits
-        $conflict = Permit::where('status', 'active')
+        $conflictQuery = Permit::where('status', 'active')
             ->where(function ($query) use ($data) {
                 $query->where(function ($q) use ($data) {
                     $q->where('full_name', $data['full_name'])
@@ -253,20 +278,35 @@ public function activate(Permit $permit)
                           $q->where('from_date', '<=', $data['from_date'])
                             ->where('to_date', '>=', $data['to_date']);
                       });
-            })
-            ->exists();
+            });
 
-        if ($conflict) {
-            return response()->json(['available' => false, 'message' => 'Permit NOT available for this period or person.']);
+        // Exclude the current permit if editing
+        if (!empty($data['current_permit_id'])) {
+            $conflictQuery->where('id', '!=', $data['current_permit_id']);
         }
 
-        return response()->json(['available' => true, 'message' => 'Permit available!']);
+        $conflict = $conflictQuery->exists();
+
+        if ($conflict) {
+            return response()->json([
+                'available' => false, 
+                'message' => 'Permit NOT available for this period or person.'
+            ]);
+        }
+
+        return response()->json([
+            'available' => true, 
+            'message' => 'Permit available!'
+        ]);
+
     } catch (\Exception $e) {
         \Log::error('Availability check failed: ' . $e->getMessage());
-        return response()->json(['available' => false, 'message' => 'Server error occurred.'], 500);
+        return response()->json([
+            'available' => false, 
+            'message' => 'Server error occurred.'
+        ], 500);
     }
 }
-
     
    
 }

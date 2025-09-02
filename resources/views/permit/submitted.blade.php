@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
 <div class="container">
     <h1 class="mb-4">Submitted Permit Requests <small class="text-muted">(Grouped by Submission)</small></h1>
 
@@ -45,7 +48,19 @@
                                         <th>Issue Type</th>
                                         <th>From Date</th>
                                         <th>To Date</th>
-                                    @else
+                                    @elseif($group->first()->type === 'MP')
+                                        <th>ID Type</th>
+                                        <th>ID Number</th>
+                                        <th>Full Name</th>
+                                        <th>Company Name</th>
+                                        <th>Pass Type</th>
+                                        <th>From Date</th>
+                                        <th>To Date</th>
+                                        <th>Issue Type</th>
+                                        <th>Police Report Issue Date</th>
+                                        {{-- Optionally also show expire date --}}
+                                        {{-- <th>Police Report Expire Date</th> --}}
+                                    @else {{-- TP or other --}}
                                         <th>ID Type</th>
                                         <th>ID Number</th>
                                         <th>Full Name</th>
@@ -55,11 +70,13 @@
                                         <th>To Date</th>
                                         <th>Issue Type</th>
                                     @endif
+
                                     <th class="sticky-col status-col" style="width:120px;">Status</th>
                                     <th class="sticky-col actions-col" style="width:120px;">Actions</th>
                                     <th class="sticky-col view-col" style="width:120px;">View</th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 @foreach($group as $permit)
                                     <tr id="permit-row-{{ $permit->id }}">
@@ -72,7 +89,21 @@
                                             <td>{{ ucfirst($permit->issue_type) }}</td>
                                             <td>{{ $permit->from_date }}</td>
                                             <td>{{ $permit->to_date }}</td>
-                                        @else
+
+                                        @elseif($permit->type === 'MP')
+                                            <td>{{ $permit->id_type }}</td>
+                                            <td>{{ $permit->id_number }}</td>
+                                            <td>{{ $permit->full_name }}</td>
+                                            <td>{{ $permit->company_name }}</td>
+                                            <td>{{ $permit->pass_type }}</td>
+                                            <td>{{ $permit->from_date }}</td>
+                                            <td>{{ $permit->to_date }}</td>
+                                            <td>{{ $permit->issue_type }}</td>
+                                            <td>{{ $permit->police_issue_date ?? '-' }}</td>
+                                            {{-- Optionally also show expire date if you added it to the header --}}
+                                            {{-- <td>{{ $permit->police_expire_date ?? '-' }}</td> --}}
+
+                                        @else {{-- TP or other --}}
                                             <td>{{ $permit->id_type }}</td>
                                             <td>{{ $permit->id_number }}</td>
                                             <td>{{ $permit->full_name }}</td>
@@ -82,6 +113,7 @@
                                             <td>{{ $permit->to_date }}</td>
                                             <td>{{ $permit->issue_type }}</td>
                                         @endif
+
 
                                         <!-- Status -->
                                         <td class="sticky-col status-col" id="status-col-{{ $permit->id }}">
@@ -142,11 +174,11 @@
                                         <!-- Actions -->
                                         <td class="sticky-col actions-col">
                                             <a href="{{ route('permits.edit', $permit) }}" class="btn btn-sm btn-warning w-100 mb-1">Edit</a>
-                                            @if(in_array(Auth::user()->role, ['admin','super-admin']))
+                                            <!--@if(in_array(Auth::user()->role, ['admin','super-admin']))
                                                 <form action="{{ route('permits.destroy', $permit) }}" method="POST" onsubmit="return confirm('Delete this permit?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger w-100">Delete</button>
+                                                    <button type="submit" class="btn btn-sm btn-danger w-100">Delete</button>-->
                                                 </form>
                                             @endif
                                         </td>

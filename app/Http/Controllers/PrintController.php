@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Permit;
+use App\Models\MonthlyPermit;  
 use App\Models\Payment;
 class PrintController extends Controller
 {
