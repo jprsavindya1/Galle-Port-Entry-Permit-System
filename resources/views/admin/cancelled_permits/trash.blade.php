@@ -68,12 +68,13 @@
                                     <button type="submit" class="btn btn-success btn-sm">Restore</button>
                                 </form>
 
-                                <!-- Force Delete -->
+                                <!-- Force Delete 
                                 <form action="{{ route('admin.cancelled_permits.forceDelete', $permit->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this permit?')">Delete</button>
                                 </form>
+                                -->
                             </td>
                         </tr>
 

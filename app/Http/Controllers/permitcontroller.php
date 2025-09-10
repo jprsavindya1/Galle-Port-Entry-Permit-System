@@ -187,37 +187,40 @@ public function cancel(Request $request, Permit $permit)
         ? $request->cancel_reason_other
         : $request->cancel_reason_select;
 
-    // Update original permit
-    $permit->status = 'cancelled';
-    $permit->cancel_reason = $reason;
-    $permit->save();
-
-    // Insert into cancelled_permits table
-    \App\Models\CancelledPermit::create([
-        'permit_id'        => $permit->permit_id,
-        'invoice_id'       => $permit->submission_id, // or keep original invoice_id if you have it
-        'submission_id'    => $permit->submission_id,
-        'type'             => $permit->type,
-        'id_type'          => $permit->id_type,
-        'id_number'        => $permit->id_number,
-        'full_name'        => $permit->full_name,
-        'initials'         => $permit->initials,
-        'designation'      => $permit->designation,
-        'company_name'     => $permit->company_name,
-        'company_address'  => $permit->company_address,
-        'residence_address'=> $permit->residence_address,
-        'pass_type'        => $permit->pass_type,
-        'issue_type'       => $permit->issue_type,
-        'reason'           => $permit->reason,
-        'vehicle_type'     => $permit->vehicle_type,
-        'vehicle_number'   => $permit->vehicle_number,
-        'owner_name'       => $permit->owner_name,
-        'owner_address'    => $permit->owner_address,
-        'remarks'          => $permit->remarks,
-        'cancel_reason'    => $reason,
-        'cancelled_at'     => now(),
-        'cancelled_by'     => auth()->user()->name ?? 'System',
+    // 1. Update the original permit
+    $permit->update([
+        'status' => 'cancelled',
+        'cancel_reason' => $reason,
     ]);
+
+    // 2. Insert into cancelled_permits table if not exists
+    CancelledPermit::updateOrCreate(
+        ['permit_id' => $permit->permit_id],
+        [
+            'invoice_id'        => $permit->submission_id,
+            'submission_id'     => $permit->submission_id,
+            'type'              => $permit->type,
+            'id_type'           => $permit->id_type,
+            'id_number'         => $permit->id_number,
+            'full_name'         => $permit->full_name,
+            'initials'          => $permit->initials,
+            'designation'       => $permit->designation,
+            'company_name'      => $permit->company_name,
+            'company_address'   => $permit->company_address,
+            'residence_address' => $permit->residence_address,
+            'pass_type'         => $permit->pass_type,
+            'issue_type'        => $permit->issue_type,
+            'reason'            => $permit->reason,
+            'vehicle_type'      => $permit->vehicle_type,
+            'vehicle_number'    => $permit->vehicle_number,
+            'owner_name'        => $permit->owner_name,
+            'owner_address'     => $permit->owner_address,
+            'remarks'           => $permit->remarks,
+            'cancel_reason'     => $reason,
+            'cancelled_at'      => now(),
+            'cancelled_by'      => auth()->user()->name ?? 'System',
+        ]
+    );
 
     return response()->json([
         'id' => $permit->id,
@@ -225,18 +228,27 @@ public function cancel(Request $request, Permit $permit)
     ]);
 }
 
-
-
-
 public function activate(Permit $permit)
 {
+    // 1. Update the permit status
     $permit->update([
         'status' => 'active',
-        'cancel_reason' => null, // Remove previous cancel reason
+        'cancel_reason' => null,
     ]);
 
-    return redirect()->back()->with('success', 'Permit activated successfully.');
+    // 2. Permanently remove the CancelledPermit row
+    \DB::table('cancelled_permits')
+        ->where('permit_id', $permit->permit_id)
+        ->delete(); // <-- this bypasses SoftDeletes completely
+
+    return response()->json([
+        'id' => $permit->id,
+        'status' => 'active',
+    ]);
 }
+
+
+
 
    // Check check Availability
   

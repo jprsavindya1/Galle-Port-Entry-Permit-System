@@ -172,22 +172,29 @@
                                         </td>
 
                                         <!-- Actions -->
-                                        <td class="sticky-col actions-col">
-                                            <a href="{{ route('permits.edit', $permit) }}" class="btn btn-sm btn-warning w-100 mb-1">Edit</a>
-                                            <!--@if(in_array(Auth::user()->role, ['admin','super-admin']))
-                                                <form action="{{ route('permits.destroy', $permit) }}" method="POST" onsubmit="return confirm('Delete this permit?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger w-100">Delete</button>-->
-                                                </form>
-                                            @endif
-                                        </td>
+<td class="sticky-col actions-col">
+    <a href="{{ route('permits.edit', $permit) }}"
+       class="btn btn-sm btn-warning w-100 mb-1"
+       @if($permit->status === 'cancelled') disabled style="pointer-events: none; opacity: 0.5;" @endif>
+       Edit
+    </a>
+</td>
 
-                                        <!-- View -->
-                                        <td class="sticky-col view-col">
-                                            <a href="{{ route('payment.invoice', $permit->submission_id) }}" class="btn btn-sm btn-warning w-100 mb-1">View Group</a>
-                                            <a href="{{ route('permit.print.single', $permit->id) }}" target="_blank" class="btn btn-sm btn-primary w-100">Print</a>
-                                        </td>
+<!-- View -->
+<td class="sticky-col view-col">
+    <a href="{{ route('payment.invoice', $permit->submission_id) }}"
+       class="btn btn-sm btn-warning w-100 mb-1"
+       @if($permit->status === 'cancelled') disabled style="pointer-events: none; opacity: 0.5;" @endif>
+       View Group
+    </a>
+
+    <a href="{{ route('permit.print.single', $permit->id) }}"
+       target="_blank"
+       class="btn btn-sm btn-primary w-100"
+       @if($permit->status === 'cancelled') disabled style="pointer-events: none; opacity: 0.5;" @endif>
+       Print
+    </a>
+</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -273,6 +280,17 @@ document.addEventListener("DOMContentLoaded", function () {
                             </button>
                         </form>
                     `;
+
+                    // Disable Edit / View / Print buttons
+                    const row = document.querySelector(`#permit-row-${data.id}`);
+                    row.querySelectorAll('a.btn').forEach(btn => {
+                        btn.setAttribute('disabled', 'disabled');
+                        btn.style.pointerEvents = 'none';
+                        btn.style.opacity = 0.2;
+                        btn.style.backgroundColor = '#6c757d'; // Bootstrap's secondary grey
+                        btn.style.borderColor = '#6c757d';
+
+                    });
                 }
 
             } catch(err) {
@@ -346,6 +364,17 @@ document.addEventListener("DOMContentLoaded", function () {
                             </div>
                         </div>
                     `;
+
+                    // Enable Edit / View / Print buttons
+                    const row = document.querySelector(`#permit-row-${data.id}`);
+                    row.querySelectorAll('a.btn').forEach(btn => {
+                        btn.removeAttribute('disabled');
+                        btn.style.pointerEvents = '';
+                        btn.style.opacity = '';
+                        btn.style.backgroundColor = '';
+                        btn.style.borderColor = '';
+
+                    });
                 }
 
             } catch(err) {

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\CancelledPermit;
 use App\Models\Permit; 
-use App\Models\Payment;// Main permit model
+use App\Models\Payment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
@@ -107,20 +107,30 @@ class CancelledPermitController extends Controller
     // Permanently delete
     public function forceDelete($id)
     {
-        $permit = CancelledPermit::onlyTrashed()->findOrFail($id);
+        $cancelled = CancelledPermit::onlyTrashed()->findOrFail($id);
 
-        $permit->addLog('force_deleted', auth()->id(), [
-            'permit_id' => $permit->permit_id,
-            'full_name' => $permit->full_name,
-            'company_name' => $permit->company_name,
-            'vehicle_number' => $permit->vehicle_number,
-            'cancel_reason' => $permit->cancel_reason,
+        $cancelled->addLog('force_deleted', auth()->id(), [
+            'permit_id'      => $cancelled->permit_id,
+            'full_name'      => $cancelled->full_name,
+            'company_name'   => $cancelled->company_name,
+            'vehicle_number' => $cancelled->vehicle_number,
+            'cancel_reason'  => $cancelled->cancel_reason,
         ]);
 
-        $permit->forceDelete();
+        // Delete related payment
+        Payment::where('submission_id', $cancelled->submission_id)->delete();
+
+        // Delete original permit
+        $mainPermit = Permit::where('permit_id', $cancelled->permit_id)->first();
+        if ($mainPermit) {
+            $mainPermit->delete(); // or ->forceDelete() if Permit uses SoftDeletes
+        }
+
+        // Finally delete from cancelled_permits
+        $cancelled->forceDelete();
 
         return redirect()->route('admin.cancelled_permits.trash')
-            ->with('success', 'Permit permanently deleted.');
+            ->with('success', 'Permit permanently deleted with related records.');
     }
 
     // Export PDF
@@ -202,23 +212,26 @@ class CancelledPermitController extends Controller
     {
         $permit = Permit::findOrFail($permitId);
 
+        // Update permit status
         $permit->status = 'cancelled';
         $permit->save();
 
-        $cancelled = new CancelledPermit();
-        $cancelled->permit_id = $permit->permit_id;
-        $cancelled->invoice_id = $permit->invoice_id ?? null;
-        $cancelled->submission_id = $permit->submission_id;
-        $cancelled->id_number = $permit->id_number ?? null;
-        $cancelled->full_name = $permit->full_name ?? null;
-        $cancelled->company_name = $permit->company_name ?? null;
-        $cancelled->vehicle_number = $permit->vehicle_number ?? null;
-        $cancelled->cancel_reason = $request->cancel_reason_other ?: $request->cancel_reason_select;
-        $cancelled->cancelled_at = now();
-        $cancelled->cancelled_by = auth()->user()->name;
-        $cancelled->save();
+        // Update or create cancelled permit (avoid duplicates)
+        $cancelled = CancelledPermit::updateOrCreate(
+            ['permit_id' => $permit->permit_id],
+            [
+                'invoice_id'    => $permit->invoice_id ?? null,
+                'submission_id' => $permit->submission_id,
+                'id_number'     => $permit->id_number ?? null,
+                'full_name'     => $permit->full_name ?? null,
+                'company_name'  => $permit->company_name ?? null,
+                'vehicle_number'=> $permit->vehicle_number ?? null,
+                'cancel_reason' => $request->cancel_reason_other ?: $request->cancel_reason_select,
+                'cancelled_at'  => now(),
+                'cancelled_by'  => auth()->user()->name,
+            ]
+        );
 
-        // Log activity
         $cancelled->addLog('cancelled', auth()->id(), [
             'permit_id' => $cancelled->permit_id,
             'full_name' => $cancelled->full_name,
@@ -233,14 +246,17 @@ class CancelledPermitController extends Controller
         ]);
     }
 
-    // Activate a cancelled permit (AJAX)
+    // Activate a cancelled permit (AJAX) without adding to trash
     public function activate(Request $request, $permitId)
     {
         $permit = Permit::findOrFail($permitId);
 
+        // Update permit status to active
         $permit->status = 'active';
+        $permit->cancel_reason = null;
         $permit->save();
 
+        // Permanently remove the cancelled permit entry (no soft delete)
         $cancelled = CancelledPermit::where('permit_id', $permit->permit_id)->first();
         if ($cancelled) {
             $cancelled->addLog('activated', auth()->id(), [
@@ -250,7 +266,7 @@ class CancelledPermitController extends Controller
                 'vehicle_number' => $cancelled->vehicle_number,
             ]);
 
-            $cancelled->delete();
+            \DB::table('cancelled_permits')->where('id', $cancelled->id)->delete();
         }
 
         return response()->json([
