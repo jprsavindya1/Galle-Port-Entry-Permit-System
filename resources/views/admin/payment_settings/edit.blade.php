@@ -32,6 +32,14 @@
             @error('vat') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
+        <div class="mb-3">
+            <label for="ssc" class="form-label">SSC Amount</label>
+            <input type="number" step="0.01" name="ssc" id="ssc" 
+                value="{{ old('ssc', $settings->ssc) }}" 
+                class="form-control" required>
+            @error('ssc') <small class="text-danger">{{ $message }}</small> @enderror
+        </div>
+
         <button type="submit" class="btn btn-primary">Save Changes</button>
         <a href="{{ route('dashboard') }}" class="btn btn-secondary ms-2">Cancel</a>
     </form>

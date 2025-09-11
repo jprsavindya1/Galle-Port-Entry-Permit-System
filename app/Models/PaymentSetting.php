@@ -6,6 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentSetting extends Model
 {// Fillable fields 
     protected $fillable = [
-        'rate', 'nbt', 'vat',
+        'rate', 'nbt', 'vat', 'ssc',
     ];
 }

@@ -12,7 +12,8 @@ class VehicleController extends Controller
     public function index(Request $request)
     {
         $vehicles = Vehicle::when($request->search, function($query, $search) {
-            $query->where('name', 'like', "%$search%");
+            $query->where('name', 'like', "%$search%")
+                  ->orWhere('code', 'like', "%$search%");
         })->paginate(10);
 
         if ($request->ajax()) {
@@ -55,6 +56,8 @@ class VehicleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:vehicles,name',
+            'code' => 'required|string|max:50|unique:vehicles,code',
+            'rate' => 'required|numeric|min:0',
         ]);
 
         Vehicle::create($validated);
@@ -72,6 +75,8 @@ class VehicleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:vehicles,name,' . $vehicle->id,
+            'code' => 'required|string|max:50|unique:vehicles,code,' . $vehicle->id,
+            'rate' => 'required|numeric|min:0',
         ]);
 
         $vehicle->update($validated);

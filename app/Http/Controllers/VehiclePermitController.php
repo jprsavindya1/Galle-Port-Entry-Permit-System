@@ -7,6 +7,11 @@ use App\Models\Permit;
 use App\Models\MonthlyPermit;  
 use Illuminate\Support\Str;
 use App\Models\Vehicle; 
+use App\Models\Company;
+use App\Models\Designation;
+use App\Models\Reason;
+use App\Models\Payment;
+use App\Models\PaymentSetting;
 class VehiclePermitController extends PermitController
 {
    ////////////////////////////////////vehicle////////////////////////////
@@ -15,12 +20,26 @@ class VehiclePermitController extends PermitController
 {
      $cart = session()->get('vehicle_permit_cart', []);
     $vehicles = Vehicle::all(); // fetch all vehicles for dropdown
-    return view('permit.vehicle', compact('cart', 'vehicles'));
+
+    if (empty($cart)) {
+        session()->forget(['vehicle_company_name', 'vehicle_company_address']);
+        $companyName = null;
+        $companyAddress = null;
+    } else {
+        $companyName = session('vehicle_company_name');
+        $companyAddress = session('vehicle_company_address');
+    }
+
+    $companies = Company::all(); // fetching companies
+    $reasons = Reason::orderBy('name')->get();
+    // Add companies to the compact array
+    return view('permit.vehicle', compact('cart', 'companyName', 'companyAddress', 'companies', 'vehicles', 'reasons'));
+  
 }
 public function addVehicleToSession(Request $request)
 {
     $validated = $request->validate([
-        'vehicle_name' => 'required|string',
+        'vehicle_type' => 'required|string',
         'vehicle_number' => 'required|string',
         'revenue_license_number' => 'required|string',
         'from_date' => 'required|date',
@@ -28,17 +47,103 @@ public function addVehicleToSession(Request $request)
         'issue_type' => 'required|string|in:free,payment',
         'owner_name' => 'required|string',
         'owner_address' => 'required|string',
-        'company_name' => 'nullable|string',
+        'company_name' => 'required|string',
+        'company_address' => 'nullable|string',
         'remarks' => 'nullable|string',
+        'reason' => 'required|string',
         'insurance_number' => 'nullable|string',
     ]);
 
+    // Ensure company_address exists
+    $validated['company_address'] = $validated['company_address'] ?? '';
+
     $cart = session()->get('vehicle_permit_cart', []);
+
+    // Enforce company consistency across entries
+    $sessionCompanyName = strtolower(trim(session('vehicle_company_name') ?? ''));
+    $sessionCompanyAddress = strtolower(trim(session('vehicle_company_address') ?? ''));
+
+    $newCompanyName = strtolower(trim($validated['company_name']));
+    $newCompanyAddress = strtolower(trim($validated['company_address']));
+
+    if (session()->has('vehicle_company_name')) {
+        if ($newCompanyName !== $sessionCompanyName || $newCompanyAddress !== $sessionCompanyAddress) {
+            return redirect()->route('permit.vehicle')
+                ->withErrors(['company_name' => 'All entries must have the same company name and address.'])
+                ->withInput();
+        }
+    } else {
+        session(['vehicle_company_name' => $validated['company_name']]);
+        session(['vehicle_company_address' => $validated['company_address']]);
+    }
+
+    // Convert pass_type array to comma-separated string (if you still use pass_type)
+    if (isset($validated['pass_type']) && is_array($validated['pass_type'])) {
+        $validated['pass_type'] = implode(',', $validated['pass_type']);
+    }
+
     $cart[] = $validated;
     session(['vehicle_permit_cart' => $cart]);
 
-    return redirect()->route('permit.vehicle')->with('success', 'Vehicle permit added to list.');
+    return redirect()->route('permit.vehicle')->with('success', 'Vehicle Permit entry added to list.');
 }
+
+
+public function paymentVehicleSummary()
+{
+    $cart = session()->get('vehicle_permit_cart', []);
+    $submissionId = session('payment_submission_id');
+
+    if (empty($cart) || !$submissionId) {
+        return redirect()->route('permit.vehicle')->with('error', 'No data available for vehicle payment summary.');
+    }
+
+    $totalPayment = 0;
+    $detailedPayments = [];
+
+    $settings = PaymentSetting::first();
+    $sscAmount = $settings->ssc ?? 0;
+    $vatRate  = $settings->vat ?? 15;
+
+    foreach ($cart as $item) {
+        // Ensure type exists
+        $item['type'] = 'VP';
+
+        $vehicle = Vehicle::find($item['vehicle_type']); // vehicle_type stores vehicle ID
+        if (!$vehicle) continue;
+
+        $days = \Carbon\Carbon::parse($item['from_date'])->diffInDays(\Carbon\Carbon::parse($item['to_date'])) + 1;
+
+        // Base rate per vehicle × days
+        $baseRate = $vehicle->rate * $days;
+
+        if ($item['issue_type'] === 'free') {
+            $tRate = 0;
+            $ssc = 0;
+            $vat = 0;
+            $amount = 0;
+        } else {
+            $tRate = $baseRate;
+            $ssc = $sscAmount;
+            $vat = round(($tRate + $ssc) * ($vatRate / 100), 2);
+            $amount = round($tRate + $ssc + $vat, 2);
+        }
+
+        $totalPayment += $amount;
+
+        $detailedPayments[] = [
+            'entry' => $item,
+            'rate'  => $tRate,
+            'nbt'   => 0,          // VP never uses NBT
+            'ssc'   => $ssc,       // always set
+            'vat'   => $vat,
+            'total' => $amount,
+        ];
+    }
+
+    return view('permit.payment_summary', compact('cart', 'detailedPayments', 'totalPayment', 'submissionId'));
+}
+
 
 public function editVehicleSessionEntry($index)
 {
@@ -54,7 +159,7 @@ public function editVehicleSessionEntry($index)
 public function updateVehicleSessionEntry(Request $request, $index)
 {
     $validated = $request->validate([
-        'vehicle_name' => 'required|string',
+        'vehicle_type' => 'required|string',
         'vehicle_number' => 'required|string',
         'revenue_license_number' => 'required|string',
         'from_date' => 'required|date',
@@ -78,7 +183,51 @@ public function updateVehicleSessionEntry(Request $request, $index)
 
     return redirect()->route('permit.vehicle')->with('success', 'Vehicle permit updated.');
 }
+public function removeVehicleSessionEntry($index)
+{
+    $cart = session('vehicle_permit_cart', []);
 
+    if (isset($cart[$index])) {
+        unset($cart[$index]);
+    }
+
+    // Reindex the array
+    $cart = array_values($cart);
+
+    session(['vehicle_permit_cart' => $cart]);
+
+    if (count($cart) === 0) {
+        return redirect()->route('permit.vehicle')->with('message', 'All entries removed.');
+    }
+
+    return redirect()->route('permit.vehicle')->with('message', 'Entry removed.');
+}
+
+ /*
+     * Show form pre-filled with monthly permit data from session cart by index.
+     */
+public function removeEntry($index)
+{
+    $cart = session('payment_cart', []);
+
+    if (isset($cart[$index])) {
+        unset($cart[$index]);
+    }
+
+    // Clean and reindex the array
+    $cart = array_values(array_filter($cart));
+
+    // Update session
+    session(['payment_cart' => $cart]);
+
+    if (count($cart) === 0) {
+        // Clear submission ID if needed
+        session()->forget('payment_submission_id');
+        return redirect()->route('permit.vehicle')->with('message', 'All entries removed.');
+    }
+
+    return redirect()->route('payment.summary')->with('message', 'Entry removed.');
+}
     /*
      ***********  vehicle availability check with number and date *********   
     */
@@ -126,34 +275,42 @@ public function submitAllVehicle(Request $request)
     $type = 'VP';
 
     // Generate submission_id
-    $latest = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
-                    ->orderBy('submission_id', 'desc')
-                    ->first();
+     $latestPermit = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
+        ->orderBy('submission_id', 'desc')
+        ->first();
 
-    $nextNumber = 1001;
+    $latestPayment = Payment::where('submission_id', 'like', $datePrefix . $type . '%')
+        ->orderBy('submission_id', 'desc')
+        ->first();
 
-    if ($latest) {
-        $lastCounter = (int)substr($latest->submission_id, -4);
-        $nextNumber = $lastCounter + 1;
+    // Determine the highest counter used
+    $lastCounter = 0;
+    if ($latestPermit) {
+        $lastCounter = (int) substr($latestPermit->submission_id, -4);
+    }
+    if ($latestPayment) {
+        $paymentCounter = (int) substr($latestPayment->submission_id, -4);
+        if ($paymentCounter > $lastCounter) {
+            $lastCounter = $paymentCounter;
+        }
     }
 
+    $nextNumber = $lastCounter + 1;
     $submissionId = $datePrefix . $type . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-    foreach ($cart as $entry) {
-        if (isset($entry['pass_type']) && is_array($entry['pass_type'])) {
-            $entry['pass_type'] = implode(',', $entry['pass_type']);
-        }
-
+    // Add submission ID and permit type to each entry
+    foreach ($cart as $index => $entry) {
         $entry['submission_id'] = $submissionId;
         $entry['type'] = $type;
-        $entry['permit_id'] = $this->generatePermitId($type); 
-
-        Permit::create($entry);
+        $cart[$index] = $entry;
     }
 
-    session()->forget('vehicle_permit_cart');
+    // Store updated cart to new session key for payment step
+    session(['payment_cart' => $cart]);
+    session(['payment_submission_id' => $submissionId]);
 
-    return redirect()->route('permit.vehicle')->with('success', 'All vehicle permits submitted!');
+    return redirect()->route('payment.summary');
+
 }
 
 }

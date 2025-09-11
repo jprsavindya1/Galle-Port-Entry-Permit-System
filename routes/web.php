@@ -80,26 +80,7 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
 
 });
 
-// ------------------------------
-// Cancelled Permits 
-// ------------------------------
 
-/*
-Route::prefix('cancelled_permits')
-    ->middleware('auth')
-    ->name('cancelled_permits.')
-    ->group(function () {
-        Route::get('/', [CancelledPermitController::class, 'index'])->name('index');
-
-        // Export routes go first
-        Route::get('/export-excel', [CancelledPermitController::class, 'exportExcel'])->name('exportExcel');
-        Route::get('/export-pdf', [CancelledPermitController::class, 'exportPdf'])->name('exportPdf');
-
-        // Then the {id} route
-        Route::get('/{id}', [CancelledPermitController::class, 'show'])->name('show');
-        Route::delete('/{id}', [CancelledPermitController::class, 'destroy'])->name('destroy');
-    });
-*/
 
 Route::get('/', fn () => redirect()->route('dashboard'));
 Route::get('/dashboard', fn () => view('dashboard'))->middleware('auth')->name('dashboard');
@@ -154,8 +135,11 @@ Route::prefix('permit/vehicle')->controller(VehiclePermitController::class)->gro
     Route::post('/add', 'addVehicleToSession')->name('permit.vehicle.addToSession');
     Route::get('/edit-session-entry/{index}', 'editVehicleSessionEntry')->name('permit.vehicle.editSessionEntry');
     Route::put('/update-session-entry/{index}', 'updateVehicleSessionEntry')->name('permit.vehicle.updateSessionEntry');
-    Route::post('/submit', 'submitAllVehicle')->name('permit.vehicle.submitAll');
-    Route::post('/checkAvailability', 'checkVehicleAvailability')->name('permit.vehicle.checkAvailability');
+    Route::post('/submit', 'submitAllVehicle')->name('permit.vehicle.submitAllVehicle');
+    Route::post('/checkAvailability', 'checkVehicleAvailability')->name('permit.vehicle.checkVehicleAvailability');
+    Route::get('/edit/{index}', 'editVehicleSessionEntry')->name('permit.vehicle.editVehicleSessionEntry');
+    Route::put('/edit/{index}', 'updatevehicleSessionEntry')->name('permit.vehicle.updateVehicleSessionEntry');
+    Route::delete('/remove/{index}', 'removevehicleSessionEntry')->name('permit.vehicle.removeVehicleSessionEntry');
 }); 
 
 
