@@ -73,7 +73,7 @@
         <h5 class="mb-3">Payment Summary</h5>
         <p><strong>Rate Total:</strong> Rs. {{ number_format($payment->rate_total, 2) }}</p>
         @if($payment->permit_type === 'VP')
-            <p><strong>SSC:</strong> Rs. {{ number_format($payment->ssc_total, 2) }}</p>
+            <p><strong>SSL:</strong> Rs. {{ number_format($payment->ssl_total, 2) }}</p>
         @else
             <p><strong>NBT:</strong> Rs. {{ number_format($payment->nbt_total, 2) }}</p>
         @endif

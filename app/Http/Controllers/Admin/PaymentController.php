@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Permit;
 use App\Models\Payment;
 use App\Models\PaymentSetting;
+use App\Models\Vehicle;
 
 class PaymentController extends Controller
 {
@@ -20,29 +21,31 @@ class PaymentController extends Controller
         }
 
         $settings = PaymentSetting::first();
-        $baseRate = $settings->rate ?? 0;
+        $baseRateSetting = $settings->rate ?? 0;
         $nbtRate = $settings->nbt ?? 0;
         $vatRate = $settings->vat ?? 0;
-        $sscRate = $settings->ssc ?? 0;
+        $sslRate = $settings->ssl ?? 0;
 
         $detailedPayments = [];
         $totalPayment = 0;
-        $firstType = $cart[0]['type'] ?? 'TP';
 
         foreach ($cart as $item) {
             $days = \Carbon\Carbon::parse($item['from_date'])->diffInDays($item['to_date']) + 1;
 
-            if ($firstType === 'VP') {
-                // Vehicle permit: SSC instead of NBT
-                $tRate = $baseRate * $days;
+            if ($item['type'] === 'VP') {
+                // Vehicle permit: rate comes from vehicles table
+                $vehicle = Vehicle::where('name', $item['vehicle_type'])->first();
+                $vehicleRate = $vehicle ? $vehicle->rate : 0;
+
+                $tRate = $vehicleRate * $days;
                 if ($item['issue_type'] === 'free') {
-                    $ssc = 0;
+                    $ssl = 0;
                     $vat = 0;
                     $amount = 0;
                 } else {
-                    $ssc = round(($tRate * $sscRate) / 100, 2);
-                    $vat = round((($tRate + $ssc) * $vatRate) / 100, 2);
-                    $amount = round($tRate + $ssc + $vat, 2);
+                    $ssl = round(($tRate * $sslRate) / 100, 2);
+                    $vat = round((($tRate + $ssl) * $vatRate) / 100, 2);
+                    $amount = round($tRate + $ssl + $vat, 2);
                 }
 
                 $totalPayment += $amount;
@@ -50,14 +53,14 @@ class PaymentController extends Controller
                 $detailedPayments[] = [
                     'entry' => $item,
                     'rate' => $tRate,
-                    'ssc' => $ssc,
+                    'ssl' => $ssl,
                     'vat' => $vat,
                     'total' => $amount,
                 ];
 
             } else {
-                // Temporary/Monthly permit
-                $tRate = $baseRate * $days;
+                // Temporary / Monthly permits: rate from settings
+                $tRate = $baseRateSetting * $days;
                 if ($item['issue_type'] === 'free') {
                     $nbt = 0;
                     $vat = 0;
@@ -88,117 +91,123 @@ class PaymentController extends Controller
         ));
     }
 
-public function submit(Request $request)
-{
-    $cart = session('payment_cart', []);
-    $submissionId = session('payment_submission_id');
+    public function submit(Request $request)
+    {
+        $cart = session('payment_cart', []);
+        $submissionId = session('payment_submission_id');
 
-    if (empty($cart) || !$submissionId) {
-        return redirect()->route('permit.temporary')->with('error', 'No permit data found.');
-    }
-
-    $permitType = $cart[0]['type'] ?? 'unknown';
-    $settings = PaymentSetting::first();
-    $rate = $settings->rate ?? 0;
-    $nbtRate = $settings->nbt ?? 0;
-    $vatRate = $settings->vat ?? 0;
-    $sscRate = $settings->ssc ?? 0;
-
-    // Save all permits
-    foreach ($cart as $entry) {
-        $entry['permit_id'] = $this->generatePermitId($entry['type']);
-
-        // Safely handle pass_type: only for TP/MP
-        if (isset($entry['pass_type'])) {
-            $entry['pass_type'] = is_array($entry['pass_type']) ? implode(',', $entry['pass_type']) : $entry['pass_type'];
-        } else {
-            $entry['pass_type'] = null;
+        if (empty($cart) || !$submissionId) {
+            return redirect()->route('permit.temporary')->with('error', 'No permit data found.');
         }
 
-        Permit::create($entry);
-    }
+        $permitType = $cart[0]['type'] ?? 'unknown';
+        $settings = PaymentSetting::first();
+        $rateSetting = $settings->rate ?? 0;
+        $nbtRate = $settings->nbt ?? 0;
+        $vatRate = $settings->vat ?? 0;
+        $sslRate = $settings->ssl ?? 0;
 
-    // Calculate totals
-    $entryCount = 0;
-    $rateTotal = 0;
-    $nbtTotal = 0;
-    $sscTotal = 0;
-    $vatTotal = 0;
+        // Save all permits
+        foreach ($cart as $entry) {
+            $entry['permit_id'] = $this->generatePermitId($entry['type']);
 
-    foreach ($cart as $entry) {
-        if ($entry['issue_type'] !== 'free') {
-            $entryCount++;
-            $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays($entry['to_date']) + 1;
-            $baseRate = $rate * $days;
-
-            if ($permitType === 'VP') {
-                $ssc = round(($baseRate * $sscRate) / 100, 2);
-                $vat = round((($baseRate + $ssc) * $vatRate) / 100, 2);
-
-                $rateTotal += $baseRate;
-                $sscTotal += $ssc;
-                $vatTotal += $vat;
+            // Safely handle pass_type: only for TP/MP
+            if (isset($entry['pass_type'])) {
+                $entry['pass_type'] = is_array($entry['pass_type']) ? implode(',', $entry['pass_type']) : $entry['pass_type'];
             } else {
-                $nbt = round(($baseRate * $nbtRate) / 100, 2);
-                $vat = round((($baseRate + $nbt) * $vatRate) / 100, 2);
+                $entry['pass_type'] = null;
+            }
 
-                $rateTotal += $baseRate;
-                $nbtTotal += $nbt;
-                $vatTotal += $vat;
+            Permit::create($entry);
+        }
+
+        // Calculate totals
+        $entryCount = 0;
+        $rateTotal = 0;
+        $nbtTotal = 0;
+        $sslTotal = 0;
+        $vatTotal = 0;
+
+        foreach ($cart as $entry) {
+            if ($entry['issue_type'] !== 'free') {
+                $entryCount++;
+                $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays($entry['to_date']) + 1;
+
+                if ($permitType === 'VP') {
+                    // Vehicle rate
+                    $vehicle = Vehicle::where('name', $entry['vehicle_type'])->first();
+                    $baseRate = ($vehicle ? $vehicle->rate : 0) * $days;
+
+                    $ssl = round(($baseRate * $sslRate) / 100, 2);
+                    $vat = round((($baseRate + $ssl) * $vatRate) / 100, 2);
+
+                    $rateTotal += $baseRate;
+                    $sslTotal += $ssl;
+                    $vatTotal += $vat;
+
+                } else {
+                    // TP / MP from settings
+                    $baseRate = $rateSetting * $days;
+
+                    $nbt = round(($baseRate * $nbtRate) / 100, 2);
+                    $vat = round((($baseRate + $nbt) * $vatRate) / 100, 2);
+
+                    $rateTotal += $baseRate;
+                    $nbtTotal += $nbt;
+                    $vatTotal += $vat;
+                }
             }
         }
+
+        $yearMonth = now()->format('Ym');
+        $prefix = 'INV-' . $yearMonth . '-';
+
+        // Get latest invoice
+        $latestInvoice = Payment::where('invoice_id', 'like', $prefix . '%')
+            ->orderBy('invoice_id', 'desc')
+            ->first();
+
+        $nextNumber = ($latestInvoice && preg_match('/-(\d+)$/', $latestInvoice->invoice_id, $matches))
+            ? intval($matches[1]) + 1
+            : 1;
+
+        $invoiceId = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+        // Total amount
+        $amountTotal = $rateTotal + $vatTotal + ($permitType === 'VP' ? $sslTotal : $nbtTotal);
+
+        // Save to payments table
+        Payment::create([
+            'submission_id' => $submissionId,
+            'invoice_id' => $invoiceId,
+            'permit_type' => $permitType,
+            'entry_count' => $entryCount,
+            'rate_total' => $rateTotal,
+            'nbt_total' => $nbtTotal,
+            'ssl_total' => $sslTotal,
+            'vat_total' => $vatTotal,
+            'amount_total' => $amountTotal,
+            'status' => 'Paid',
+            'payment_date' => now(),
+            'paid_at' => now(),
+        ]);
+
+        // Clear sessions
+        session()->forget([
+            'permit_cart',
+            'payment_cart',
+            'payment_submission_id',
+            'temporary_company_name',
+            'temporary_company_address',
+            'monthly_company_name',
+            'monthly_company_address',
+            'monthly_permit_cart',
+            'temporary_permit_cart',
+            'vehicle_permit_cart',
+        ]);
+
+        return redirect()->route('payment.invoice', ['submission_id' => $submissionId]);
     }
-
-    $yearMonth = now()->format('Ym');
-    $prefix = 'INV-' . $yearMonth . '-';
-
-    // Get latest invoice
-    $latestInvoice = Payment::where('invoice_id', 'like', $prefix . '%')
-        ->orderBy('invoice_id', 'desc')
-        ->first();
-
-    $nextNumber = ($latestInvoice && preg_match('/-(\d+)$/', $latestInvoice->invoice_id, $matches))
-        ? intval($matches[1]) + 1
-        : 1;
-
-    $invoiceId = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-
-    // Total amount
-    $amountTotal = $rateTotal + $vatTotal + ($permitType === 'VP' ? $sscTotal : $nbtTotal);
-
-    // Save to payments table
-    Payment::create([
-        'submission_id' => $submissionId,
-        'invoice_id' => $invoiceId,
-        'permit_type' => $permitType,
-        'entry_count' => $entryCount,
-        'rate_total' => $rateTotal,
-        'nbt_total' => $nbtTotal,
-        'ssc_total' => $sscTotal,
-        'vat_total' => $vatTotal,
-        'amount_total' => $amountTotal,
-        'status' => 'Paid',
-        'payment_date' => now(),
-        'paid_at' => now(),
-    ]);
-
-    // Clear sessions
-    session()->forget([
-        'permit_cart',
-        'payment_cart',
-        'payment_submission_id',
-        'temporary_company_name',
-        'temporary_company_address',
-        'monthly_company_name',
-        'monthly_company_address',
-        'monthly_permit_cart',
-        'temporary_permit_cart',
-        'vehicle_permit_cart',
-    ]);
-
-    return redirect()->route('payment.invoice', ['submission_id' => $submissionId]);
-}
-
 
     private function generatePermitId($type)
     {
@@ -248,7 +257,7 @@ public function submit(Request $request)
             'amount_total' => $totalAmount,
             'rate_total' => 0,
             'nbt_total' => 0,
-            'ssc_total' => 0,
+            'ssl_total' => 0,
             'vat_total' => 0,
             'entry_count' => count($cart),
             'permit_type' => $cart[0]['type'] ?? 'unknown',

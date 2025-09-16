@@ -100,7 +100,7 @@
                     <th>To</th>
                     <th>Days</th>
                     <th>Rate</th>
-                    <th>SSC</th>
+                    <th>SSL</th>
                     <th>VAT</th>
                     <th>Total</th>
                     <th>Action</th>
@@ -110,7 +110,7 @@
                 @php
                     $i = 1;
                     $rateTotal = 0;
-                    $sscTotal = 0;
+                    $sslTotal = 0;
                     $vatTotal = 0;
                 @endphp
 
@@ -120,12 +120,12 @@
                         $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays(\Carbon\Carbon::parse($entry['to_date'])) + 1;
 
                         $rate = $payment['rate'] ?? 0;
-                        $ssc  = $payment['ssc'] ?? 0;
+                        $ssl  = $payment['ssl'] ?? 0;
                         $vat  = $payment['vat'] ?? 0;
 
                         if ($entry['issue_type'] !== 'free') {
                             $rateTotal += $rate;
-                            $sscTotal  += $ssc;
+                            $sslTotal  += $ssl;
                             $vatTotal  += $vat;
                         }
                     @endphp
@@ -138,7 +138,7 @@
                         <td>{{ $entry['to_date'] }}</td>
                         <td>{{ $days }}</td>
                         <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($rate, 2) }}</td>
-                        <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($ssc, 2) }}</td>
+                        <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($ssl, 2) }}</td>
                         <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($vat, 2) }}</td>
                         <td><strong>{{ number_format($payment['total'], 2) }}</strong></td>
                         <td>
@@ -155,7 +155,7 @@
                 <tr>
                     <td colspan="7" class="text-end"><strong>Totals</strong></td>
                     <td><strong>{{ number_format($rateTotal, 2) }}</strong></td>
-                    <td><strong>{{ number_format($sscTotal, 2) }}</strong></td>
+                    <td><strong>{{ number_format($sslTotal, 2) }}</strong></td>
                     <td><strong>{{ number_format($vatTotal, 2) }}</strong></td>
                     <td><strong>{{ number_format($totalPayment, 2) }}</strong></td>
                     <td></td>

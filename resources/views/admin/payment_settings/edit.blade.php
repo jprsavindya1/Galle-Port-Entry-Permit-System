@@ -33,11 +33,11 @@
         </div>
 
         <div class="mb-3">
-            <label for="ssc" class="form-label">SSC Amount</label>
-            <input type="number" step="0.01" name="ssc" id="ssc" 
-                value="{{ old('ssc', $settings->ssc) }}" 
+            <label for="ssl" class="form-label">SSL Amount</label>
+            <input type="number" step="0.01" name="ssl" id="ssl" 
+                value="{{ old('ssl', $settings->ssl) }}" 
                 class="form-control" required>
-            @error('ssc') <small class="text-danger">{{ $message }}</small> @enderror
+            @error('ssl') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
         <button type="submit" class="btn btn-primary">Save Changes</button>

@@ -18,7 +18,7 @@ class Payment extends Model
         'rate_total',
         'nbt_total',
         'vat_total',
-        'ssc_total',
+        'ssl_total',
         'amount_total',
         'status',
         'payment_date',

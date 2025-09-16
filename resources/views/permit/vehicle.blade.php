@@ -171,6 +171,7 @@ function checkVehicleAvailability() {
     const fromDate = document.getElementById('from_date').value;
     const toDate = document.getElementById('to_date').value;
     const availabilityMessage = document.getElementById('availabilityMessage');
+     const companyName = document.getElementById('company_name').value;
 
     availabilityMessage.innerHTML = '';
 
@@ -189,7 +190,8 @@ function checkVehicleAvailability() {
         body: JSON.stringify({
             vehicle_number: vehicleNumber,
             from_date: fromDate,
-            to_date: toDate
+            to_date: toDate,
+            company_name: companyName
         })
     })
     .then(response => response.json())

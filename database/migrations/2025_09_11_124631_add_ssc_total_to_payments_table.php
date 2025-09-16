@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
 {
     Schema::table('payments', function (Blueprint $table) {
-        $table->decimal('ssc_total', 10, 2)->default(0);
+        $table->decimal('ssl_total', 10, 2)->default(0);
     });
 }
 
 public function down(): void
 {
     Schema::table('payments', function (Blueprint $table) {
-        $table->dropColumn('ssc_total');
+        $table->dropColumn('ssl_total');
     });
 }
 };

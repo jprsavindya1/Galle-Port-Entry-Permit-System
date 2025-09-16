@@ -46,21 +46,12 @@
 
         .permit-type { top: 250px; left: 420px; font-size: 20px; font-weight: bold; }
 
-        /* Hide buttons during print */
         @media print {
-            #printControls {
-                display: none !important;
-            }
-            body {
-                margin: 0;
-            }
-
-            .permit-container {
-                page-break-after: always; /* Print each permit on a new segment */
-            }
+            #printControls { display: none !important; }
+            body { margin: 0; }
+            .permit-container { page-break-after: always; }
         }
 
-        /* Container for print controls */
         #printControls {
             margin: 20px;
             text-align: center;
@@ -70,58 +61,11 @@
             padding: 10px 20px;
             font-size: 16px;
         }
-        <style>
-    /* Container for print controls */
-    #printControls {
-        margin: 20px 0;
-        text-align: center;
-    }
-
-    #printControls button {
-        margin: 0 12px;
-        padding: 12px 28px;
-        font-size: 16px;
-        font-weight: 600;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.16);
-        transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        color: #fff;
-    }
-
-    /* Print Again - Primary style (blue) */
-    #btnPrintAgain {
-        background-color: #0d6efd; /* Bootstrap primary blue */
-    }
-    #btnPrintAgain:hover {
-        background-color: #0b5ed7;
-        box-shadow: 0 5px 12px rgba(13, 110, 253, 0.4);
-    }
-
-    /* Back button - secondary style (gray) */
-    #btnBack {
-        background-color: #6c757d; /* Bootstrap secondary gray */
-    }
-    #btnBack:hover {
-        background-color: #5c636a;
-        box-shadow: 0 5px 12px rgba(108, 117, 125, 0.4);
-    }
-    /* Back button - secondary style (gray) */
-    #btnBackInvoice{
-        background-color: #5e8eb8ff; /* Bootstrap secondary gray */
-    }
-    #btnBackInvoice:hover {
-        background-color: #5c636a;
-        box-shadow: 0 5px 12px rgba(108, 117, 125, 0.4);
-    }
-</style>
-
     </style>
 </head>
 <body>
 
-    @foreach ($permits as $permit)
+@foreach ($permits as $permit)
 
 @php
     switch ($permit->type) {
@@ -145,28 +89,56 @@
     }
 @endphp
 
-        <div class="permit-container">
-           <div class="field temporary-permit">{{ $title_en }}</div>
-            <div class="field person-label">{{ $person_label }}</div>
-            <div class="field permit-title">{{ $title_si }}</div>
-            <div class="field permit-number">{{ $permit->permit_id }}</div>
+<div class="permit-container">
+    <div class="field temporary-permit">{{ $title_en }}</div>
+    <div class="field person-label">{{ $person_label }}</div>
+    <div class="field permit-title">{{ $title_si }}</div>
+    <div class="field permit-number">{{ $permit->permit_id }}</div>
 
-            <div class="field name">{{ $permit->full_name }}</div>
-            <div class="field designation">{{ $permit->designation }}</div>
+    @if($permit->type === 'VP')
+    <!-- Vehicle Permit Layout -->
+    <div class="field name">{{ $permit->owner_name }}</div>
+    <div class="field designation">Address: {{ $permit->owner_address }}</div>
 
-            <div class="field company_name">{{ $permit->company_name ?? $permit->company_name }}</div>
-            <div class="field from-date">from {{ $permit->from_date }}</div>
+    <div class="field company_name">{{ $permit->company_name }}</div>
+    <div class="field from-date">From: {{ $permit->from_date }}</div>
 
-            <div class="field reason">{{ $permit->reason }}</div>
-            <div class="field to-date">To: {{ $permit->to_date }}</div>
+    <div class="field id-type">Vehicle No: {{ $permit->vehicle_number }}</div>
+    <div class="field to-date">To: {{ $permit->to_date }}</div>
 
-            <div class="field id-type">{{ $permit->id_type }} - {{ $permit->id_number }}</div>
-            <div class="field time">Time: {{ \Carbon\Carbon::parse($permit->entry_time ?? now())->format('H:i') }}</div>
+    <div class="field reason">{{ $permit->reason }}</div> <!-- added reason -->
+@else
+    <!-- Person-Oriented Layout (TP / MP) -->
+    <div class="field name">{{ $permit->full_name }}</div>
+    <div class="field designation">{{ $permit->designation }}</div>
 
-            <div class="field total-amount">{{ number_format($payment->amount_total ?? 0, 2) }}</div>
-            <div class="field permit-type">{{ strtoupper($permit->pass_type) }}</div>
-        </div>
-    @endforeach
+    <div class="field company_name">{{ $permit->company_name ?? '' }}</div>
+    <div class="field from-date">From: {{ $permit->from_date }}</div>
+
+    <div class="field reason">{{ $permit->reason }}</div>
+    <div class="field to-date">To: {{ $permit->to_date }}</div>
+
+    <div class="field id-type">{{ $permit->id_type }} - {{ $permit->id_number }}</div>
+@endif
+
+
+    <div class="field time">
+        Time: {{ \Carbon\Carbon::parse($permit->entry_time ?? now())->format('H:i') }}
+    </div>
+
+    <div class="field total-amount">{{ number_format($payment->amount_total ?? 0, 2) }}</div>
+
+    @if($permit->type === 'VP')
+        <!-- For Vehicle permits: show Remarks instead of Pass Type -->
+        <div class="field permit-type">Remarks: {{ $permit->remarks }}</div>
+    @else
+        <!-- For Temporary / Monthly permits: keep Pass Type -->
+        <div class="field permit-type">{{ strtoupper($permit->pass_type) }}</div>
+    @endif
+</div>
+
+@endforeach
+
 <!-- Print Controls -->
 <div id="printControls">
     <button id="btnPrintAgain">Print Again</button>
@@ -182,9 +154,7 @@
 </div>
 
 <script>
-    window.onload = function() {
-        window.print();
-    };
+    window.onload = function() { window.print(); };
 
     document.getElementById('btnPrintAgain').addEventListener('click', function() {
         window.print();

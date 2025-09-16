@@ -28,7 +28,7 @@ class PaymentSettingController extends Controller
         'rate' => 'required|numeric|min:0',
         'nbt' => 'required|numeric|min:0',
         'vat' => 'required|numeric|min:0',
-        'ssc'  => 'required|numeric|min:0',
+        'ssl'  => 'required|numeric|min:0',
     ]);
 
     $settings = PaymentSetting::first();

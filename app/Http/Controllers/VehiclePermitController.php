@@ -102,7 +102,7 @@ public function paymentVehicleSummary()
     $detailedPayments = [];
 
     $settings = PaymentSetting::first();
-    $sscAmount = $settings->ssc ?? 0;
+    $sslAmount = $settings->ssl ?? 0;
     $vatRate  = $settings->vat ?? 15;
 
     foreach ($cart as $item) {
@@ -119,14 +119,14 @@ public function paymentVehicleSummary()
 
         if ($item['issue_type'] === 'free') {
             $tRate = 0;
-            $ssc = 0;
+            $ssl = 0;
             $vat = 0;
             $amount = 0;
         } else {
             $tRate = $baseRate;
-            $ssc = $sscAmount;
-            $vat = round(($tRate + $ssc) * ($vatRate / 100), 2);
-            $amount = round($tRate + $ssc + $vat, 2);
+            $ssl = $sslAmount;
+            $vat = round(($tRate + $ssl) * ($vatRate / 100), 2);
+            $amount = round($tRate + $ssl + $vat, 2);
         }
 
         $totalPayment += $amount;
@@ -135,7 +135,7 @@ public function paymentVehicleSummary()
             'entry' => $item,
             'rate'  => $tRate,
             'nbt'   => 0,          // VP never uses NBT
-            'ssc'   => $ssc,       // always set
+            'ssl'   => $ssl,       // always set
             'vat'   => $vat,
             'total' => $amount,
         ];
@@ -145,6 +145,9 @@ public function paymentVehicleSummary()
 }
 
 
+/**
+ * Show form pre-filled with vehicle permit data from session cart by index.
+ */
 public function editVehicleSessionEntry($index)
 {
     $cart = session()->get('vehicle_permit_cart', []);
@@ -153,9 +156,32 @@ public function editVehicleSessionEntry($index)
         return redirect()->route('permit.vehicle')->with('error', 'Vehicle permit entry not found.');
     }
 
-    $entry = $cart[$index];
-    return view('permit.edit_vehicle_session_entry', compact('entry', 'index'));
+    // Use the same variable name the Blade expects
+    $permit = $cart[$index];
+
+    // Provide lists for selects used in the view
+    $vehicles = \App\Models\Vehicle::all();
+    $companies = \App\Models\Company::all();
+    $reasons = \App\Models\Reason::orderBy('name')->get();
+
+    // Preserve company session values (if any)
+    $companyName = session('vehicle_company_name');
+    $companyAddress = session('vehicle_company_address');
+
+    return view('permit.edit_vehicle_session_entry', compact(
+        'permit',
+        'index',
+        'vehicles',
+        'companies',
+        'reasons',
+        'companyName',
+        'companyAddress'
+    ));
 }
+
+/**
+ * Update a session entry at $index with validated data.
+ */
 public function updateVehicleSessionEntry(Request $request, $index)
 {
     $validated = $request->validate([
@@ -167,8 +193,11 @@ public function updateVehicleSessionEntry(Request $request, $index)
         'issue_type' => 'required|string|in:free,payment',
         'owner_name' => 'required|string',
         'owner_address' => 'required|string',
+        // company_name/company_address typically come from session or hidden inputs
         'company_name' => 'nullable|string',
+        'company_address' => 'nullable|string',
         'remarks' => 'nullable|string',
+        'reason' => 'required|string',
         'insurance_number' => 'nullable|string',
     ]);
 
@@ -178,11 +207,23 @@ public function updateVehicleSessionEntry(Request $request, $index)
         return redirect()->route('permit.vehicle')->with('error', 'Vehicle permit entry not found.');
     }
 
+    // Ensure company fields are preserved if not submitted (hidden inputs in form)
+    $validated['company_name'] = $validated['company_name'] ?? session('vehicle_company_name');
+    $validated['company_address'] = $validated['company_address'] ?? session('vehicle_company_address');
+
+    // If you previously used pass_type you may want to normalize it here:
+    if (isset($validated['pass_type']) && is_array($validated['pass_type'])) {
+        $validated['pass_type'] = implode(',', $validated['pass_type']);
+    }
+
     $cart[$index] = $validated;
+
+    // Save back to session
     session(['vehicle_permit_cart' => $cart]);
 
     return redirect()->route('permit.vehicle')->with('success', 'Vehicle permit updated.');
 }
+
 public function removeVehicleSessionEntry($index)
 {
     $cart = session('vehicle_permit_cart', []);
