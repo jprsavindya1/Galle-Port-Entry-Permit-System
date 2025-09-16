@@ -70,16 +70,13 @@
     </div>
 
     <div class="card payment-summary p-4">
-        <h5 class="mb-3">Payment Summary</h5>
-        <p><strong>Rate Total:</strong> Rs. {{ number_format($payment->rate_total, 2) }}</p>
-        @if($payment->permit_type === 'VP')
-            <p><strong>SSL:</strong> Rs. {{ number_format($payment->ssl_total, 2) }}</p>
-        @else
-            <p><strong>NBT:</strong> Rs. {{ number_format($payment->nbt_total, 2) }}</p>
-        @endif
-        <p><strong>VAT:</strong> Rs. {{ number_format($payment->vat_total, 2) }}</p>
-        <h4 class="mt-3"><strong>Total Amount: Rs. {{ number_format($payment->amount_total, 2) }}</strong></h4>
-    </div>
+    <h5 class="mb-3">Payment Summary</h5>
+    <p><strong>Rate Total:</strong> Rs. {{ number_format($payment->rate_total, 2) }}</p>
+    <p><strong>SSL:</strong> Rs. {{ number_format($payment->ssl_total, 2) }}</p>
+    <p><strong>VAT:</strong> Rs. {{ number_format($payment->vat_total, 2) }}</p>
+    <h4 class="mt-3"><strong>Total Amount: Rs. {{ number_format($payment->amount_total, 2) }}</strong></h4>
+</div>
+
 
     <!-- Dynamic Back Button -->
     @if($payment->permit_type === 'TP')

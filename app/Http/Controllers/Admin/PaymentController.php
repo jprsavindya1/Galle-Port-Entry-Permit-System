@@ -22,9 +22,9 @@ class PaymentController extends Controller
 
         $settings = PaymentSetting::first();
         $baseRateSetting = $settings->rate ?? 0;
-        $nbtRate = $settings->nbt ?? 0;
-        $vatRate = $settings->vat ?? 0;
         $sslRate = $settings->ssl ?? 0;
+        $vatRate = $settings->vat ?? 0;
+        
 
         $detailedPayments = [];
         $totalPayment = 0;
@@ -58,17 +58,19 @@ class PaymentController extends Controller
                     'total' => $amount,
                 ];
 
+
+
             } else {
                 // Temporary / Monthly permits: rate from settings
                 $tRate = $baseRateSetting * $days;
                 if ($item['issue_type'] === 'free') {
-                    $nbt = 0;
+                    $ssl = 0;
                     $vat = 0;
                     $amount = 0;
                 } else {
-                    $nbt = round(($tRate * $nbtRate) / 100, 2);
-                    $vat = round((($tRate + $nbt) * $vatRate) / 100, 2);
-                    $amount = round($tRate + $nbt + $vat, 2);
+                    $ssl = round(($tRate * $sslRate) / 100, 2);
+                    $vat = round((($tRate + $ssl) * $vatRate) / 100, 2);
+                    $amount = round($tRate + $ssl + $vat, 2);
                 }
 
                 $totalPayment += $amount;
@@ -76,7 +78,7 @@ class PaymentController extends Controller
                 $detailedPayments[] = [
                     'entry' => $item,
                     'rate' => $tRate,
-                    'nbt' => $nbt,
+                    'ssl' => $ssl,
                     'vat' => $vat,
                     'total' => $amount,
                 ];
@@ -103,9 +105,9 @@ class PaymentController extends Controller
         $permitType = $cart[0]['type'] ?? 'unknown';
         $settings = PaymentSetting::first();
         $rateSetting = $settings->rate ?? 0;
-        $nbtRate = $settings->nbt ?? 0;
-        $vatRate = $settings->vat ?? 0;
         $sslRate = $settings->ssl ?? 0;
+        $vatRate = $settings->vat ?? 0;
+
 
         // Save all permits
         foreach ($cart as $entry) {
@@ -124,7 +126,6 @@ class PaymentController extends Controller
         // Calculate totals
         $entryCount = 0;
         $rateTotal = 0;
-        $nbtTotal = 0;
         $sslTotal = 0;
         $vatTotal = 0;
 
@@ -133,7 +134,7 @@ class PaymentController extends Controller
                 $entryCount++;
                 $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays($entry['to_date']) + 1;
 
-                if ($permitType === 'VP') {
+               if ($permitType === 'VP') {
                     // Vehicle rate
                     $vehicle = Vehicle::where('name', $entry['vehicle_type'])->first();
                     $baseRate = ($vehicle ? $vehicle->rate : 0) * $days;
@@ -149,11 +150,11 @@ class PaymentController extends Controller
                     // TP / MP from settings
                     $baseRate = $rateSetting * $days;
 
-                    $nbt = round(($baseRate * $nbtRate) / 100, 2);
-                    $vat = round((($baseRate + $nbt) * $vatRate) / 100, 2);
+                    $ssl = round(($baseRate * $sslRate) / 100, 2);
+                    $vat = round((($baseRate + $ssl) * $vatRate) / 100, 2);
 
                     $rateTotal += $baseRate;
-                    $nbtTotal += $nbt;
+                    $sslTotal += $ssl;
                     $vatTotal += $vat;
                 }
             }
@@ -174,7 +175,8 @@ class PaymentController extends Controller
         $invoiceId = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
         // Total amount
-        $amountTotal = $rateTotal + $vatTotal + ($permitType === 'VP' ? $sslTotal : $nbtTotal);
+      $amountTotal = $rateTotal + $sslTotal + $vatTotal;
+
 
         // Save to payments table
         Payment::create([
@@ -183,7 +185,6 @@ class PaymentController extends Controller
             'permit_type' => $permitType,
             'entry_count' => $entryCount,
             'rate_total' => $rateTotal,
-            'nbt_total' => $nbtTotal,
             'ssl_total' => $sslTotal,
             'vat_total' => $vatTotal,
             'amount_total' => $amountTotal,
@@ -256,7 +257,6 @@ class PaymentController extends Controller
             'invoice_id' => $invoiceId,
             'amount_total' => $totalAmount,
             'rate_total' => 0,
-            'nbt_total' => 0,
             'ssl_total' => 0,
             'vat_total' => 0,
             'entry_count' => count($cart),

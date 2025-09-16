@@ -26,9 +26,8 @@ class PaymentSettingController extends Controller
 {
     $validated = $request->validate([
         'rate' => 'required|numeric|min:0',
-        'nbt' => 'required|numeric|min:0',
+        'ssl' => 'required|numeric|min:0',
         'vat' => 'required|numeric|min:0',
-        'ssl'  => 'required|numeric|min:0',
     ]);
 
     $settings = PaymentSetting::first();

@@ -109,7 +109,7 @@ if (session()->has('temporary_company_name')) {
             'ashore' => $settings->price_ashore ?? 50,
         ];
 
-        $nbtRate = $settings->nbt ?? 2;   // NBT %
+        $sslRate = $settings->ssl ?? 2;   // SSL %
         $vatRate = $settings->vat ?? 15;  // VAT %
 
         foreach ($cart as $item) {
@@ -126,13 +126,13 @@ if (session()->has('temporary_company_name')) {
 
             if ($item['issue_type'] === 'free') {
                 $tRate = 0;
-                $nbt = 0;
+                $ssl = 0;
                 $vat = 0;
                 $amount = 0;
             } else {
-                $nbt = round(($tRate / 98) * $nbtRate, 2);
-                $vat = round((($tRate + $nbt) / 100) * $vatRate, 2);
-                $amount = round($tRate + $nbt + $vat, 2);
+                $ssl = round(($tRate / 98) * $sslRate, 2);
+                $vat = round((($tRate + $ssl) / 100) * $vatRate, 2);
+                $amount = round($tRate + $ssl + $vat, 2);
             }
 
             $totalPayment += $amount;
@@ -140,7 +140,7 @@ if (session()->has('temporary_company_name')) {
             $detailedPayments[] = [
                 'entry' => $item,
                 'rate' => $item['issue_type'] === 'free' ? 0 : $tRate,
-                'nbt' => $nbt,
+                'ssl' => $ssl,
                 'vat' => $vat,
                 'total' => $amount,
             ];
@@ -174,7 +174,7 @@ if (session()->has('temporary_company_name')) {
             'ashore' => $settings->price_ashore ?? 50,
         ];
 
-        $nbtRate = $settings->nbt ?? 2;
+        $sslRate = $settings->ssl ?? 2;
         $vatRate = $settings->vat ?? 15;
 
         foreach ($cart as $item) {
@@ -191,13 +191,13 @@ if (session()->has('temporary_company_name')) {
 
             if ($item['issue_type'] === 'free') {
                 $tRate = 0;
-                $nbt = 0;
+                $ssl = 0;
                 $vat = 0;
                 $amount = 0;
             } else {
-                $nbt = round(($tRate / 98) * $nbtRate, 2);
-                $vat = round((($tRate + $nbt) / 100) * $vatRate, 2);
-                $amount = round($tRate + $nbt + $vat, 2);
+                $ssl = round(($tRate / 98) * $sslRate, 2);
+                $vat = round((($tRate + $ssl) / 100) * $vatRate, 2);
+                $amount = round($tRate + $ssl + $vat, 2);
             }
 
             $totalPayment += $amount;
@@ -205,7 +205,7 @@ if (session()->has('temporary_company_name')) {
             $detailedPayments[] = [
                 'entry' => $item,
                 'rate' => $item['issue_type'] === 'free' ? 0 : $tRate,
-                'nbt' => $nbt,
+                'ssl' => $ssl,
                 'vat' => $vat,
                 'total' => $amount,
             ];

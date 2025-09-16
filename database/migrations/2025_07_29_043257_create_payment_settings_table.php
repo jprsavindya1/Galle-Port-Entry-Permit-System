@@ -14,7 +14,7 @@ return new class extends Migration
     Schema::create('payment_settings', function (Blueprint $table) {
         $table->id();
         $table->decimal('rate', 10, 2)->default(100);
-        $table->decimal('nbt', 5, 2)->default(2);      // percent
+        $table->decimal('ssl', 5, 2)->default(2);      // percent
         $table->decimal('vat', 5, 2)->default(15);     // percent
         $table->decimal('price_onboard', 10, 2)->default(100);
         $table->decimal('price_afloat', 10, 2)->default(80);

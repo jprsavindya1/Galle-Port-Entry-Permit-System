@@ -7,7 +7,10 @@
     <h2 class="mb-4">Payment Summary for Submission ID: <strong>{{ $submissionId }}</strong></h2>
 
     @php
-        $firstType = $detailedPayments[0]['entry']['type'] ?? 'TP';
+        $firstType = 'TP'; // default type
+        if(!empty($detailedPayments) && isset($detailedPayments[0]['entry']['type'])) {
+            $firstType = $detailedPayments[0]['entry']['type'];
+        }
     @endphp
 
     {{-- ================= TEMPORARY & MONTHLY PERMITS ================= --}}
@@ -23,7 +26,7 @@
                     <th>To</th>
                     <th>Days</th>
                     <th>Rate</th>
-                    <th>NBT</th>
+                    <th>SSL</th>
                     <th>VAT</th>
                     <th>Total</th>
                     <th>Action</th>
@@ -33,7 +36,7 @@
                 @php
                     $i = 1;
                     $rateTotal = 0;
-                    $nbtTotal = 0;
+                    $sslTotal = 0;
                     $vatTotal = 0;
                 @endphp
 
@@ -43,12 +46,12 @@
                         $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays(\Carbon\Carbon::parse($entry['to_date'])) + 1;
 
                         $rate = $payment['rate'] ?? 0;
-                        $nbt  = $payment['nbt'] ?? 0;
+                        $ssl  = $payment['ssl'] ?? 0;
                         $vat  = $payment['vat'] ?? 0;
 
                         if ($entry['issue_type'] !== 'free') {
                             $rateTotal += $rate;
-                            $nbtTotal  += $nbt;
+                            $sslTotal  += $ssl;
                             $vatTotal  += $vat;
                         }
                     @endphp
@@ -61,7 +64,7 @@
                         <td>{{ $entry['to_date'] }}</td>
                         <td>{{ $days }}</td>
                         <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($rate, 2) }}</td>
-                        <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($nbt, 2) }}</td>
+                        <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($ssl, 2) }}</td>
                         <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($vat, 2) }}</td>
                         <td><strong>{{ number_format($payment['total'], 2) }}</strong></td>
                         <td>
@@ -78,7 +81,7 @@
                 <tr>
                     <td colspan="7" class="text-end"><strong>Totals</strong></td>
                     <td><strong>{{ number_format($rateTotal, 2) }}</strong></td>
-                    <td><strong>{{ number_format($nbtTotal, 2) }}</strong></td>
+                    <td><strong>{{ number_format($sslTotal, 2) }}</strong></td>
                     <td><strong>{{ number_format($vatTotal, 2) }}</strong></td>
                     <td><strong>{{ number_format($totalPayment, 2) }}</strong></td>
                     <td></td>
@@ -166,9 +169,19 @@
 
     {{-- ================= ACTION BUTTONS ================= --}}
     <form method="POST" action="{{ route('payment.submit') }}">
-        @csrf
-        <button type="submit" class="btn btn-success btn-lg">Confirm & Pay</button>
-        <a href="{{ route('permit.temporary') }}" class="btn btn-secondary btn-lg ms-2">Cancel</a>
-    </form>
+    @csrf
+    <button type="submit" class="btn btn-success btn-lg">Confirm & Pay</button>
+    @php
+        // Determine the back route dynamically
+        switch($firstType ?? 'TP') {
+            case 'TP': $backRoute = route('permit.temporary'); break;
+            case 'MP': $backRoute = route('permit.monthly'); break;
+            case 'VP': $backRoute = route('permit.vehicle'); break;
+            default: $backRoute = url()->previous();
+        }
+    @endphp
+    <a href="{{ $backRoute }}" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+</form>
+
 </div>
 @endsection

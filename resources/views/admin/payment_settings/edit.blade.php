@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <h2>Edit Payment Information</h2>
-<!-- payment variables edit interface, rate - nbt - vat -->
+<!-- payment variables edit interface, rate -ssl - vat -->
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -21,9 +21,9 @@
         </div>
 
         <div class="mb-3">
-            <label for="nbt" class="form-label">NBT (%)</label>
-            <input type="number" step="0.01" name="nbt" id="nbt" value="{{ old('nbt', $settings->nbt) }}" class="form-control" required>
-            @error('nbt') <small class="text-danger">{{ $message }}</small> @enderror
+            <label for="ssl" class="form-label">SSL (%)</label>
+            <input type="number" step="0.01" name="ssl" id="ssl" value="{{ old('ssl', $settings->ssl) }}" class="form-control" required>
+            @error('ssl') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
         <div class="mb-3">
@@ -32,13 +32,6 @@
             @error('vat') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
-        <div class="mb-3">
-            <label for="ssl" class="form-label">SSL Amount</label>
-            <input type="number" step="0.01" name="ssl" id="ssl" 
-                value="{{ old('ssl', $settings->ssl) }}" 
-                class="form-control" required>
-            @error('ssl') <small class="text-danger">{{ $message }}</small> @enderror
-        </div>
 
         <button type="submit" class="btn btn-primary">Save Changes</button>
         <a href="{{ route('dashboard') }}" class="btn btn-secondary ms-2">Cancel</a>

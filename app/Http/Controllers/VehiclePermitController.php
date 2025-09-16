@@ -102,19 +102,17 @@ public function paymentVehicleSummary()
     $detailedPayments = [];
 
     $settings = PaymentSetting::first();
-    $sslAmount = $settings->ssl ?? 0;
-    $vatRate  = $settings->vat ?? 15;
+    $sslRate = $settings->ssl ?? 0;
+    $vatRate = $settings->vat ?? 15;
 
     foreach ($cart as $item) {
-        // Ensure type exists
         $item['type'] = 'VP';
 
-        $vehicle = Vehicle::find($item['vehicle_type']); // vehicle_type stores vehicle ID
+        $vehicle = Vehicle::find($item['vehicle_type']);
         if (!$vehicle) continue;
 
         $days = \Carbon\Carbon::parse($item['from_date'])->diffInDays(\Carbon\Carbon::parse($item['to_date'])) + 1;
 
-        // Base rate per vehicle × days
         $baseRate = $vehicle->rate * $days;
 
         if ($item['issue_type'] === 'free') {
@@ -124,8 +122,8 @@ public function paymentVehicleSummary()
             $amount = 0;
         } else {
             $tRate = $baseRate;
-            $ssl = $sslAmount;
-            $vat = round(($tRate + $ssl) * ($vatRate / 100), 2);
+            $ssl = round(($tRate * $sslRate) / 100, 2);
+            $vat = round((($tRate + $ssl) * $vatRate) / 100, 2);
             $amount = round($tRate + $ssl + $vat, 2);
         }
 
@@ -134,11 +132,12 @@ public function paymentVehicleSummary()
         $detailedPayments[] = [
             'entry' => $item,
             'rate'  => $tRate,
-            'nbt'   => 0,          // VP never uses NBT
-            'ssl'   => $ssl,       // always set
+            'ssl'   => $ssl,
             'vat'   => $vat,
             'total' => $amount,
         ];
+
+
     }
 
     return view('permit.payment_summary', compact('cart', 'detailedPayments', 'totalPayment', 'submissionId'));
