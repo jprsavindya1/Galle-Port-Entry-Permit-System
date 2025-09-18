@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ReasonController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\BlacklistController;
 use App\Http\Controllers\Admin\CancelledPermitController;
+use App\Http\Controllers\ReportController;
 // ------------------------------
 //Admin Routes
 // ------------------------------
@@ -186,7 +187,12 @@ Route::get('/permit/print/batch/{submission_id}', [PrintController::class, 'show
 Route::get('/permit/print/single/{id}', [PrintController::class, 'showSingle'])
     ->name('permit.print.single');
 
-
+Route::prefix('reports')->middleware('auth')->group(function () {
+    Route::get('/user', [ReportController::class, 'userReportForm'])->name('reports.user');
+    Route::post('/user/results', [ReportController::class, 'userReportResults'])->name('reports.user.results');
+    Route::get('/user/export/pdf', [ReportController::class, 'exportUserPdf'])->name('reports.user.pdf');
+    Route::get('/user/export/csv', [ReportController::class, 'exportUserCsv'])->name('reports.user.csv');
+});
 
 Route::middleware(['role:admin'])->group(function () {
     Route::get('/admin', function () {

@@ -11,20 +11,39 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+    <div class="row mb-4 align-items-center">
     <!-- Filter Form -->
-    <form id="filter-form" method="GET" action="{{ route('permits.submitted') }}" class="row g-3 mb-4">
-        <div class="col-md-3">
-            <input type="date" name="date" class="form-control" 
-                   value="{{ request('date', \Carbon\Carbon::today()->toDateString()) }}" 
-                   onchange="document.getElementById('filter-form').submit();">
+    <div class="col-md-8">
+        <form id="filter-form" method="GET" action="{{ route('permits.submitted') }}" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="date" name="date" class="form-control" 
+                       value="{{ request('date', \Carbon\Carbon::today()->toDateString()) }}" 
+                       onchange="document.getElementById('filter-form').submit();">
+            </div>
+            <div class="col-md-5">
+                <input type="text" name="q" class="form-control" placeholder="Search by Company, ID, or Name" value="{{ request('q') }}">
+            </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Report Widget -->
+    <div class="col-md-3 text-end">
+        <div class="card shadow-sm ">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <i class="fas fa-file-alt fa-2x text-primary"></i>
+                    <span class="ms-6 fw-bold">User / Company Report</span>
+                </div>
+                <a href="{{ route('reports.user') }}" class="btn btn-primary btn-sm">
+                    Generate
+                </a>
+            </div>
         </div>
-        <div class="col-md-3">
-            <input type="text" name="q" class="form-control" placeholder="Search by Company, ID, or Name" value="{{ request('q') }}">
-        </div>
-        <div class="col-md-auto">
-            <button type="submit" class="btn btn-primary">Search</button>
-        </div>
-    </form>
+    </div>
+</div>
 
     @if($permits->count())
         @php $grouped = $permits->groupBy('submission_id'); @endphp

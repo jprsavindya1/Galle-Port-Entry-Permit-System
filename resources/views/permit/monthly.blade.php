@@ -24,11 +24,11 @@
         @csrf
 
         <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="col-md-1">
                 <label for="id_type" class="form-label">ID Type</label>
                <input type="text" class="form-control" name="id_type" id="id_type" value="NIC" readonly>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-5">
                 <label for="id_number" class="form-label">ID Number</label>
                 <input type="text" class="form-control" name="id_number" id="id_number" value="{{ old('id_number') }}" required>
             </div>

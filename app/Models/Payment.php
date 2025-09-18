@@ -33,4 +33,11 @@ class Payment extends Model
         'vat_total' => 'float',
         'amount_total' => 'float',
     ];
+
+    // app/Models/Payment.php
+public function permits()
+{
+    return $this->hasMany(\App\Models\Permit::class, 'submission_id', 'submission_id');
+}
+
 }
