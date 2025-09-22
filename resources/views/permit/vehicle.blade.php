@@ -59,7 +59,8 @@
 
         <div class="mb-3">
             <label>Owner's Name</label>
-            <input type="text" class="form-control" name="owner_name" required value="{{ old('owner_name') }}">
+            <input type="text" class="form-control" name="owner_name" required value="{{ old('owner_name') }}"
+            oninput="this.value = this.value.toUpperCase();">
 
             <label for="company_name" class="form-label">Company Name</label>
             <select name="company_name" id="company_name" class="form-select" onchange="setCompanyAddress()" required>
@@ -95,7 +96,8 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label>Owner's Address</label>
-                <input type="text" class="form-control" name="owner_address" required value="{{ old('owner_address') }}">
+                <input type="text" class="form-control" name="owner_address" required value="{{ old('owner_address') }}"
+                oninput="this.value = this.value.toUpperCase();">
             </div>
         </div>
 

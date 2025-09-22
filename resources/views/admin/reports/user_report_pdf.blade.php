@@ -22,7 +22,7 @@
         @endphp
 
         <p><strong>ID Number:</strong> {{ $uniqueUsers === 1 ? $firstPermit->id_number : 'Multiple Users' }}</p>
-        <p><strong>Full Name:</strong> {{ $uniqueUsers === 1 ? $firstPermit->full_name : 'Multiple Users' }}</p>
+        <p><strong>Full Name / Owner:</strong> {{ $uniqueUsers === 1 ? ($firstPermit->type === 'VP' ? $firstPermit->owner_name : $firstPermit->full_name) : 'Multiple Users' }}</p>
     @elseif($query)
         <p><strong>Search Query:</strong> {{ $query }}</p>
     @endif
@@ -40,8 +40,13 @@
                 <thead>
                     <tr>
                         <th>Permit ID</th>
-                        <th>Full Name</th>
-                        <th>ID Number</th>
+                        @if($type === 'VP')
+                            <th>Owner Name</th>
+                            <th>Vehicle Number</th>
+                        @else
+                            <th>Full Name</th>
+                            <th>ID Number</th>
+                        @endif
                         <th>Company Name</th>
                         <th>From Date</th>
                         <th>To Date</th>
@@ -56,8 +61,13 @@
                     @foreach($permitsByType as $permit)
                         <tr>
                             <td>{{ $permit->permit_id }}</td>
-                            <td>{{ $permit->full_name }}</td>
-                            <td>{{ $permit->id_number }}</td>
+                            @if($type === 'VP')
+                                <td>{{ $permit->owner_name }}</td>
+                                <td>{{ $permit->vehicle_number }}</td>
+                            @else
+                                <td>{{ $permit->full_name }}</td>
+                                <td>{{ $permit->id_number }}</td>
+                            @endif
                             <td>{{ $permit->company_name }}</td>
                             <td>{{ $permit->from_date }}</td>
                             <td>{{ $permit->to_date }}</td>

@@ -24,11 +24,10 @@
     <form method="POST" action="{{ route('permit.addToSession') }}">
         @csrf
         <input type="hidden" name="type" value="temporary">
-
-  <div class="row mb-3 align-items-end">
+<div class="row mb-3 align-items-end">
   <div class="col-auto" style="min-width: 180px;">
     <label for="id_type" class="form-label">Identification Type</label>
-    <select name="id_type" id="id_type" onchange="setMaxToDate()" class="form-select" required>
+    <select name="id_type" id="id_type" onchange="updateIdValidation()" class="form-select" required>
       <option value="NIC" {{ old('id_type', $permit->id_type ?? '') == 'NIC' ? 'selected' : '' }}>NIC</option>
       <option value="Passport" {{ old('id_type', $permit->id_type ?? '') == 'Passport' ? 'selected' : '' }}>Passport</option>
       <option value="Driving License" {{ old('id_type', $permit->id_type ?? '') == 'Driving License' ? 'selected' : '' }}>Driving License</option>
@@ -37,9 +36,13 @@
 
   <div class="col-md-5">
     <label for="id_number" class="form-label">Identification Number</label>
-    <input type="text" name="id_number" id="id_number" value="{{ old('id_number') }}" class="form-control" required>
+    <input type="text" name="id_number" id="id_number" 
+           value="{{ old('id_number') }}" class="form-control" required
+           oninput="this.value = this.value.toUpperCase();">
+            <span id="id_number_error" class="text-danger small"></span>
   </div>
 </div>
+
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="from_date" class="form-label">From Date</label>
@@ -62,7 +65,8 @@
 
         <div class="mb-3">
             <label for="initials" class="form-label">Name with Initials</label>
-            <input type="text" name="initials" id="initials" value="{{ old('initials') }}" class="form-control" required>
+            <input type="text" name="initials" id="initials" value="{{ old('initials') }}" class="form-control" required
+            oninput="this.value = this.value.toUpperCase();">
         </div>
 
         <div class="mb-3">
@@ -103,6 +107,7 @@
         <div class="mb-3">
             <label for="residence_address" class="form-label">Residence Address</label>
             <textarea name="residence_address" id="residence_address" rows="2" class="form-control">{{ old('residence_address') }}</textarea>
+       
         </div>
 
         <fieldset class="mb-3">
@@ -263,7 +268,45 @@
     });
 
 });
+document.addEventListener("DOMContentLoaded", function () {
+    const idType = document.getElementById("id_type");
+    const idNumber = document.getElementById("id_number");
+    const errorSpan = document.getElementById("id_number_error");
 
+    function validateId() {
+        let type = idType.value;
+        let value = idNumber.value.trim();
+        let regex, message = "";
+
+        if (type === "NIC") {
+            // Old (9 digits + V/X) OR New (12 digits)
+            regex = /^(?:\d{9}[VXvx]|\d{12})$/;
+            message = "Enter a valid NIC number (123456789V or 123456789123).";
+        } else if (type === "Passport") {
+            // 1 or 2 letters + 6–7 digits
+            regex = /^[A-Z]{1,2}\d{6,7}$/i;
+            message = "Enter a valid Passport Number (N1234567 or PP123456).";
+        } else if (type === "Driving License") {
+            // NIC (old/new) OR 8 digits
+            regex = /^(?:\d{7,8}|[A-Z]\d{7}|\d{9}[VXvx]|\d{12})$/;
+            message = "Enter a valid Driving License Number (1234567 or A123456).";
+        }
+
+        if (!regex.test(value) && value !== "") {
+            errorSpan.textContent = message;
+            idNumber.classList.add("is-invalid");
+            return false;
+        } else {
+            errorSpan.textContent = "";
+            idNumber.classList.remove("is-invalid");
+            return true;
+        }
+    }
+
+    // Run validation on typing & changing
+    idNumber.addEventListener("input", validateId);
+    idType.addEventListener("change", validateId);
+});
    
     function setMaxToDate() {
         const idType = document.getElementById('id_type').value;
@@ -358,7 +401,6 @@
             $('#company_address').val(address);
         });
     });
-
 
 </script>
 @endpush
