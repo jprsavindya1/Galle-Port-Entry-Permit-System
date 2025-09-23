@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+    <link rel="preload" href="{{ asset('images/Sri_Lanka_Ports_Authority_logo.png') }}" as="image">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -16,7 +17,11 @@
 <body class="bg-light">
     <!-- Top Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-        <a class="navbar-brand" href="{{ route('dashboard') }}">{{ config('app.name', 'Permit Portal') }}</a>
+        <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard') }}">
+    <img src="{{ asset('images/Sri_Lanka_Ports_Authority_logo.png') }}" alt="SLPA Logo" class="me-2" style="height:50px; width:auto;">
+    <span class="fs-4 fw-bold">SLPA Permit System</span>
+</a>
+
         <div class="ms-auto text-white">
             @auth
                 {{ Auth::user()->name }}
@@ -30,6 +35,7 @@
 
     <!-- Layout Row -->
     <div class="d-flex">
+        
         <!-- Sidebar -->
         <div class="text-white shadow p-4" style="min-width: 220px; min-height: 100vh; background: linear-gradient(to bottom, #002b5c, #00bfff);">
             <h5 class="mb-4">Navigation</h5>
@@ -44,11 +50,11 @@
                         Temporary Permit
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link text-white {{ request()->routeIs('permit.monthly-permit') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.monthly') }}">
+                    <li class="nav-item mb-2">
+                    <a class="nav-link text-white {{ request()->routeIs('permit.monthly') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.monthly') }}">
                         Monthly Permit
                     </a>
-                </li>
+                    </li>
                 <li class="nav-item mb-2">
                     <a class="nav-link text-white {{ request()->routeIs('permit.vehicle') ? 'active bg-secondary rounded' : '' }}" href="{{ route('permit.vehicle') }}">
                         Vehicle Permit
@@ -67,4 +73,18 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 </body>
+
+<style>
+.nav-link {
+    transition: background-color 0.2s;
+}
+.nav-link:hover {
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 0.25rem;
+}
+.nav-link.active {
+    background-color: rgba(255,255,255,0.3);
+    border-radius: 0.25rem;
+}
+</style>
 </html>
