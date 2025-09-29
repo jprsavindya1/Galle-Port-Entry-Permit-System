@@ -110,18 +110,46 @@ class PaymentController extends Controller
 
 
         // Save all permits
-        foreach ($cart as $entry) {
-            $entry['permit_id'] = $this->generatePermitId($entry['type']);
+foreach ($cart as $entry) {
+    $entry['permit_id'] = $this->generatePermitId($entry['type']);
 
-            // Safely handle pass_type: only for TP/MP
-            if (isset($entry['pass_type'])) {
-                $entry['pass_type'] = is_array($entry['pass_type']) ? implode(',', $entry['pass_type']) : $entry['pass_type'];
-            } else {
-                $entry['pass_type'] = null;
-            }
+    // Safely handle pass_type: only for TP/MP
+    if (isset($entry['pass_type'])) {
+        $entry['pass_type'] = is_array($entry['pass_type']) ? implode(',', $entry['pass_type']) : $entry['pass_type'];
+    } else {
+        $entry['pass_type'] = null;
+    }
 
-            Permit::create($entry);
-        }
+    // ===== Calculate per-permit totals =====
+    $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays(\Carbon\Carbon::parse($entry['to_date'])) + 1;
+
+    if ($entry['type'] === 'VP') {
+        $vehicle = Vehicle::where('name', $entry['vehicle_type'])->first();
+        $rate = ($vehicle ? $vehicle->rate : 0) * $days;
+    } else {
+        $rate = $rateSetting * $days;
+    }
+
+    if ($entry['issue_type'] === 'free') {
+        $ssl = 0;
+        $vat = 0;
+        $total = 0;
+    } else {
+        $ssl = round(($rate * $sslRate) / 100, 2);
+        $vat = round((($rate + $ssl) * $vatRate) / 100, 2);
+        $total = round($rate + $ssl + $vat, 2);
+    }
+
+    // Add totals to $entry
+    $entry['rate'] = $rate;
+    $entry['ssl'] = $ssl;
+    $entry['vat'] = $vat;
+    $entry['total'] = $total;
+    // ======================================
+
+    Permit::create($entry);
+}
+
 
         // Calculate totals
         $entryCount = 0;
@@ -191,6 +219,7 @@ class PaymentController extends Controller
             'status' => 'Paid',
             'payment_date' => now(),
             'paid_at' => now(),
+            
         ]);
 
         // Clear sessions

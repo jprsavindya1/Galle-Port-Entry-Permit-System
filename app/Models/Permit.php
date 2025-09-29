@@ -41,6 +41,10 @@ class Permit extends Model
         'cancel_reason',
         'police_issue_date',
         'police_expire_date',
+        'rate',
+        'ssl',
+        'vat',
+        'total',
     ];
 
     public function payment()
