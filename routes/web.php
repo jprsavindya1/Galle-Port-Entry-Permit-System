@@ -187,11 +187,22 @@ Route::get('/permit/print/batch/{submission_id}', [PrintController::class, 'show
 Route::get('/permit/print/single/{id}', [PrintController::class, 'showSingle'])
     ->name('permit.print.single');
 
+    // reports routes
+
 Route::prefix('reports')->middleware('auth')->group(function () {
+
+    // User Activity Reports
     Route::get('/user', [ReportController::class, 'userReportForm'])->name('reports.user');
     Route::post('/user/results', [ReportController::class, 'userReportResults'])->name('reports.user.results');
     Route::get('/user/export/pdf', [ReportController::class, 'exportUserPdf'])->name('reports.user.pdf');
     Route::get('/user/export/csv', [ReportController::class, 'exportUserCsv'])->name('reports.user.csv');
+
+    // Payment / Financial Reports
+    
+    Route::get('/payment', [ReportController::class, 'paymentReport'])->name('reports.payment');
+    Route::get('/payment/export/pdf', [ReportController::class, 'exportPaymentPdf'])->name('reports.payment.pdf');
+    Route::get('/payment/export/csv', [ReportController::class, 'exportPaymentCsv'])->name('reports.payment.csv');
+
 });
 
 Route::middleware(['role:admin'])->group(function () {

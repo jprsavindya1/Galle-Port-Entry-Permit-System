@@ -127,7 +127,7 @@
     </div>
 
    <div class="field total-amount">{{ number_format($permit->total ?? 0, 2) }}</div>
->
+
 
 
     @if($permit->type === 'VP')

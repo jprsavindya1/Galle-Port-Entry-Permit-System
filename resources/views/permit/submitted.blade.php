@@ -24,22 +24,38 @@
                 <input type="text" name="q" class="form-control" placeholder="Search by Company, ID, or Name" value="{{ request('q') }}">
             </div>
             <div class="col-md-auto">
-                <button type="submit" class="btn btn-primary">Search</button>
+                <button type="submit" class="btn btn-primary w-100">Search</button>
             </div>
         </form>
     </div>
 
-    <!-- Report Widget -->
-    <div class="col-md-3 text-end">
-        <div class="card shadow-sm ">
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <div>
-                    <i class="fas fa-file-alt fa-2x text-primary"></i>
-                    <span class="ms-6 fw-bold">User / Company Report</span>
+    <!-- Report Cards -->
+    <div class="col-md-4">
+        <div class="row g-3 justify-content-end">
+            <!-- User / Company Report -->
+            <div class="col-12 col-sm-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-alt fa-2x text-primary"></i>
+                            <span class="ms-2 fw-bold">User Reports</span>
+                        </div>
+                        <a href="{{ route('reports.user') }}" class="btn btn-primary btn-sm">Generate</a>
+                    </div>
                 </div>
-                <a href="{{ route('reports.user') }}" class="btn btn-primary btn-sm">
-                    Generate
-                </a>
+            </div>
+
+            <!-- Financial Report -->
+            <div class="col-12 col-sm-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-coins fa-2x text-success"></i>
+                            <span class="ms-2 fw-bold">Financial Reports</span>
+                        </div>
+                        <a href="{{ route('reports.payment') }}" class="btn btn-success btn-sm">Generate</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

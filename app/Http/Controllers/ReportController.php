@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Permit;
 use Pdf;
+use App\Models\Payment;
+use Carbon\Carbon;
 
 class ReportController extends Controller
 {
@@ -168,5 +170,148 @@ class ReportController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+
     }
+public function paymentReport(Request $request)
+{
+    $type = $request->query('type');   // TP / MP / VP / all
+    $range = $request->query('range'); // day / week / month
+    $date = $request->query('date');   // reference date (optional)
+
+    $payments = Payment::with('permits');
+
+    // Filter by permit type
+    if ($type) {
+        $payments->where('permit_type', $type);
+    }
+
+    // Date filters
+    $refDate = $date ? Carbon::parse($date) : Carbon::today();
+
+    if ($range === 'day') {
+        $payments->whereDate('payment_date', $refDate);
+    } elseif ($range === 'week') {
+       $payments->whereBetween('payment_date', [
+        $refDate->copy()->startOfWeek(),
+        $refDate->copy()->endOfWeek(),
+    ]);
+    } elseif ($range === 'month') {
+        $payments->whereMonth('payment_date', $refDate->month)
+                 ->whereYear('payment_date', $refDate->year);
+    }
+
+    $payments = $payments->orderBy('payment_date', 'desc')->get();
+
+    // Summary totals
+    $summary = [
+        'rate_total'  => $payments->sum('rate_total'),
+        'ssl_total'   => $payments->sum('ssl_total'),
+        'vat_total'   => $payments->sum('vat_total'),
+        'amount_total'=> $payments->sum('amount_total'),
+    ];
+
+    return view('admin.reports.payment_report', compact('payments', 'summary', 'type', 'range', 'date'));
 }
+
+public function exportPaymentPdf(Request $request)
+{
+    $type  = $request->query('type');
+    $range = $request->query('range');
+    $date  = $request->query('date');
+
+    $paymentsQuery = Payment::with('permits');
+
+    if ($type) {
+        $paymentsQuery->where('permit_type', $type);
+    }
+
+    $refDate = $date ? \Carbon\Carbon::parse($date) : \Carbon\Carbon::today();
+
+    if ($range === 'day') {
+        $paymentsQuery->whereDate('payment_date', $refDate);
+    } elseif ($range === 'week') {
+        $paymentsQuery->whereBetween('payment_date', [$refDate->startOfWeek(), $refDate->endOfWeek()]);
+    } elseif ($range === 'month') {
+        $paymentsQuery->whereMonth('payment_date', $refDate->month)
+                      ->whereYear('payment_date', $refDate->year);
+    }
+
+    $payments = $paymentsQuery->orderBy('payment_date', 'desc')->get();
+
+    $summary = [
+        'rate_total'   => $payments->sum('rate_total'),
+        'ssl_total'    => $payments->sum('ssl_total'),
+        'vat_total'    => $payments->sum('vat_total'),
+        'amount_total' => $payments->sum('amount_total'),
+    ];
+
+    return \Pdf::loadView('admin.reports.payment_report_pdf', compact('payments', 'summary', 'type', 'range', 'date'))
+              ->setPaper('a4', 'landscape')
+              ->download('payment_report.pdf');
+}
+
+public function exportPaymentCsv(Request $request)
+{
+    $type  = $request->query('type');
+    $range = $request->query('range');
+    $date  = $request->query('date');
+
+    $paymentsQuery = Payment::with('permits');
+
+    if ($type) {
+        $paymentsQuery->where('permit_type', $type);
+    }
+
+    $refDate = $date ? \Carbon\Carbon::parse($date) : \Carbon\Carbon::today();
+
+    if ($range === 'day') {
+        $paymentsQuery->whereDate('payment_date', $refDate);
+    } elseif ($range === 'week') {
+        $paymentsQuery->whereBetween('payment_date', [$refDate->startOfWeek(), $refDate->endOfWeek()]);
+    } elseif ($range === 'month') {
+        $paymentsQuery->whereMonth('payment_date', $refDate->month)
+                      ->whereYear('payment_date', $refDate->year);
+    }
+
+    $payments = $paymentsQuery->orderBy('payment_date', 'desc')->get();
+
+    $fileName = 'payment_report.csv';
+    $headers = [
+        'Content-Type' => 'text/csv',
+        'Content-Disposition' => "attachment; filename=\"$fileName\"",
+    ];
+
+    $callback = function() use ($payments) {
+        $file = fopen('php://output', 'w');
+
+        // Header
+        fputcsv($file, [
+            'Invoice ID', 'Submission ID', 'Permit Type', 'Company Name',
+            'Entry Count', 'Rate Total', 'SSL Total', 'VAT Total', 'Amount Total', 'Payment Date'
+        ]);
+
+        foreach ($payments as $p) {
+            fputcsv($file, [
+                $p->invoice_id,
+                $p->submission_id,
+                $p->permit_type,
+                $p->permits->first()->company_name ?? '-',
+                $p->entry_count,
+                $p->rate_total,
+                $p->ssl_total,
+                $p->vat_total,
+                $p->amount_total,
+                $p->payment_date,
+            ]);
+        }
+
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+}
+
+
+
+}
+
