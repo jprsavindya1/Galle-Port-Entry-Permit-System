@@ -4,10 +4,10 @@
 
 @section('content')
 
-<!-- Bootstrap CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- Custom Hover Styles -->
 <style>
     .dashboard-card {
         transition: transform 0.2s, box-shadow 0.2s;
@@ -15,19 +15,92 @@
     .dashboard-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-         border-right: 4px solid #6a9ed5ff;
+        border-right: 4px solid #6a9ed5ff;
     }
+    .summary-card {
+        padding: 1.5rem;
+        text-align: center;
+        border-radius: 0.75rem;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+    }
+    .summary-card h3 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .summary-card h5 { font-size: 1rem; color: #555; margin-bottom: 1rem; }
+    .summary-breakdown {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 1rem;
+        font-weight: 500;
+        color: #333;
+    }
+    .summary-breakdown div {
+        flex: 1;
+        text-align: center;
+        padding: 0.5rem;
+        background: #f5f7fa;
+        border-radius: 0.5rem;
+        margin: 0 0.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    canvas { max-height: 220px; }
 </style>
 
 <div class="container">
-    <h2 class="mb-4">Dashboard</h2>
+    <h2 class="mb-3">Dashboard</h2>
 
     @auth
-    <div class="alert alert-info">
-        Logged in as: {{ Auth::user()->name }} (Role: {{ Auth::user()->role }})
-    </div>
-@endauth
+        <div class="alert alert-info">
+            Logged in as: {{ Auth::user()->name }} (Role: {{ Auth::user()->role }})
+        </div>
+    @endauth
 
+    <!-- --- Summary Cards Row --- -->
+<div class="row mb-3">
+    <!-- Total Permits Card -->
+    <div class="col-md-6 mb-2">
+        <div class="summary-card h-100">
+            <h5>Total Permits</h5>
+            <h3>{{ ($totalPermits['TP'] ?? 0) + ($totalPermits['MP'] ?? 0) + ($totalPermits['VP'] ?? 0) }}</h3>
+            <div class="summary-breakdown">
+                <div>TP<br>{{ $totalPermits['TP'] ?? 0 }}</div>
+                <div>MP<br>{{ $totalPermits['MP'] ?? 0 }}</div>
+                <div>VP<br>{{ $totalPermits['VP'] ?? 0 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Revenue Card with Month Filter -->
+    <div class="col-md-6 mb-2">
+        <div class="summary-card h-100">
+            <h5>Total Revenue</h5>
+           <select id="monthFilterSelect" class="form-select">
+    @foreach($months as $num => $name)
+        <option value="{{ $num }}" {{ $selectedMonth == $num ? 'selected' : '' }}>{{ $name }}</option>
+    @endforeach
+</select>
+
+            <h3>LKR {{ number_format($totalRevenue ?? 0,2) }}</h3>
+        </div>
+    </div>
+</div>
+
+
+    <!-- --- Charts Row --- -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-2">
+            <div class="card shadow-sm rounded-3 p-2">
+                <h5 class="mb-2">Permits by Company</h5>
+                <canvas id="companyBarChart"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6 mb-2">
+            <div class="card shadow-sm rounded-3 p-2">
+                <h5 class="mb-2">Permit Type Distribution & Revenue</h5>
+                <canvas id="permitPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- Action Cards Row --- -->
     <div class="row g-4">
         <div class="col-md-4">
             <a href="{{ route('permit.temporary') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
@@ -37,25 +110,22 @@
                 </div>
             </a>
         </div>
-
         <div class="col-md-4">
-            <a href="{{ route('permit.monthly') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm  rounded-3 h-100">
+            <a href="{{ route('permit.monthly') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
                     <h4>Monthly Permit</h4>
                     <p>Create a new monthly permit request.</p>
                 </div>
             </a>
         </div>
-
         <div class="col-md-4">
-            <a href="{{ route('permit.vehicle') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm  rounded-3 h-100">
+            <a href="{{ route('permit.vehicle') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
                     <h4>Vehicle Permit</h4>
                     <p>Create a new vehicle permit request.</p>
                 </div>
             </a>
         </div>
-        
 
         <div class="col-md-4">
             <a href="{{ route('permits.submitted') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
@@ -65,97 +135,170 @@
                 </div>
             </a>
         </div>
-        
+
         @auth
-  @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
-        <div class="col-md-4">
-            <a href="{{ route('blacklist.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm  rounded-3 h-100">
-                <div class="card-body">
-                    <h4>Edit BlackList</h4>
-                    <p>BlackList</p>
-                </div>
-            </a>
-        </div>
+        @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
+            <div class="col-md-4">
+                <a href="{{ route('blacklist.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <h4>Edit BlackList</h4>
+                        <p>BlackList</p>
+                    </div>
+                </a>
+            </div>
 
-<div class="col-md-4">
-    <a href="{{ route('admin.payment_settings.edit') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm  rounded-3 h-100">
-        <div class="card-body">
-            <h4>Edit Payment Information</h4>
-            <p>Configure rates, taxes and pass pricing</p>
-        </div>
-    </a>
-</div>
-  <div class="col-md-4">
-            <a href="{{ route('users.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h4>Manage Users</h4>
-                    <p>Create, edit, and delete system users</p>
-                </div>
-            </a>
-        </div>
-<div class="col-md-4">
-             <a href="{{ route('admin.cancelled_permits.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h4>Cancelled Permits</h4>
-                    <p>View and manage cancelled permit requests.</p>
-                </div>
-            </a>
-        </div>
-  
-<!--  
-        <div class="col-md-4">
-            <a href="{{ route('permits.submitted') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h4>Edit vehicle list</h4>
-                    <p>Vehicle List</p>
-                </div>
-            </a>
-        </div>
+            <div class="col-md-4">
+                <a href="{{ route('admin.payment_settings.edit') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <h4>Edit Payment Information</h4>
+                        <p>Configure rates, taxes and pass pricing</p>
+                    </div>
+                </a>
+            </div>
 
- 
-      
-          <div class="col-md-4">
-            <a href="{{ route('admin.companies.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h4>Edit Company List</h4>
-                    <p>Create, edit, and delete Company Information</p>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4">
-            <a href="{{ route('admin.designations.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h4>Edit Designation List</h4>
-                    <p>Create, edit, and delete Designation Information</p>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4">
-            <a href="{{ route('admin.designations.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h4>Edit Reasons List</h4>
-                    <p>Create, edit, and delete Reasons to entry</p>
-                </div>
-            </a>
-        </div>-->
+            <div class="col-md-4">
+                <a href="{{ route('users.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <h4>Manage Users</h4>
+                        <p>Create, edit, and delete system users</p>
+                    </div>
+                </a>
+            </div>
 
-        {{-- Combined Card --}}
-<div class="col-md-4">
-    <a href="{{ route('admin.masterdata') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
-        <div class="card-body">
-            <h4>Edit Master Data</h4>
-            <p>companies, designations, vehicles, reasons</p>
-        </div>
-    </a>
-</div>
+            <div class="col-md-4">
+                <a href="{{ route('admin.cancelled_permits.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <h4>Cancelled Permits</h4>
+                        <p>View and manage cancelled permit requests.</p>
+                    </div>
+                </a>
+            </div>
 
-
-
-
-    @endif
-@endauth
-
-
+            <div class="col-md-4">
+                <a href="{{ route('admin.masterdata') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <h4>Edit Master Data</h4>
+                        <p>companies, designations, vehicles, reasons</p>
+                    </div>
+                </a>
+            </div>
+        @endif
+        @endauth
     </div>
 </div>
+
+<script>
+    const companies = @json($companies ?? []);
+    const permitCounts = @json($permitCounts ?? []);
+    const permitTypes = @json($permitTypes ?? ['TP','MP','VP']);
+    const permitRevenue = @json($permitRevenue ?? [0,0,0]);
+
+    // --- Gradient Bar Chart ---
+    const ctxBar = document.getElementById('companyBarChart').getContext('2d');
+    const gradient = ctxBar.createLinearGradient(0,0,0,250);
+    gradient.addColorStop(0,'#6a9ed5ff');
+    gradient.addColorStop(1,'#1e3c72ff');
+
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: companies,
+            datasets: [{
+                label: 'Number of Permits',
+                data: permitCounts,
+                backgroundColor: gradient,
+                borderRadius: 8,
+                barThickness: 30
+            }]
+        },
+        options: {
+            responsive:true,
+            plugins:{ legend:{ display:false }, tooltip:{ mode:'index', intersect:false }},
+            scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } }, x:{ grid:{ display:false } } }
+        }
+    });
+
+    // --- Pie Chart ---
+    new Chart(document.getElementById('permitPieChart').getContext('2d'), {
+        type:'pie',
+        data:{
+            labels: permitTypes,
+            datasets:[{
+                label:'Revenue (LKR)',
+                data: permitRevenue,
+                backgroundColor:['#FF6384','#36A2EB','#FFCE56'],
+                hoverOffset:10
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{ tooltip:{ callbacks:{ label: function(ctx){ return ctx.label + ': LKR ' + ctx.raw.toLocaleString(); } } } }
+        }
+    });
+
+    // --- Month Filter Change Handler ---
+    let companyChart, permitChart;
+
+function renderCharts(companies, counts, types, revenues){
+    // Bar Chart
+    const ctxBar = document.getElementById('companyBarChart').getContext('2d');
+    if(companyChart) companyChart.destroy();
+
+    const gradient = ctxBar.createLinearGradient(0,0,0,250);
+    gradient.addColorStop(0,'#6a9ed5ff');
+    gradient.addColorStop(1,'#1e3c72ff');
+
+    companyChart = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: companies,
+            datasets: [{ label:'Number of Permits', data: counts, backgroundColor: gradient, borderRadius:8, barThickness:30 }]
+        },
+        options:{ responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, stepSize:1 } } }
+    });
+
+    // Pie Chart
+    const ctxPie = document.getElementById('permitPieChart').getContext('2d');
+    if(permitChart) permitChart.destroy();
+    permitChart = new Chart(ctxPie, {
+        type:'pie',
+        data:{
+            labels: types,
+            datasets:[{ data: revenues, backgroundColor:['#FF6384','#36A2EB','#FFCE56'], hoverOffset:10 }]
+        },
+        options:{
+            responsive:true,
+            plugins:{ tooltip:{ callbacks:{ label: function(ctx){ return ctx.label + ': LKR ' + ctx.raw.toLocaleString(); } } } }
+        }
+    });
+}
+
+$('#monthFilterSelect').on('change', function(){
+    const month = $(this).val();
+    $.get('{{ route("dashboard.data") }}', { month: month }, function(res){
+
+
+        // Update total permits total
+        $('.summary-card h3').eq(0).text(res.totalPermits.TP + res.totalPermits.MP + res.totalPermits.VP);
+        // Update total permits total
+        $('.summary-card h3').eq(0).text(res.totalPermitsAll);
+
+       
+
+        // Update total revenue
+        $('.summary-card h3').eq(1).text('LKR ' + Number(res.totalRevenue).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
+        
+        // Update total permits breakdown
+        const breakdown = $('.summary-breakdown div');
+        breakdown.eq(0).html('TP<br>'+res.totalPermits.TP);
+        breakdown.eq(1).html('MP<br>'+res.totalPermits.MP);
+        breakdown.eq(2).html('VP<br>'+res.totalPermits.VP);
+
+        // Update charts
+        renderCharts(res.companies, res.permitCounts, ['TP','MP','VP'], res.permitRevenue);
+    });
+});
+
+</script>
+
 @endsection

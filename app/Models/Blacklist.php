@@ -18,4 +18,12 @@ class Blacklist extends Model
         'vehicle_number',
         'reason',
     ];
+    
+    public function activities()
+{
+    return $this->hasMany(\App\Models\ActivityLog::class, 'model_id')
+                ->where('model', self::class)
+                ->latest();
+}
+
 }

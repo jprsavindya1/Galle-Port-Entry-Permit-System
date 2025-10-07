@@ -16,6 +16,21 @@ use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\BlacklistController;
 use App\Http\Controllers\Admin\CancelledPermitController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\DashboardController;
+use Illuminate\Http\Request;
+
+// Keep the "/" redirect
+Route::get('/', fn () => redirect()->route('dashboard'));
+
+// Old-style inline route — now calls the controller with Request
+Route::get('/dashboard', function (Request $request) {
+    return app(DashboardController::class)->index($request);
+})->middleware('auth')->name('dashboard');
+
+Route::get('/dashboard/data', [DashboardController::class, 'getMonthData'])
+    ->middleware('auth')
+    ->name('dashboard.data');
+
 // ------------------------------
 //Admin Routes
 // ------------------------------
@@ -80,12 +95,6 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
 
 
 });
-
-
-
-Route::get('/', fn () => redirect()->route('dashboard'));
-Route::get('/dashboard', fn () => view('dashboard'))->middleware('auth')->name('dashboard');
-
 
 // ------------------------------
 // invoice Routes
@@ -177,6 +186,8 @@ Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(
     Route::get('/{blacklist}/edit', [BlacklistController::class, 'edit'])->name('edit');
     Route::put('/{blacklist}', [BlacklistController::class, 'update'])->name('update');
     Route::delete('/{blacklist}', [BlacklistController::class, 'destroy'])->name('destroy');
+    Route::get('/export/pdf', [App\Http\Controllers\Admin\BlacklistController::class, 'exportPdf'])->name('exportPdf');
+    Route::get('/export/excel', [App\Http\Controllers\Admin\BlacklistController::class, 'exportExcel'])->name('exportExcel');
 });
 
 // Batch print (by submission_id)

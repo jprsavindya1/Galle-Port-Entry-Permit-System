@@ -57,10 +57,10 @@
                 <td>{{ $permit->cancelled_by }}</td>
                 <td>
                     <a href="{{ route('admin.cancelled_permits.show', $permit->id) }}" class="btn btn-sm btn-info">View</a>
-                    <form action="{{ route('admin.cancelled_permits.destroy', $permit->id) }}" method="POST" style="display:inline-block">
+                    <!-- <form action="{{ route('admin.cancelled_permits.destroy', $permit->id) }}" method="POST" style="display:inline-block">
                         @csrf @method('DELETE')
                         <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this record?')">Delete</button>
-                    </form>
+                    </form>-->
                 </td>
             </tr>
         @empty
@@ -83,11 +83,11 @@
 
 
     </div>
-
+<!--
     <div class="mb-3">
         <a href="{{ route('admin.cancelled_permits.trash') }}" class=" btn btn-danger mb-3">
             View Trash
         </a>
-    </div>
+    </div>-->
 </div>
 @endsection

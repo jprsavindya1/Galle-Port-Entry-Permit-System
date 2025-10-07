@@ -51,7 +51,7 @@
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center">
                             <i class="fas fa-coins fa-2x text-success"></i>
-                            <span class="ms-2 fw-bold">Financial Reports</span>
+                            <span class="ms-2 fw-bold">Revenue Reports</span>
                         </div>
                         <a href="{{ route('reports.payment') }}" class="btn btn-success btn-sm">Generate</a>
                     </div>
