@@ -204,6 +204,48 @@ function checkVehicleAvailability() {
         availabilityMessage.innerHTML = '<div class="alert alert-danger">Error checking availability. Please try again.</div>';
     });
 }
+function setMaxToDate() {
+        const idType = document.getElementById('id_type')?.value;
+        const fromDateInput = document.getElementById('from_date');
+        const toDateInput = document.getElementById('to_date');
+
+        if (!fromDateInput || !toDateInput) return;
+        if (!fromDateInput.value) return;
+
+        const fromDate = new Date(fromDateInput.value);
+
+        let maxDays = 29; // default for NIC
+        if (idType === 'Passport' || idType === 'Driving License') {
+            maxDays = 14;
+        }
+
+        const maxToDate = new Date(fromDate);
+        maxToDate.setDate(maxToDate.getDate() + maxDays);
+
+        const yyyy = maxToDate.getFullYear();
+        const mm = String(maxToDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(maxToDate.getDate()).padStart(2, '0');
+
+        toDateInput.min = fromDateInput.value;
+        toDateInput.max = `${yyyy}-${mm}-${dd}`;
+
+        // If the currently selected to_date is invalid, reset it
+        if (toDateInput.value < toDateInput.min || toDateInput.value > toDateInput.max) {
+            toDateInput.value = toDateInput.min;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const idTypeInput = document.getElementById('id_type');
+        const fromDateInput = document.getElementById('from_date');
+
+        if (fromDateInput) {
+            fromDateInput.addEventListener('change', setMaxToDate);
+        }
+        if (idTypeInput) {
+            idTypeInput.addEventListener('change', setMaxToDate);
+        }
+    });
 </script>
 
 @endsection

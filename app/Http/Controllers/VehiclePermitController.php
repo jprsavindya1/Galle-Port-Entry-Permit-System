@@ -122,7 +122,7 @@ public function paymentVehicleSummary()
             $amount = 0;
         } else {
             $tRate = $baseRate;
-            $ssl = round(($tRate * $sslRate) / 100, 2);
+           $ssl = round(($tRate * $sslRate) / 100, 2);
             $vat = round((($tRate + $ssl) * $vatRate) / 100, 2);
             $amount = round($tRate + $ssl + $vat, 2);
         }
@@ -314,8 +314,9 @@ public function submitAllVehicle(Request $request)
     $datePrefix = now()->format('Ymd');
     $type = 'VP';
 
-    // Generate submission_id
-     $latestPermit = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
+ // Generate submission_id
+
+    $latestPermit = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
         ->orderBy('submission_id', 'desc')
         ->first();
 
@@ -323,7 +324,7 @@ public function submitAllVehicle(Request $request)
         ->orderBy('submission_id', 'desc')
         ->first();
 
-    // Determine the highest counter used
+// Determine the highest counter used
     $lastCounter = 0;
     if ($latestPermit) {
         $lastCounter = (int) substr($latestPermit->submission_id, -4);
@@ -339,18 +340,19 @@ public function submitAllVehicle(Request $request)
     $submissionId = $datePrefix . $type . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
     // Add submission ID and permit type to each entry
+
     foreach ($cart as $index => $entry) {
         $entry['submission_id'] = $submissionId;
         $entry['type'] = $type;
+        $entry['permit_id'] = $this->generatePermitId($type); // ✅ New yearly-reset permit ID
         $cart[$index] = $entry;
     }
 
-    // Store updated cart to new session key for payment step
+ // Store updated cart to new session key for payment step
     session(['payment_cart' => $cart]);
     session(['payment_submission_id' => $submissionId]);
 
     return redirect()->route('payment.summary');
-
 }
 
 }

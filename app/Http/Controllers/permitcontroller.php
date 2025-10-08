@@ -117,24 +117,27 @@ public function edit(Permit $permit)
     /*
      * generate Permit Id
      */
-    protected function generatePermitId(string $type): string
+   protected function generatePermitId(string $type): string
 {
-    $datePrefix = now()->format('ym'); // '2508'  August 2025
+    $yearPrefix = now()->format('y'); // e.g., '25' for 2025
 
-    $latest = Permit::where('permit_id', 'like', $type . $datePrefix . '%')
+    // Get the latest permit for this type and year
+    $latest = Permit::where('permit_id', 'like', $type . $yearPrefix . '%')
         ->orderBy('permit_id', 'desc')
         ->first();
 
-    $nextNumber = 1001;
+    $nextNumber = 1;
 
     if ($latest) {
         $lastId = $latest->permit_id;
-        $lastCounter = (int)substr($lastId, -4);
+        $lastCounter = (int) substr($lastId, -4);
         $nextNumber = $lastCounter + 1;
     }
 
-    return $type . $datePrefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+    $month = now()->format('m');
+    return $type . $yearPrefix . $month . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 }
+
 
 
     /*

@@ -134,7 +134,7 @@ if (session()->has('monthly_company_name')) {
                 $vat = 0;
                 $amount = 0;
             } else {
-                $ssl = round(($tRate / 98) * $sslRate, 2);
+                $ssl = round(($tRate * $sslRate) / 100, 2);
                 $vat = round((($tRate + $ssl) / 100) * $vatRate, 2);
                 $amount = round($tRate + $ssl + $vat, 2);
             }
@@ -192,12 +192,9 @@ public function removeEntry($index)
         return redirect()->route('permit.monthly')->with('error', 'No permit entries to submit.');
     }
 
-    $datePrefix = now()->format('Ymd'); // e.g., 20250901
-    $type = 'MP'; // Monthly Permit
+    $datePrefix = now()->format('Ymd');
+    $type = 'MP';
 
-    $nextNumber = 1001;
-
-    // Find the latest submission_id in BOTH permits and payments
     $latestPermit = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
         ->orderBy('submission_id', 'desc')
         ->first();
@@ -206,7 +203,6 @@ public function removeEntry($index)
         ->orderBy('submission_id', 'desc')
         ->first();
 
-    // Determine the highest counter used
     $lastCounter = 0;
     if ($latestPermit) {
         $lastCounter = (int) substr($latestPermit->submission_id, -4);
@@ -221,19 +217,19 @@ public function removeEntry($index)
     $nextNumber = $lastCounter + 1;
     $submissionId = $datePrefix . $type . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-    // Add submission ID and permit type to each entry
     foreach ($cart as $index => $entry) {
         $entry['submission_id'] = $submissionId;
         $entry['type'] = $type;
+        $entry['permit_id'] = $this->generatePermitId($type); // New yearly-reset permit ID
         $cart[$index] = $entry;
     }
 
-    // Store updated cart to new session key for payment step
     session(['payment_cart' => $cart]);
     session(['payment_submission_id' => $submissionId]);
 
     return redirect()->route('payment.summary');
 }
+
 
 
     /**

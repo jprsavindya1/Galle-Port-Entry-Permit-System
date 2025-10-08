@@ -76,8 +76,8 @@
             break;
 
         case 'VP':
-            $title_en = "Vehicle Permit";
-            $title_si = "රථවාහන බලපත්‍රය";
+            $title_en = "Temporary Permit";
+            $title_si = "තාවකාලික බලපත්‍රය";
             $person_label = "Vehicle රථවාහන";
             break;
 
@@ -98,7 +98,7 @@
     @if($permit->type === 'VP')
     <!-- Vehicle Permit Layout -->
     <div class="field name">{{ $permit->owner_name }}</div>
-    <div class="field designation">Address: {{ $permit->owner_address }}</div>
+    <!--<div class="field designation">Address: {{ $permit->owner_address }}</div>-->
 
     <div class="field company_name">{{ $permit->company_name }}</div>
     <div class="field from-date">From: {{ $permit->from_date }}</div>
@@ -130,13 +130,13 @@
 
 
 
-    @if($permit->type === 'VP')
+   <!-- @if($permit->type === 'VP')-->
         <!-- For Vehicle permits: show Remarks instead of Pass Type -->
-        <div class="field permit-type">Remarks: {{ $permit->remarks }}</div>
-    @else
+        <!--<div class="field permit-type">Remarks: {{ $permit->remarks }}</div>
+    @else-->
         <!-- For Temporary / Monthly permits: keep Pass Type -->
-        <div class="field permit-type">{{ strtoupper($permit->pass_type) }}</div>
-    @endif
+        <!--<div class="field permit-type">{{ strtoupper($permit->pass_type) }}</div>
+    @endif>-->
 </div>
 
 @endforeach

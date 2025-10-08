@@ -94,7 +94,7 @@
         </div>
         <div class="col-md-6 mb-2">
             <div class="card shadow-sm rounded-3 p-2">
-                <h5 class="mb-2">Permit Type Distribution & Revenue</h5>
+                <h5 class="mb-2">Permit Revenue Insights</h5>
                 <canvas id="permitPieChart"></canvas>
             </div>
         </div>
@@ -188,117 +188,99 @@
 </div>
 
 <script>
+    // Initial Data from Controller
     const companies = @json($companies ?? []);
     const permitCounts = @json($permitCounts ?? []);
-    const permitTypes = @json($permitTypes ?? ['TP','MP','VP']);
+    const permitTypes = ['TP','MP','VP'];
     const permitRevenue = @json($permitRevenue ?? [0,0,0]);
 
-    // --- Gradient Bar Chart ---
-    const ctxBar = document.getElementById('companyBarChart').getContext('2d');
-    const gradient = ctxBar.createLinearGradient(0,0,0,250);
-    gradient.addColorStop(0,'#6a9ed5ff');
-    gradient.addColorStop(1,'#1e3c72ff');
-
-    new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: companies,
-            datasets: [{
-                label: 'Number of Permits',
-                data: permitCounts,
-                backgroundColor: gradient,
-                borderRadius: 8,
-                barThickness: 30
-            }]
-        },
-        options: {
-            responsive:true,
-            plugins:{ legend:{ display:false }, tooltip:{ mode:'index', intersect:false }},
-            scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } }, x:{ grid:{ display:false } } }
-        }
-    });
-
-    // --- Pie Chart ---
-    new Chart(document.getElementById('permitPieChart').getContext('2d'), {
-        type:'pie',
-        data:{
-            labels: permitTypes,
-            datasets:[{
-                label:'Revenue (LKR)',
-                data: permitRevenue,
-                backgroundColor:['#FF6384','#36A2EB','#FFCE56'],
-                hoverOffset:10
-            }]
-        },
-        options:{
-            responsive:true,
-            plugins:{ tooltip:{ callbacks:{ label: function(ctx){ return ctx.label + ': LKR ' + ctx.raw.toLocaleString(); } } } }
-        }
-    });
-
-    // --- Month Filter Change Handler ---
     let companyChart, permitChart;
 
-function renderCharts(companies, counts, types, revenues){
-    // Bar Chart
-    const ctxBar = document.getElementById('companyBarChart').getContext('2d');
-    if(companyChart) companyChart.destroy();
+    // --- Chart Rendering Function ---
+    function renderCharts(companies, counts, types, revenues) {
+        // Destroy old charts
+        if (companyChart) companyChart.destroy();
+        if (permitChart) permitChart.destroy();
 
-    const gradient = ctxBar.createLinearGradient(0,0,0,250);
-    gradient.addColorStop(0,'#6a9ed5ff');
-    gradient.addColorStop(1,'#1e3c72ff');
+        // --- Bar Chart (Permits by Company) ---
+        const ctxBar = document.getElementById('companyBarChart').getContext('2d');
+        const gradient = ctxBar.createLinearGradient(0, 0, 0, 250);
+        gradient.addColorStop(0, '#6a9ed5ff');
+        gradient.addColorStop(1, '#1e3c72ff');
 
-    companyChart = new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: companies,
-            datasets: [{ label:'Number of Permits', data: counts, backgroundColor: gradient, borderRadius:8, barThickness:30 }]
-        },
-        options:{ responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, stepSize:1 } } }
+        companyChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: companies,
+                datasets: [{
+                    label: 'Number of Permits',
+                    data: counts,
+                    backgroundColor: gradient,
+                    borderRadius: 8,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // --- Pie Chart (Revenue by Type) ---
+        const ctxPie = document.getElementById('permitPieChart').getContext('2d');
+        permitChart = new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: types,
+                datasets: [{
+                    data: revenues,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                return ctx.label + ': LKR ' + ctx.raw.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- Initial Render ---
+    renderCharts(companies, permitCounts, permitTypes, permitRevenue);
+
+    // --- Month Filter Change Handler ---
+    $('#monthFilterSelect').on('change', function() {
+        const month = $(this).val();
+        $.get('{{ route("dashboard.data") }}', { month: month }, function(res) {
+
+            // --- Update Total Cards ---
+            const cards = $('.summary-card h3');
+            // 1. Total Permits
+            cards.eq(0).text(res.totalPermitsAll);
+            // 2. Total Revenue
+            cards.eq(1).text('LKR ' + Number(res.totalRevenue).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+
+            // --- Update Breakdown ---
+            const breakdown = $('.summary-breakdown div');
+            breakdown.eq(0).html('TP<br>' + res.totalPermits.TP);
+            breakdown.eq(1).html('MP<br>' + res.totalPermits.MP);
+            breakdown.eq(2).html('VP<br>' + res.totalPermits.VP);
+
+            // --- Update Charts ---
+            renderCharts(res.companies, res.permitCounts, ['TP', 'MP', 'VP'], res.permitRevenue);
+        });
     });
-
-    // Pie Chart
-    const ctxPie = document.getElementById('permitPieChart').getContext('2d');
-    if(permitChart) permitChart.destroy();
-    permitChart = new Chart(ctxPie, {
-        type:'pie',
-        data:{
-            labels: types,
-            datasets:[{ data: revenues, backgroundColor:['#FF6384','#36A2EB','#FFCE56'], hoverOffset:10 }]
-        },
-        options:{
-            responsive:true,
-            plugins:{ tooltip:{ callbacks:{ label: function(ctx){ return ctx.label + ': LKR ' + ctx.raw.toLocaleString(); } } } }
-        }
-    });
-}
-
-$('#monthFilterSelect').on('change', function(){
-    const month = $(this).val();
-    $.get('{{ route("dashboard.data") }}', { month: month }, function(res){
-
-
-        // Update total permits total
-        $('.summary-card h3').eq(0).text(res.totalPermits.TP + res.totalPermits.MP + res.totalPermits.VP);
-        // Update total permits total
-        $('.summary-card h3').eq(0).text(res.totalPermitsAll);
-
-       
-
-        // Update total revenue
-        $('.summary-card h3').eq(1).text('LKR ' + Number(res.totalRevenue).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
-        
-        // Update total permits breakdown
-        const breakdown = $('.summary-breakdown div');
-        breakdown.eq(0).html('TP<br>'+res.totalPermits.TP);
-        breakdown.eq(1).html('MP<br>'+res.totalPermits.MP);
-        breakdown.eq(2).html('VP<br>'+res.totalPermits.VP);
-
-        // Update charts
-        renderCharts(res.companies, res.permitCounts, ['TP','MP','VP'], res.permitRevenue);
-    });
-});
-
 </script>
-
 @endsection

@@ -43,7 +43,7 @@
         case 'MP':
             $title_en = "Monthly Permit"; $title_si = "මාසික බලපත්‍රය"; $person_label = "Person පුද්ගල"; break;
         case 'VP':
-            $title_en = "Vehicle Permit"; $title_si = "රථවාහන බලපත්‍රය"; $person_label = "Vehicle රථවාහන"; break;
+            $title_en = "Temporary Permit"; $title_si = "තාවකාලික බලපත්‍රය"; $person_label = "Vehicle රථවාහන"; break;
         default:
             $title_en = "Temporary Permit"; $title_si = "තාවකාලික බලපත්‍රය"; $person_label = "Person පුද්ගල"; break;
     }
@@ -57,7 +57,7 @@
 
     @if($permit->type === 'VP')
         <div class="field name">Owner: {{ $permit->owner_name }}</div>
-        <div class="field designation">Address: {{ $permit->owner_address }}</div>
+        <!--<div class="field designation">Address: {{ $permit->owner_address }}</div>-->
         <div class="field company_name">{{ $permit->company_name }}</div>
         <div class="field from-date">From: {{ $permit->from_date }}</div>
         <div class="field id-type">Vehicle No: {{ $permit->vehicle_number }}</div>
@@ -76,11 +76,11 @@
     <div class="field time">Time: {{ \Carbon\Carbon::parse($permit->entry_time ?? now())->format('H:i') }}</div>
     <div class="field total-amount">{{ number_format($payment->amount_total ?? 0, 2) }}</div>
 
-    @if($permit->type === 'VP')
-        <div class="field permit-type">Remarks: {{ $permit->remarks }}</div> <!-- replace pass type with remarks -->
-    @else
+    <!--@if($permit->type === 'VP')
+        <div class="field permit-type">Remarks: {{ $permit->remarks }}</div>--> <!-- replace pass type with remarks -->
+    <!--@else
         <div class="field permit-type">{{ strtoupper($permit->pass_type) }}</div>
-    @endif
+    @endif-->
 </div>
 
 <div id="printControls">

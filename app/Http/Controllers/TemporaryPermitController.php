@@ -130,7 +130,7 @@ if (session()->has('temporary_company_name')) {
                 $vat = 0;
                 $amount = 0;
             } else {
-                $ssl = round(($tRate / 98) * $sslRate, 2);
+                $ssl = round(($tRate * $sslRate) / 100, 2);
                 $vat = round((($tRate + $ssl) / 100) * $vatRate, 2);
                 $amount = round($tRate + $ssl + $vat, 2);
             }
@@ -195,7 +195,7 @@ if (session()->has('temporary_company_name')) {
                 $vat = 0;
                 $amount = 0;
             } else {
-                $ssl = round(($tRate / 98) * $sslRate, 2);
+                $ssl = round(($tRate * $sslRate) / 100, 2);
                 $vat = round((($tRate + $ssl) / 100) * $vatRate, 2);
                 $amount = round($tRate + $ssl + $vat, 2);
             }
@@ -249,10 +249,9 @@ public function removeEntry($index)
     if (empty($cart)) {
         return redirect()->route('permit.temporary')->with('error', 'No permit entries to submit.');
     }
-
-    // Create unique submission ID to group permits
-    $datePrefix = now()->format('Ymd'); // e.g., 20250728
-    $type = 'TP'; // Temporary Permit
+// Create unique submission ID to group permits
+    $datePrefix = now()->format('Ymd');
+    $type = 'TP';
 
     $latest = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
         ->orderBy('submission_id', 'desc')
@@ -261,27 +260,26 @@ public function removeEntry($index)
     $nextNumber = 1001;
     if ($latest) {
         $lastId = $latest->submission_id;
-        $lastCounter = (int)substr($lastId, -4);
+        $lastCounter = (int) substr($lastId, -4);
         $nextNumber = $lastCounter + 1;
     }
 
     $submissionId = $datePrefix . $type . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-    // Add submission ID and permit type to each entry, don't save yet
+    // Add submission ID, type, and yearly-reset permit ID
     foreach ($cart as $index => $entry) {
         $entry['submission_id'] = $submissionId;
         $entry['type'] = $type;
+        $entry['permit_id'] = $this->generatePermitId($type); // ✅ New yearly-reset permit ID
         $cart[$index] = $entry;
     }
 
-    // Store updated cart to new session key for payment step
     session(['payment_cart' => $cart]);
     session(['payment_submission_id' => $submissionId]);
 
-
-
     return redirect()->route('payment.summary');
 }
+
     /**
      * Check if a permit can be issued without conflicts.
      */
