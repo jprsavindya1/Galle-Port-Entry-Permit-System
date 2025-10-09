@@ -9,14 +9,33 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <style>
-    .dashboard-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        border-right: 4px solid #6a9ed5ff;
-    }
+.dashboard-card {
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.dashboard-card::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(180deg, #0073e6, #4fc3f7);
+  transition: width 0.3s ease;
+  z-index: 1;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-card:hover::after {
+  width: 5px;
+}
+
     .summary-card {
         padding: 1.5rem;
         text-align: center;
@@ -36,12 +55,35 @@
         flex: 1;
         text-align: center;
         padding: 0.5rem;
-        background: #f5f7fa;
+        background: #caddfaff;
         border-radius: 0.5rem;
         margin: 0 0.25rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     canvas { max-height: 220px; }
+
+    .icon-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    opacity: 0.7;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    filter: grayscale(100%);
+}
+
+/* On hover — make GIF play  */
+.dashboard-card:hover .card-icon {
+    opacity: 1;
+    transform: scale(1.15);
+    filter: grayscale(0%);
+}
+
 </style>
 
 <div class="container">
@@ -105,6 +147,9 @@
         <div class="col-md-4">
             <a href="{{ route('permit.temporary') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
+                    <div class="icon-wrapper">
+                        <img src="{{ asset('images/notes.gif') }}" class="card-icon" alt="Icon">
+                    </div>
                     <h4>Temporary Permit</h4>
                     <p>Create a new temporary permit request.</p>
                 </div>
@@ -113,6 +158,9 @@
         <div class="col-md-4">
             <a href="{{ route('permit.monthly') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
+                    <div class="icon-wrapper">
+                        <img src="{{ asset('images/notepad.gif') }}" class="card-icon" alt="Icon">
+                    </div>
                     <h4>Monthly Permit</h4>
                     <p>Create a new monthly permit request.</p>
                 </div>
@@ -121,6 +169,9 @@
         <div class="col-md-4">
             <a href="{{ route('permit.vehicle') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
+                    <div class="icon-wrapper">
+                        <img src="{{ asset('images/file.gif') }}" class="card-icon" alt="Icon">
+                    </div>
                     <h4>Vehicle Permit</h4>
                     <p>Create a new vehicle permit request.</p>
                 </div>
@@ -130,6 +181,9 @@
         <div class="col-md-4">
             <a href="{{ route('permits.submitted') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                 <div class="card-body">
+                    <div class="icon-wrapper">
+                        <img src="{{ asset('images/checklist.gif') }}" class="card-icon" alt="Icon">
+                    </div>
                     <h4>View all permit requests</h4>
                     <p>Permit List</p>
                 </div>
@@ -141,6 +195,9 @@
             <div class="col-md-4">
                 <a href="{{ route('blacklist.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                     <div class="card-body">
+                        <div class="icon-wrapper">
+                        <img src="{{ asset('images/cyberterrorism.gif') }}" class="card-icon" alt="Icon">
+                    </div>
                         <h4>Edit BlackList</h4>
                         <p>BlackList</p>
                     </div>
@@ -150,6 +207,9 @@
             <div class="col-md-4">
                 <a href="{{ route('admin.payment_settings.edit') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                     <div class="card-body">
+                        <div class="icon-wrapper">
+                        <img src="{{ asset('images/payment.gif') }}" class="card-icon" alt="Icon">
+                    </div>
                         <h4>Edit Payment Information</h4>
                         <p>Configure rates, taxes and pass pricing</p>
                     </div>
@@ -159,6 +219,9 @@
             <div class="col-md-4">
                 <a href="{{ route('users.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                     <div class="card-body">
+                        <div class="icon-wrapper">
+                        <img src="{{ asset('images/user.gif') }}" class="card-icon" alt="Icon">
+                    </div>
                         <h4>Manage Users</h4>
                         <p>Create, edit, and delete system users</p>
                     </div>
@@ -168,6 +231,9 @@
             <div class="col-md-4">
                 <a href="{{ route('admin.cancelled_permits.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                     <div class="card-body">
+                        <div class="icon-wrapper">
+                        <img src="{{ asset('images/no-data.gif') }}" class="card-icon" alt="Icon">
+                    </div>
                         <h4>Cancelled Permits</h4>
                         <p>View and manage cancelled permit requests.</p>
                     </div>
@@ -177,6 +243,9 @@
             <div class="col-md-4">
                 <a href="{{ route('admin.masterdata') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
                     <div class="card-body">
+                        <div class="icon-wrapper">
+                        <img src="{{ asset('images/settings.gif') }}" class="card-icon" alt="Icon">
+                    </div>
                         <h4>Edit Master Data</h4>
                         <p>companies, designations, vehicles, reasons</p>
                     </div>
