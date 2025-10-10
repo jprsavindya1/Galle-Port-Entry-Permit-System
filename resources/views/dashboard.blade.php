@@ -95,10 +95,10 @@
         </div>
     @endauth
 
-    <!-- --- Summary Cards Row --- -->
+   <!-- --- Summary Cards Row --- -->
 <div class="row mb-3">
     <!-- Total Permits Card -->
-    <div class="col-md-6 mb-2">
+    <div class="col-md-4 mb-2">
         <div class="summary-card h-100">
             <h5>Total Permits</h5>
             <h3>{{ ($totalPermits['TP'] ?? 0) + ($totalPermits['MP'] ?? 0) + ($totalPermits['VP'] ?? 0) }}</h3>
@@ -110,17 +110,30 @@
         </div>
     </div>
 
-    <!-- Total Revenue Card with Month Filter -->
-    <div class="col-md-6 mb-2">
-        <div class="summary-card h-100">
-            <h5>Total Revenue</h5>
-           <select id="monthFilterSelect" class="form-select">
-    @foreach($months as $num => $name)
-        <option value="{{ $num }}" {{ $selectedMonth == $num ? 'selected' : '' }}>{{ $name }}</option>
-    @endforeach
-</select>
 
-            <h3>LKR {{ number_format($totalRevenue ?? 0,2) }}</h3>
+
+    <!-- Daily Revenue Card -->
+    <div class="col-md-4 mb-2">
+        <div class="summary-card h-100">
+            <h5>Daily Revenue ({{ now()->format('Y-m-d') }})</h5>
+            <h3 id="dailyRevenue">LKR {{ number_format($dailyRevenue ?? 0, 2) }}</h3>
+        </div>
+    </div>
+
+        <!-- Total Monthly Revenue Card -->
+    <div class="col-md-4 mb-2">
+        <div class="summary-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Total Monthly Revenue</h5>
+                <select id="monthFilterSelect" class="form-select form-select-sm w-auto">
+                    @foreach($months as $num => $name)
+                        <option value="{{ $num }}" {{ $selectedMonth == $num ? 'selected' : '' }}>
+                            {{ $name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <h3>LKR {{ number_format($totalRevenue ?? 0, 2) }}</h3>
         </div>
     </div>
 </div>
@@ -328,28 +341,31 @@
 
     // --- Month Filter Change Handler ---
     $('#monthFilterSelect').on('change', function() {
-        const month = $(this).val();
-        $.get('{{ route("dashboard.data") }}', { month: month }, function(res) {
+    const month = $(this).val();
+    $.get('{{ route("dashboard.data") }}', { month: month }, function(res) {
 
-            // --- Update Total Cards ---
-            const cards = $('.summary-card h3');
-            // 1. Total Permits
-            cards.eq(0).text(res.totalPermitsAll);
-            // 2. Total Revenue
-            cards.eq(1).text('LKR ' + Number(res.totalRevenue).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }));
+        // Update Total Cards
+        const cards = $('.summary-card h3');
+        cards.eq(0).text(res.totalPermitsAll); // Total Permits
+        cards.eq(1).text('LKR ' + Number(res.dailyRevenue).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })); // Daily Revenue
+        cards.eq(2).text('LKR ' + Number(res.totalRevenue).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })); // Monthly Revenue
 
-            // --- Update Breakdown ---
-            const breakdown = $('.summary-breakdown div');
-            breakdown.eq(0).html('TP<br>' + res.totalPermits.TP);
-            breakdown.eq(1).html('MP<br>' + res.totalPermits.MP);
-            breakdown.eq(2).html('VP<br>' + res.totalPermits.VP);
+        // Update Breakdown
+        const breakdown = $('.summary-breakdown div');
+        breakdown.eq(0).html('TP<br>' + res.totalPermits.TP);
+        breakdown.eq(1).html('MP<br>' + res.totalPermits.MP);
+        breakdown.eq(2).html('VP<br>' + res.totalPermits.VP);
 
-            // --- Update Charts ---
-            renderCharts(res.companies, res.permitCounts, ['TP', 'MP', 'VP'], res.permitRevenue);
-        });
+        // Update Charts
+        renderCharts(res.companies, res.permitCounts, ['TP','MP','VP'], res.permitRevenue);
     });
+});
+
 </script>
 @endsection

@@ -3,44 +3,97 @@
 @section('title', 'Edit Master Data')
 
 <style>
-    .dashboard-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
-    }
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        border-right: 4px solid #6a9ed5ff;
-    }
-    .dashboard-card h4 {
-        font-weight: 700;
-        font-size: 1.2rem;
-    }
-    .mb-4 {
-       font-weight: 700;
-        font-size: 1.2rem;
-    }
+.dashboard-card {
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.dashboard-card::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(180deg, #0073e6, #4fc3f7);
+    transition: width 0.3s ease;
+    z-index: 1;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-card:hover::after {
+    width: 6px;
+}
+
+/* --- Icon styling --- */
+.icon-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    opacity: 0.7;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    filter: grayscale(100%);
+}
+
+.dashboard-card:hover .card-icon {
+    opacity: 1;
+    transform: scale(1.15);
+    filter: grayscale(0%);
+}
+
+/* --- Text consistency --- */
+.dashboard-card h4 {
+    font-weight: 600;
+    margin-top: 0.5rem;
+    color: #222;
+}
+
+.dashboard-card p {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0;
+}
 </style>
+
 
 @section('content')
 <div class="container mt-4">
     <h2 class="mb-4">Edit Master Data</h2>
     <div class="row g-4">
 
-        <div class="col-md-3">
-            <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
-                 data-url="{{ route('admin.companies.index') }}">
-                <div class="card-body">
-                    <h4>Companies</h4>
-                    <p>Manage company Info</p>
-                </div>
+      <div class="col-md-3">
+    <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
+         data-url="{{ route('admin.companies.index') }}">
+        <div class="card-body">
+            <div class="icon-wrapper">
+                <img src="{{ asset('images/company.gif') }}" class="card-icon" alt="Companies Icon">
             </div>
+            <h4>Companies</h4>
+            <p>Manage company information</p>
         </div>
+    </div>
+</div>
+
 
         <div class="col-md-3">
             <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
                  data-url="{{ route('admin.designations.index') }}">
                 <div class="card-body">
+                     <div class="icon-wrapper">
+                <img src="{{ asset('images/career.gif') }}" class="card-icon" alt="Companies Icon">
+            </div>
                     <h4>Designations</h4>
                     <p>Manage Job Titles</p>
                 </div>
@@ -51,6 +104,9 @@
     <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
          data-url="{{ route('admin.reasons.index') }}">
         <div class="card-body">
+             <div class="icon-wrapper">
+                <img src="{{ asset('images/metal-detector.gif') }}" class="card-icon" alt="Companies Icon">
+            </div>
             <h4>Reasons</h4>
             <p>Manage Entry Reasons</p>
         </div>
@@ -61,6 +117,9 @@
     <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
          data-url="{{ route('admin.vehicles.index') }}">
         <div class="card-body">
+             <div class="icon-wrapper">
+                <img src="{{ asset('images/car.gif') }}" class="card-icon" alt="Companies Icon">
+            </div>
             <h4>Vehicles</h4>
             <p>Manage Vehicles</p>
         </div>
