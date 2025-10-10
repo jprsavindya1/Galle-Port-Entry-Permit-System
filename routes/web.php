@@ -188,6 +188,7 @@ Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(
     Route::delete('/{blacklist}', [BlacklistController::class, 'destroy'])->name('destroy');
     Route::get('/export/pdf', [App\Http\Controllers\Admin\BlacklistController::class, 'exportPdf'])->name('exportPdf');
     Route::get('/export/excel', [App\Http\Controllers\Admin\BlacklistController::class, 'exportExcel'])->name('exportExcel');
+    
 });
 
 // Batch print (by submission_id)

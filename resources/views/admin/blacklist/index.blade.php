@@ -33,37 +33,76 @@
             <th>Reason</th>
             <th>Added By</th>
             <th>Added On</th>
-            <th>Actions</th>
+            <th>Status</th>
+            @php
+                $showReinstated = $blacklists->contains(fn($entry) => $entry instanceof \App\Models\BlacklistHistory);
+                $showActions = $blacklists->contains(fn($entry) => !($entry instanceof \App\Models\BlacklistHistory));
+            @endphp
+            @if($showReinstated)
+                <th>Reinstated By</th>
+                <th>Reinstated On</th>
+            @endif
+            @if($showActions)
+                <th>Actions</th>
+            @endif
         </tr>
     </thead>
     <tbody>
         @forelse ($blacklists as $entry)
             @php
-                $log = $entry->activities->first();
+                $isHistory = $entry instanceof \App\Models\BlacklistHistory;
+
+                if ($isHistory) {
+                    $addedBy = $entry->admin_name ?? '—';
+                    $addedOn = $entry->created_at->format('Y-m-d H:i');
+                    $status = $entry->status ?? ucfirst($entry->action ?? 'Deleted');
+                    $reinstatedBy = $entry->reinstated_by ?? '—';
+                    $reinstatedOn = $entry->reinstated_on ? \Carbon\Carbon::parse($entry->reinstated_on)->format('Y-m-d H:i') : '—';
+                    $actions = null;
+                } else {
+                    $log = $entry->activities->first();
+                    $addedBy = $log->user_name ?? '—';
+                    $addedOn = $log ? $log->created_at->format('Y-m-d H:i') : '—';
+                    $status = 'Blacklisted';
+                    $reinstatedBy = null;
+                    $reinstatedOn = null;
+                    $actions = '
+                        <a href="'.route('blacklist.edit', $entry).'" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="'.route('blacklist.destroy', $entry).'" method="POST" style="display:inline;">
+                            '.csrf_field().method_field('DELETE').'
+                            <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this entry?\')">Delete</button>
+                        </form>
+                    ';
+                }
             @endphp
-            <tr>
+            <tr class="{{ $isHistory ? 'table-secondary' : '' }}">
                 <td>{{ $entry->nic }}</td>
                 <td>{{ $entry->full_name }}</td>
                 <td>{{ $entry->company_name }}</td>
                 <td>{{ $entry->vehicle_number }}</td>
                 <td>{{ $entry->reason }}</td>
-                <td>{{ $log->user_name ?? '—' }}</td>
-                <td>{{ $log ? $log->created_at->format('Y-m-d H:i') : '—' }}</td>
-                <td>
-                    <a href="{{ route('blacklist.edit', $entry) }}" class="btn btn-sm btn-warning">Edit</a>
-                    <form action="{{ route('blacklist.destroy', $entry) }}" method="POST" style="display:inline;">
-                        @csrf @method('DELETE')
-                        <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this entry?')">Delete</button>
-                    </form>
-                </td>
+                <td>{{ $addedBy }}</td>
+                <td>{{ $addedOn }}</td>
+                <td>{{ $status }}</td>
+                @if($isHistory)
+                    <td>{{ $reinstatedBy }}</td>
+                    <td>{{ $reinstatedOn }}</td>
+                @endif
+                @if(!$isHistory)
+                    <td>{!! $actions !!}</td>
+                @endif
             </tr>
         @empty
-            <tr><td colspan="8" class="text-center">No results found.</td></tr>
+            <tr>
+                <td colspan="{{ $showReinstated ? ($showActions ? 11 : 9) : ($showActions ? 9 : 8) }}" class="text-center">No results found.</td>
+            </tr>
         @endforelse
     </tbody>
 </table>
 
 
-    {{ $blacklists->links() }}
+    @if(!request('search'))
+        {{ $blacklists->links() }}
+    @endif
 </div>
 @endsection
