@@ -125,111 +125,136 @@ class BlacklistController extends Controller
 
     return redirect()->route('blacklist.index')->with('success', 'Blacklist entry deleted.');
 }
-
-    // ===== Export PDF =====
 public function exportPdf(Request $request)
 {
     $search = $request->input('search');
 
-    // Active blacklist entries
-    $blacklistsQuery = Blacklist::query();
     if ($search) {
-        $blacklistsQuery->where('nic', 'like', "%{$search}%")
-            ->orWhere('full_name', 'like', "%{$search}%")
-            ->orWhere('company_name', 'like', "%{$search}%")
-            ->orWhere('vehicle_number', 'like', "%{$search}%")
-            ->orWhere('reason', 'like', "%{$search}%");
-    }
-    $blacklists = $blacklistsQuery->get();
-
-    // Blacklist history entries only when search exists
-    $histories = collect();
-    if ($search) {
+        // Only show history entries when searching
         $historiesQuery = \App\Models\BlacklistHistory::query();
         $historiesQuery->where('nic', 'like', "%{$search}%")
             ->orWhere('full_name', 'like', "%{$search}%")
             ->orWhere('company_name', 'like', "%{$search}%")
             ->orWhere('vehicle_number', 'like', "%{$search}%")
             ->orWhere('reason', 'like', "%{$search}%");
-        $histories = $historiesQuery->get();
+        $entries = $historiesQuery->get();
+        $isHistory = true;
+    } else {
+        // Only show active blacklist entries when no search
+        $blacklistsQuery = Blacklist::query();
+        $entries = $blacklistsQuery->get();
+        $isHistory = false;
     }
 
-    // Merge active and history entries
-    $allEntries = $blacklists->merge($histories);
-
-    // Pass merged collection to PDF view
-    $pdf = Pdf::loadView('admin.blacklist.export_pdf', compact('allEntries'))
-        ->setPaper('a4', 'landscape');
+    $pdf = Pdf::loadView('admin.blacklist.export_pdf', [
+        'entries' => $entries,
+        'isHistory' => $isHistory,
+    ])->setPaper('a4', 'landscape');
 
     return $pdf->download('blacklist_report.pdf');
 }
 
-    // ===== Export Excel (CSV) =====
-public function exportExcel(Request $request)
+
+   public function exportExcel(Request $request)
 {
     $search = $request->input('search');
 
-    // Get active blacklist entries
-    $blacklistsQuery = Blacklist::query();
+    // --- Get Active Blacklist Entries ---
+    $blacklistsQuery = \App\Models\Blacklist::query();
     if ($search) {
-        $blacklistsQuery->where('nic', 'like', "%{$search}%")
-            ->orWhere('full_name', 'like', "%{$search}%")
-            ->orWhere('company_name', 'like', "%{$search}%")
-            ->orWhere('vehicle_number', 'like', "%{$search}%")
-            ->orWhere('reason', 'like', "%{$search}%");
+        $blacklistsQuery->where(function($q) use ($search) {
+            $q->where('nic', 'like', "%{$search}%")
+              ->orWhere('full_name', 'like', "%{$search}%")
+              ->orWhere('company_name', 'like', "%{$search}%")
+              ->orWhere('vehicle_number', 'like', "%{$search}%")
+              ->orWhere('reason', 'like', "%{$search}%");
+        });
     }
     $blacklists = $blacklistsQuery->get();
 
-    // Get historical blacklist entries if search exists
-    $histories = collect();
+    // --- Get Blacklist History Entries ---
+    $historiesQuery = \App\Models\BlacklistHistory::query();
     if ($search) {
-        $historiesQuery = \App\Models\BlacklistHistory::query();
-        $historiesQuery->where('nic', 'like', "%{$search}%")
-            ->orWhere('full_name', 'like', "%{$search}%")
-            ->orWhere('company_name', 'like', "%{$search}%")
-            ->orWhere('vehicle_number', 'like', "%{$search}%")
-            ->orWhere('reason', 'like', "%{$search}%");
-
-        $histories = $historiesQuery->get();
+        $historiesQuery->where(function($q) use ($search) {
+            $q->where('nic', 'like', "%{$search}%")
+              ->orWhere('full_name', 'like', "%{$search}%")
+              ->orWhere('company_name', 'like', "%{$search}%")
+              ->orWhere('vehicle_number', 'like', "%{$search}%")
+              ->orWhere('reason', 'like', "%{$search}%");
+        });
     }
+    $histories = $historiesQuery->get();
 
-    // Merge active and history entries
+    // --- Merge Both ---
     $allEntries = $blacklists->merge($histories);
 
+    // --- CSV Setup ---
     $fileName = 'blacklist_report.csv';
     $headers = [
         'Content-Type' => 'text/csv',
         'Content-Disposition' => "attachment; filename=\"$fileName\"",
     ];
 
-    $columns = ['NIC', 'Full Name', 'Company Name', 'Vehicle Number', 'Reason', 'Action', 'Performed By', 'Date/Time'];
+    $search = $request->input('search');
 
-    $callback = function() use ($allEntries, $columns) {
-        $file = fopen('php://output', 'w');
-        fputcsv($file, $columns);
+    if ($search) {
+        // Only export history entries when searching
+        $columns = ['NIC', 'Full Name', 'Company Name', 'Vehicle Number', 'Reason', 'Added By', 'Added On', 'Status', 'Reinstated By', 'Reinstated On'];
+        $historiesQuery = \App\Models\BlacklistHistory::query();
+        $historiesQuery->where('nic', 'like', "%{$search}%")
+            ->orWhere('full_name', 'like', "%{$search}%")
+            ->orWhere('company_name', 'like', "%{$search}%")
+            ->orWhere('vehicle_number', 'like', "%{$search}%")
+            ->orWhere('reason', 'like', "%{$search}%");
+        $entries = $historiesQuery->get();
+        $isHistory = true;
+    } else {
+        // Only export active blacklist entries when no search
+        $columns = ['NIC', 'Full Name', 'Company Name', 'Vehicle Number', 'Reason', 'Added By', 'Added On', 'Status'];
+        $blacklistsQuery = Blacklist::query();
+        $entries = $blacklistsQuery->get();
+        $isHistory = false;
+    }
 
-        foreach ($allEntries as $entry) {
-            $isHistory = $entry instanceof \App\Models\BlacklistHistory;
-            $action = $isHistory ? $entry->action : 'active';
-            $performedBy = $isHistory ? $entry->admin_name : ($entry->activities->first()->user_name ?? '—');
-            $dateTime = $isHistory ? $entry->created_at : ($entry->activities->first()->created_at ?? $entry->created_at);
-
+    $file = fopen('php://output', 'w');
+    fputcsv($file, $columns);
+    foreach ($entries as $entry) {
+        if ($isHistory) {
+            $status = $entry->status ?? ucfirst($entry->action);
+            $addedBy = $entry->admin_name ?? '—';
+            $addedOn = $entry->created_at ? "'" . $entry->created_at->format('Y-m-d H:i') : '—';
+            $reinstatedBy = $entry->reinstated_by ?? '—';
+            $reinstatedOn = $entry->reinstated_on ? "'" . \Carbon\Carbon::parse($entry->reinstated_on)->format('Y-m-d H:i') : '—';
             fputcsv($file, [
                 $entry->nic,
                 $entry->full_name,
                 $entry->company_name,
                 $entry->vehicle_number,
                 $entry->reason,
-                ucfirst($action),
-                $performedBy,
-                $dateTime->format('Y-m-d H:i'),
+                $addedBy,
+                $addedOn,
+                $status,
+                $reinstatedBy,
+                $reinstatedOn,
+            ]);
+        } else {
+            $status = 'Blacklisted';
+            $addedBy = $entry->activities->first()->user_name ?? '—';
+            $addedOn = $entry->activities->first()->created_at ?? $entry->created_at;
+            $addedOnFormatted = $addedOn ? "'" . $addedOn->format('Y-m-d H:i') : '—';
+            fputcsv($file, [
+                $entry->nic,
+                $entry->full_name,
+                $entry->company_name,
+                $entry->vehicle_number,
+                $entry->reason,
+                $addedBy,
+                $addedOnFormatted,
+                $status,
             ]);
         }
-
-        fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
+    }
+    fclose($file);
+    return response()->stream(function() {}, 200, $headers);
 }
-
 }

@@ -21,29 +21,54 @@
                 <th>Company</th>
                 <th>Vehicle</th>
                 <th>Reason</th>
-                <th>Action</th>
-                <th>Performed By</th>
-                <th>Date/Time</th>
+                <th>Added By</th>
+                <th>Added On</th>
+                <th>Status</th>
+                @if($isHistory)
+                    <th>Reinstated By</th>
+                    <th>Reinstated On</th>
+                @endif
             </tr>
         </thead>
         <tbody>
-            @foreach ($allEntries as $entry)
-                @php
-                    $isHistory = $entry instanceof \App\Models\BlacklistHistory;
-                    $action = $isHistory ? $entry->action : 'active';
-                    $performedBy = $isHistory ? $entry->admin_name : ($entry->activities->first()->user_name ?? '—');
-                    $dateTime = $isHistory ? $entry->created_at : ($entry->activities->first()->created_at ?? $entry->created_at);
-                @endphp
-                <tr class="{{ $isHistory ? 'history' : '' }}">
-                    <td>{{ $entry->nic }}</td>
-                    <td>{{ $entry->full_name }}</td>
-                    <td>{{ $entry->company_name }}</td>
-                    <td>{{ $entry->vehicle_number }}</td>
-                    <td>{{ $entry->reason }}</td>
-                    <td>{{ ucfirst($action) }}</td>
-                    <td>{{ $performedBy }}</td>
-                    <td>{{ $dateTime->format('Y-m-d H:i') }}</td>
-                </tr>
+            @foreach ($entries as $entry)
+                @if($isHistory)
+                    @php
+                        $status = $entry->status ?? ucfirst($entry->action);
+                        $addedBy = $entry->admin_name ?? '—';
+                        $addedOn = $entry->created_at;
+                        $reinstatedBy = $entry->reinstated_by ?? '—';
+                        $reinstatedOn = $entry->reinstated_on ? \Carbon\Carbon::parse($entry->reinstated_on)->format('Y-m-d H:i') : '—';
+                    @endphp
+                    <tr class="history">
+                        <td>{{ $entry->nic }}</td>
+                        <td>{{ $entry->full_name }}</td>
+                        <td>{{ $entry->company_name }}</td>
+                        <td>{{ $entry->vehicle_number }}</td>
+                        <td>{{ $entry->reason }}</td>
+                        <td>{{ $addedBy }}</td>
+                        <td>{{ $addedOn->format('Y-m-d H:i') }}</td>
+                        <td>{{ $status }}</td>
+                        <td>{{ $reinstatedBy }}</td>
+                        <td>{{ $reinstatedOn }}</td>
+                    </tr>
+                @else
+                    @php
+                        $status = 'Blacklisted';
+                        $addedBy = $entry->activities->first()->user_name ?? '—';
+                        $addedOn = $entry->activities->first()->created_at ?? $entry->created_at;
+                    @endphp
+                    <tr>
+                        <td>{{ $entry->nic }}</td>
+                        <td>{{ $entry->full_name }}</td>
+                        <td>{{ $entry->company_name }}</td>
+                        <td>{{ $entry->vehicle_number }}</td>
+                        <td>{{ $entry->reason }}</td>
+                        <td>{{ $addedBy }}</td>
+                        <td>{{ $addedOn->format('Y-m-d H:i') }}</td>
+                        <td>{{ $status }}</td>
+                    </tr>
+                @endif
             @endforeach
         </tbody>
     </table>
