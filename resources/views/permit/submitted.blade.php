@@ -399,7 +399,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Delegate Cancel Permit
     container.addEventListener('submit', async function(e){
-        if(e.target.classList.contains('cancel-permit-form')){
+            if(e.target.classList.contains('cancel-permit-form')){
             e.preventDefault();
 
             if(!['admin','super-admin'].includes(userRole)) {
@@ -409,7 +409,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
             let form = e.target;
             let actionUrl = form.getAttribute('action');
-            let formData = new FormData(form);
+                // Build form data and ensure the final cancel_reason is set.
+                let formData = new FormData(form);
+                const cancelSelect = form.querySelector('select[name="cancel_reason_select"]');
+                const cancelOther = form.querySelector('input[name="cancel_reason_other"]');
+                let finalReason = '';
+                if (cancelSelect) {
+                    finalReason = cancelSelect.value;
+                    if (finalReason === 'Other') {
+                        // require typed reason when Other is selected
+                        if (!cancelOther || !cancelOther.value.trim()) {
+                            alert('Please enter a reason when "Other" is selected.');
+                            return;
+                        }
+                        finalReason = cancelOther.value.trim();
+                    }
+                } else if (cancelOther && cancelOther.value.trim()) {
+                    finalReason = cancelOther.value.trim();
+                }
+                // Ensure backend receives `cancel_reason` field
+                if (finalReason) {
+                    formData.set('cancel_reason', finalReason);
+                }
 
             try {
                 const response = await fetch(actionUrl, {
