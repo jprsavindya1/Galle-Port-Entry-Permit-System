@@ -1,148 +1,270 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Monthly Permit Entry')
+
 @section('content')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-<div class="container">
-    <h2 class="my-4">Edit Monthly Permit Session Entry</h2>
+<style>
+    /* --- Blue Theme Dashboard Styles --- */
+    .user-dashboard-card {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f8fafc 100%);
+        border-radius: 1rem;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: none;
+    }
+    .user-dashboard-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #1976d2;
+        letter-spacing: 1px;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #bbdefb;
+        text-align: center;
+    }
+    .form-control, .form-select, .form-check-input {
+        border-radius: 0.5rem;
+        border: 1px solid #bbdefb;
+        background-color: #f8fafc;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #1976d2;
+        box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
+    }
+    .form-label {
+        font-weight: 500;
+        color: #1976d2;
+    }
+    .btn-primary {
+        background-color: #1976d2;
+        border-color: #1976d2;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+    .btn-info {
+        background-color: #4fc3f7;
+        border-color: #4fc3f7;
+        color: #fff;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+    .btn-secondary {
+        border-radius: 0.5rem;
+        font-weight: 500;
+        border-color: #6c757d;
+        background-color: #6c757d;
+        color: #fff;
+    }
+    /* Grouping Card for Sections */
+    .form-section-card {
+        background-color: #ffffff;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #bbdefb;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    }
+    .form-section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1976d2;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #bbdefb;
+    }
+    legend {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1976d2;
+        border-bottom: 1px solid #bbdefb;
+        padding-bottom: 0.25rem;
+        margin-bottom: 1rem;
+        width: auto;
+    }
+</style>
 
-    @if($errors->any())
-        <div class="alert alert-danger">
-            <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-        </div>
-    @endif
-
-    <form method="POST" action="{{ route('permit.monthly.updateMonthlySessionEntry', $index) }}">
-        @csrf
-        @method('PUT')
-    <!-- This hidden input tells backend this is an edit session -->
-    <input type="hidden" name="session_edit" value="1">
-    <input type="hidden" name="company_name" value="{{ $permit['company_name'] ?? '' }}">
-<input type="hidden" name="company_address" value="{{ $permit['company_address'] ?? '' }}">
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label>ID Type</label>
-                <input type="text" class="form-control" name="id_type" id="id_type" value="NIC" readonly>
-            </div>
-            <div class="col-md-6">
-                <label>ID Number</label>
-                <input type="text" class="form-control" name="id_number" id="id_number" value="{{ old('id_number', $permit['id_number']) }}" required>
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label>From Date</label>
-                <input type="date" class="form-control" name="from_date" id="from_date" value="{{ old('from_date', $permit['from_date']) }}" required>
-            </div>
-            <div class="col-md-6">
-                <label>To Date</label>
-                <input type="date" class="form-control" name="to_date" id="to_date" value="{{ old('to_date', $permit['to_date']) }}" required>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label for="full_name" class="form-label">Full Name</label>
-            <input type="text" 
-                   name="full_name" 
-                   id="full_name"
-                   value="{{ old('full_name', $permit['full_name'] ?? '') }}" 
-                   class="form-control" 
-                   required
-                   style="text-transform: uppercase;" 
-                   oninput="this.value = this.value.toUpperCase();">
-        </div>
-
-        <div class="mb-3">
-            <label>Name with Initials</label>
-            <input type="text" class="form-control" name="initials" id="initials" value="{{ old('initials', $permit['initials']) }}" required>
-        </div>
-
-        <button type="button" onclick="checkMonthlyAvailability(true)" class="btn btn-info mb-3">
-            Check Availability
-        </button>
-        <p id="availability-msg" class="fw-bold"></p>
-
-        <div class="mb-3">
-            <label for="designation" class="form-label">Designation</label>
-            <select name="designation" id="designation" class="form-select" required>
-                <option value="">-- Select Designation --</option>
-                @foreach($designations as $designation)
-                    <option value="{{ $designation->name }}" 
-                        {{ old('designation', $permit['designation']) == $designation->name ? 'selected' : '' }}>
-                        {{ $designation->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label>Residence Address</label>
-            <textarea class="form-control" name="residence_address" id="residence_address" rows="2">{{ old('residence_address', $permit['residence_address']) }}</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label>Pass Type</label><br>
-            @php
-                $selectedTypes = old('pass_type', isset($permit['pass_type']) ? explode(',', $permit['pass_type']) : []);
-            @endphp
-
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" name="pass_type[]" value="onboard" {{ in_array('onboard', $selectedTypes) ? 'checked' : '' }}>
-                <label class="form-check-label">Onboard</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" name="pass_type[]" value="afloat" {{ in_array('afloat', $selectedTypes) ? 'checked' : '' }}>
-                <label class="form-check-label">Afloat</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" name="pass_type[]" value="ashore" {{ in_array('ashore', $selectedTypes) ? 'checked' : '' }}>
-                <label class="form-check-label">Ashore</label>
-            </div>
+<div class="container py-4">
+    <div class="user-dashboard-card mx-auto" style="max-width: 900px;">
+        <div class="user-dashboard-title">
+            <i class="bi bi-person-fill-gear me-2"></i> Edit Monthly Permit Session Entry
         </div>
 
-        <div class="mb-3">
-            <label>Issue Type</label><br>
-            @php $issueType = old('issue_type', $permit['issue_type'] ?? 'free'); @endphp
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="issue_type" value="free" {{ $issueType === 'free' ? 'checked' : '' }}>
-                <label class="form-check-label">Free</label>
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
             </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="issue_type" value="payment" {{ $issueType === 'payment' ? 'checked' : '' }}>
-                <label class="form-check-label">On Payment</label>
-            </div>
-        </div>
+        @endif
 
-        <select name="reason" class="form-select" required>
-            <option value="">-- Select --</option>
-            @foreach($reasons as $reason)
-                <option value="{{ $reason->name }}" {{ old('reason', $permit['reason']) == $reason->name ? 'selected' : '' }}>
-                    {{ ucfirst($reason->name) }}
-                </option>
-            @endforeach
-        </select>
+        <form method="POST" action="{{ route('permit.monthly.updateMonthlySessionEntry', $index) }}">
+            @csrf
+            @method('PUT')
+            
+            <input type="hidden" name="session_edit" value="1">
+            <input type="hidden" name="company_name" value="{{ $permit['company_name'] ?? '' }}">
+            <input type="hidden" name="company_address" value="{{ $permit['company_address'] ?? '' }}">
 
-        <div class="row mb-3 mt-3">
-            <div class="col-md-6">
-                <label>Police Report Issue Date</label>
-                <input type="date" class="form-control" name="police_issue_date" id="police_issue_date" value="{{ old('police_issue_date', $permit['police_issue_date']) }}" required>
-            </div>
-            <div class="col-md-6">
-                <label>Police Report Expiry Date</label>
-                <input type="date" class="form-control" name="police_expire_date" id="police_expire_date" value="{{ old('police_expire_date', $permit['police_expire_date']) }}" required>
-            </div>
-        </div>
+            {{-- --- Section 1: Identification & Validity --- --}}
+            <div class="form-section-card">
+                <div class="form-section-title"><i class="bi bi-card-heading me-2"></i> ID and Validity Period</div>
 
-        <button type="submit" class="btn btn-primary">Update Entry</button>
-        <a href="{{ route('permit.monthly') }}" class="btn btn-secondary">Cancel</a>
-    </form>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label for="id_type" class="form-label"><i class="bi bi-person-badge me-1"></i> ID Type</label>
+                        <input type="text" class="form-control" name="id_type" id="id_type" value="NIC" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
+                        <input type="text" class="form-control" name="id_number" id="id_number" 
+                               value="{{ old('id_number', $permit['id_number']) }}" required>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label for="from_date" class="form-label"><i class="bi bi-calendar-date me-1"></i> From Date</label>
+                        <input type="date" class="form-control" name="from_date" id="from_date" 
+                               value="{{ old('from_date', $permit['from_date']) }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="to_date" class="form-label"><i class="bi bi-calendar-range me-1"></i> To Date</label>
+                        <input type="date" class="form-control" name="to_date" id="to_date" 
+                               value="{{ old('to_date', $permit['to_date']) }}" required>
+                    </div>
+                </div>
+
+                <div class="mb-3 d-flex align-items-center">
+                    <button type="button" onclick="checkMonthlyAvailability(true)" class="btn btn-info me-3">
+                        <i class="bi bi-search me-1"></i> Check Availability
+                    </button>
+                    <p id="availability-msg" class="fw-bold my-0"></p>
+                </div>
+            </div>
+
+            {{-- --- Section 2: Personal & Contact Details --- --}}
+            <div class="form-section-card">
+                <div class="form-section-title"><i class="bi bi-person me-2"></i> Personal Details</div>
+
+                <div class="mb-3">
+                    <label for="full_name" class="form-label"><i class="bi bi-person-vcard me-1"></i> Full Name</label>
+                    <input type="text" name="full_name" id="full_name"
+                           value="{{ old('full_name', $permit['full_name'] ?? '') }}" 
+                           class="form-control" required
+                           oninput="this.value = this.value.toUpperCase();">
+                </div>
+
+                <div class="mb-3">
+                    <label for="initials" class="form-label"><i class="bi bi-text-short me-1"></i> Name with Initials</label>
+                    <input type="text" class="form-control" name="initials" id="initials" 
+                           value="{{ old('initials', $permit['initials']) }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="designation" class="form-label"><i class="bi bi-briefcase me-1"></i> Designation</label>
+                    <select name="designation" id="designation" class="form-select" required>
+                        <option value="">-- Select Designation --</option>
+                        @foreach($designations as $designation)
+                            <option value="{{ $designation->name }}" 
+                                {{ old('designation', $permit['designation']) == $designation->name ? 'selected' : '' }}>
+                                {{ $designation->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="residence_address" class="form-label"><i class="bi bi-house-door me-1"></i> Residence Address</label>
+                    <textarea class="form-control" name="residence_address" id="residence_address" rows="2">{{ old('residence_address', $permit['residence_address']) }}</textarea>
+                </div>
+            </div>
+
+            {{-- --- Section 3: Permit Details & Police Report --- --}}
+            <div class="form-section-card">
+                <div class="form-section-title"><i class="bi bi-ticket-perforated me-2"></i> Permit Specifications</div>
+
+                <fieldset class="mb-3">
+                    <legend class="col-form-label pt-0"><i class="bi bi-layers-half me-1"></i> Pass Type</legend>
+                    @php
+                        $selectedTypes = old('pass_type', isset($permit['pass_type']) ? explode(',', $permit['pass_type']) : []);
+                    @endphp
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="pass_type[]" value="onboard" id="pass_onboard" {{ in_array('onboard', $selectedTypes) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="pass_onboard">Onboard</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="pass_type[]" value="afloat" id="pass_afloat" {{ in_array('afloat', $selectedTypes) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="pass_afloat">Afloat</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="pass_type[]" value="ashore" id="pass_ashore" {{ in_array('ashore', $selectedTypes) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="pass_ashore">Ashore</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="mb-3">
+                    <legend class="col-form-label pt-0"><i class="bi bi-cash me-1"></i> Issue Type</legend>
+                    @php $issueType = old('issue_type', $permit['issue_type'] ?? 'free'); @endphp
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="issue_type" id="issue_free" value="free" {{ $issueType === 'free' ? 'checked' : '' }}>
+                        <label class="form-check-label" for="issue_free">Free</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="issue_type" id="issue_payment" value="payment" {{ $issueType === 'payment' ? 'checked' : '' }}>
+                        <label class="form-check-label" for="issue_payment">On Payment</label>
+                    </div>
+                </fieldset>
+
+                <div class="mb-4">
+                    <label for="reason" class="form-label"><i class="bi bi-file-earmark-text me-1"></i> Reason for Visit</label>
+                    <select name="reason" id="reason" class="form-select" required>
+                        <option value="">-- Select --</option>
+                        @foreach($reasons as $reason)
+                            <option value="{{ $reason->name }}" {{ old('reason', $permit['reason']) == $reason->name ? 'selected' : '' }}>
+                                {{ ucfirst($reason->name) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label for="police_issue_date" class="form-label"><i class="bi bi-calendar-check me-1"></i> Police Report Issue Date</label>
+                        <input type="date" class="form-control" name="police_issue_date" id="police_issue_date" 
+                               value="{{ old('police_issue_date', $permit['police_issue_date']) }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="police_expire_date" class="form-label"><i class="bi bi-calendar-x me-1"></i> Police Report Expiry Date</label>
+                        <input type="date" class="form-control" name="police_expire_date" id="police_expire_date" 
+                               value="{{ old('police_expire_date', $permit['police_expire_date']) }}" required>
+                    </div>
+                </div>
+            </div>
+
+            {{-- --- Action Buttons --- --}}
+            <div class="d-flex justify-content-end pt-3">
+                <button type="submit" class="btn btn-primary btn-lg me-3">
+                    <i class="bi bi-save me-1"></i> Update Entry
+                </button>
+                <a href="{{ route('permit.monthly') }}" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
+/**
+ * Function to check the availability of the Monthly Permit.
+ * The `isEdit` flag tells the backend to handle the check in an edit context.
+ */
 function checkMonthlyAvailability(isEdit = false) {
     const idType = document.getElementById('id_type').value;
     const idNumber = document.getElementById('id_number').value;
@@ -155,7 +277,7 @@ function checkMonthlyAvailability(isEdit = false) {
     msg.innerText = '';
 
     if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
-        msg.innerText = "Please fill in all required fields.";
+        msg.innerText = "Please fill in all required fields to check availability.";
         msg.style.color = 'red';
         return;
     }

@@ -35,7 +35,7 @@
             <tr>
                 <th>Permit ID</th>
                 <th>Invoice ID</th>
-                <th>Full Name</th>
+                <th>Name</th>
                 <th>Company</th>
                 <th>Vehicle No</th>
                 <th>Cancelled Reason</th>
@@ -49,7 +49,13 @@
             <tr>
                 <td>{{ $permit->permit_id }}</td>
                 <td>{{ $permit->invoice_id }}</td>
-                <td>{{ $permit->full_name }}</td>
+                <td>
+                    @if(isset($permit->type) && $permit->type === 'VP')
+                        {{ $permit->owner_name ?? ($permit->full_name ?? '-') }}
+                    @else
+                        {{ $permit->full_name ?? ($permit->owner_name ?? '-') }}
+                    @endif
+                </td>
                 <td>{{ $permit->company_name }}</td>
                 <td>{{ $permit->vehicle_number }}</td>
                 <td>{{ $permit->cancel_reason }}</td>
