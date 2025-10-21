@@ -33,18 +33,18 @@
         border-color: #1976d2;
         box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
     }
-    .form-label {
+    main .form-label {
         font-weight: 500;
         color: #1976d2;
     }
-    .btn-primary {
+    main .btn-primary {
         background-color: #1976d2;
         border-color: #1976d2;
         border-radius: 0.5rem;
         font-weight: 500;
         transition: background-color 0.2s;
     }
-    .btn-info {
+    main .btn-info {
         background-color: #4fc3f7;
         border-color: #4fc3f7;
         color: #fff;
@@ -52,25 +52,25 @@
         font-weight: 500;
         transition: background-color 0.2s;
     }
-    .btn-success {
+    main .btn-success {
         background-color: #4caf50;
         border-color: #4caf50;
         border-radius: 0.5rem;
         font-weight: 500;
     }
-    .table {
+    main .table {
         background: #f5faff;
         border-radius: 0.75rem;
         overflow: hidden;
         box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
-    .table thead th {
+    main .table thead th {
         background: #e3f2fd;
         color: #1976d2;
         font-weight: 500;
         border-bottom: 2px solid #bbdefb;
     }
-    .table tbody td {
+    main .table tbody td {
         background: #f8fafc;
         color: #333;
         vertical-align: middle;

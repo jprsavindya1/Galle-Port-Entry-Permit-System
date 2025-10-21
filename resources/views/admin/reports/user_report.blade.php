@@ -1,16 +1,127 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<style>
+    /* --- Subtle Blue Theme & Layout Adjustments --- */
+    :root {
+        --bs-blue: #4a86e8;
+        --light-blue: #e8f0fe;
+        --primary-light: #4a86e8;
+        --bg-color: #f8faff; /* Very light blue background */
+        --dark-heading: #1e3a8a;
+    }
+    
+    main {
+        background-color: var(--bg-color);
+        font-family: 'Inter', sans-serif;
+    }
+
+    main .container {
+        max-width: 1400px; /* Maximize usable width for table */
+    }
+
+    main h4, main h5, main h6 {
+        color: var(--dark-heading); 
+        font-weight: 600;
+    }
+
+    /* Card Styling - scoped to main */
+    main .card {
+        border: 1px solid #cceeff; /* Light blue border */
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(74, 134, 232, 0.08);
+        background-color: #ffffff; /* Ensure cards are white */
+    }
+
+    /* Form Controls - scoped to main */
+    main .form-select, main .form-control {
+        border-radius: 8px;
+        border-color: #bbd0ff;
+        transition: border-color 0.2s;
+    }
+    main .form-select:focus, main .form-control:focus {
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 0.25rem rgba(74, 134, 232, 0.25);
+    }
+
+    /* Primary Button Style (Search) - scoped to main to NOT affect navbar logout */
+    main .btn-primary {
+        background-color: var(--bs-blue);
+        border-color: var(--bs-blue);
+        border-radius: 8px;
+        font-weight: 500;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+    main .btn-primary:hover {
+        background-color: #3b6cd9;
+        border-color: #3b6cd9;
+        transform: translateY(-1px);
+    }
+
+    /* Export Buttons - scoped to main */
+    main .btn-danger, main .btn-success {
+        border-radius: 8px;
+        font-weight: 500;
+        transition: opacity 0.2s;
+    }
+    
+    /* --- Table Specific Styling for Compactness and Theme - scoped to main --- */
+    main .table {
+        --bs-table-bg: #ffffff;
+        --bs-table-striped-bg: var(--light-blue); /* Light blue stripe */
+        border-radius: 10px;
+        overflow: hidden; 
+        font-size: 0.8rem; /* Even smaller font size for reports with many columns */
+    }
+
+    main .table-bordered {
+        border-color: #a0c3ff; /* Lighter border color */
+    }
+    
+    /* Table Header */
+    main .table thead th {
+        background-color: #bbd0ff; /* Header background blue */
+        color: var(--dark-heading); 
+        font-weight: 600;
+        white-space: nowrap; /* Prevent header wrap */
+        padding: 0.4rem 0.5rem; /* Reduced padding for extreme compactness */
+    }
+
+    /* Table Body Cells */
+    main .table tbody td {
+        padding: 0.4rem 0.5rem; /* Reduced padding for compactness */
+        white-space: nowrap; /* Keep content from wrapping to save horizontal space */
+    }
+
+    /* Ensure table-responsive container handles overflow gracefully */
+    main .table-responsive {
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(74, 134, 232, 0.05);
+    }
+    
+    /* Status Badges */
+    main .badge-status-active {
+        background-color: #4CAF50 !important; /* Green */
+        color: white;
+    }
+    main .badge-status-cancelled {
+        background-color: #F44336 !important; /* Red */
+        color: white;
+    }
+</style>
+
+<div class="container py-4">
     <h4 class="mb-4">User / Entity Permit Report</h4>
 
     <!-- Filters -->
-    <form method="GET" action="{{ route('reports.user') }}" class="row g-2 mb-3">
-        <div class="col-md-4">
-            <input type="text" name="query" class="form-control" placeholder="Enter NIC / Name / Company" value="{{ request('query') }}">
+    <form method="GET" action="{{ route('reports.user') }}" class="row g-2 mb-4 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label visually-hidden" for="query-input">Search NIC / Name / Company</label>
+            <input id="query-input" type="text" name="query" class="form-control" placeholder="Enter NIC / Name / Company" value="{{ request('query') }}">
         </div>
-        <div class="col-md-3">
-            <select name="type" class="form-select">
+        <div class="col-md-4">
+            <label class="form-label visually-hidden" for="type-select">Permit Type</label>
+            <select id="type-select" name="type" class="form-select">
                 <option value="">All Types</option>
                 <option value="TP" {{ request('type')=='TP'?'selected':'' }}>TP</option>
                 <option value="MP" {{ request('type')=='MP'?'selected':'' }}>MP</option>
@@ -18,13 +129,15 @@
             </select>
         </div>
         <div class="col-md-3">
-            <button class="btn btn-primary w-100">Search</button>
+            <button class="btn btn-primary w-100">
+                <i class="fas fa-search me-2"></i>Search
+            </button>
         </div>
     </form>
 
     @if(isset($permits) && $permits->isNotEmpty())
         <!-- Export Buttons -->
-        <div class="mb-3 d-flex justify-content-end">
+        <div class="mb-4 d-flex justify-content-end">
             <a href="{{ route('reports.user.pdf', request()->query()) }}" class="btn btn-sm btn-danger me-2" target="_blank">
                 <i class="fas fa-file-pdf"></i> Export PDF
             </a>
@@ -37,29 +150,30 @@
 
         <!-- Table per Permit Type -->
         @foreach($grouped as $type => $permitsByType)
-            <div class="mb-4">
-                <h5 class="mb-3">{{ $type }} Permits</h5>
+            <div class="mb-5">
+                <h5 class="mb-3">{{ strtoupper($type) }} Permits</h5>
 
-                <!-- Summary Totals -->
+                <!-- Summary Totals for this Group -->
                 @php
+                    // Recalculating summary inside the loop to ensure accurate counts for the current type
                     $summary = [
                         'count' => $permitsByType->count(),
                         'active' => $permitsByType->where('status','Active')->count(),
                         'cancelled' => $permitsByType->where('status','Cancelled')->count(),
                     ];
                 @endphp
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <p>
-                            Total: {{ $summary['count'] }} |
-                            Active: {{ $summary['active'] }} |
-                            Cancelled: {{ $summary['cancelled'] }}
+                <div class="card mb-3">
+                    <div class="card-body py-2">
+                        <p class="mb-0">
+                            Total Permits: <span class="fw-bold text-primary-light">{{ $summary['count'] }}</span> |
+                            Active: <span class="fw-medium text-success">{{ $summary['active'] }}</span> |
+                            Cancelled: <span class="fw-medium text-danger">{{ $summary['cancelled'] }}</span>
                         </p>
                     </div>
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
+                    <table class="table table-bordered table-striped align-middle">
                         <thead>
                             <tr>
                                 <th>Permit ID</th>
@@ -95,8 +209,17 @@
                                     <td>{{ $permit->from_date }}</td>
                                     <td>{{ $permit->to_date }}</td>
                                     <td>{{ ucfirst($permit->issue_type) }}</td>
-                                    <td>{{ $permit->reason }}</td>
-                                    <td>{{ $permit->status }}</td>
+                                    <!-- Truncate reason if too long, or assume it's short -->
+                                    <td>{{ Str::limit($permit->reason, 20) }}</td> 
+                                    <td>
+                                        <span class="badge rounded-pill 
+                                            @if($permit->status === 'Active') badge-status-active
+                                            @elseif($permit->status === 'Cancelled') badge-status-cancelled
+                                            @else text-bg-secondary @endif
+                                        ">
+                                            {{ $permit->status }}
+                                        </span>
+                                    </td>
                                     <td>{{ $permit->submission_id }}</td>
                                     <td>{{ $permit->payment->invoice_id ?? '-' }}</td>
                                 </tr>
@@ -107,7 +230,13 @@
             </div>
         @endforeach
     @elseif(request()->has('query') || request()->has('type'))
-        <div class="alert alert-warning">No permits found for the given criteria.</div>
+        <div class="alert alert-warning mt-4 rounded-lg shadow">
+            <i class="fas fa-exclamation-triangle me-2"></i> No permits found for the given criteria. Please try a different search.
+        </div>
+    @else
+        <div class="alert alert-info mt-4 rounded-lg shadow">
+            <i class="fas fa-info-circle me-2"></i> Enter a search query (NIC, Name, or Company) or select a permit type to view the report.
+        </div>
     @endif
 </div>
 @endsection

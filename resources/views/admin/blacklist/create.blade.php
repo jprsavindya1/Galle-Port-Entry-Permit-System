@@ -29,13 +29,13 @@
         border: 1px solid #bbdefb;
         background-color: #f8fafc;
     }
-    .form-control:focus, .form-select:focus {
+    main .form-control:focus, main .form-select:focus {
         border-color: #1976d2;
         box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.12);
     }
-    .form-label { color: #1976d2; font-weight:500; }
-    .btn-primary { background-color:#1976d2; border-color:#1976d2; border-radius:0.5rem; font-weight:500; }
-    .btn-secondary { border-radius:0.5rem; font-weight:500; border-color:#6c757d; background-color:#6c757d; color:#fff; }
+    main .form-label { color: #1976d2; font-weight:500; }
+    main .btn-primary { background-color:#1976d2; border-color:#1976d2; border-radius:0.5rem; font-weight:500; }
+    main .btn-secondary { border-radius:0.5rem; font-weight:500; border-color:#6c757d; background-color:#6c757d; color:#fff; }
 </style>
 
 <div class="container py-4">

@@ -3,135 +3,97 @@
 @section('title', 'Edit Master Data')
 
 <style>
-.dashboard-card {
-    position: relative;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    overflow: hidden;
-    cursor: pointer;
-}
-
-.dashboard-card::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 0;
-    height: 100%;
-    background: linear-gradient(180deg, #0073e6, #4fc3f7);
-    transition: width 0.3s ease;
-    z-index: 1;
-}
-
-.dashboard-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-.dashboard-card:hover::after {
-    width: 6px;
-}
-
-/* --- Icon styling --- */
-.icon-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-bottom: 0.75rem;
-}
-
-.card-icon {
-    width: 50px;
-    height: 50px;
-    opacity: 0.7;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    filter: grayscale(100%);
-}
-
-.dashboard-card:hover .card-icon {
-    opacity: 1;
-    transform: scale(1.15);
-    filter: grayscale(0%);
-}
-
-/* --- Text consistency --- */
-.dashboard-card h4 {
-    font-weight: 600;
-    margin-top: 0.5rem;
-    color: #222;
-}
-
-.dashboard-card p {
-    font-size: 0.95rem;
-    color: #555;
-    margin-bottom: 0;
-}
+    .user-dashboard-card {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f8fafc 100%);
+        border-radius: 1rem;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+        border: none;
+    }
+    .user-dashboard-title {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #1976d2;
+        letter-spacing: 0.5px;
+        margin-bottom: 1rem;
+    }
+    .master-grid .master-card {
+        background: #fff;
+        border: 1px solid #e3f2fd;
+        border-radius: .75rem;
+        padding: 1.3rem 1rem;
+        /* center contents vertically and horizontally */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: transform .15s ease, box-shadow .15s ease;
+        cursor: pointer;
+        height: 100%;
+    }
+    .master-grid .master-card:hover { transform: translateY(-6px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .master-grid .card-icon { width:56px; height:56px; opacity:.95; margin-bottom:1rem }
+    .master-grid h4 { color:#0d47a1; font-weight:700; margin-bottom:.25rem }
+    .master-grid p { color:#386fa4; margin-bottom:0 }
+    #dynamic-content { margin-top:1.25rem }
 </style>
 
 
 @section('content')
-<div class="container mt-4">
-    <h2 class="mb-4">Edit Master Data</h2>
-    <div class="row g-4">
+<div class="container py-4">
+    <div class="user-dashboard-card">
+        <div class="user-dashboard-title"><i class="bi bi-tools me-2"></i> Edit Master Data</div>
 
-      <div class="col-md-3">
-    <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
-         data-url="{{ route('admin.companies.index') }}">
-        <div class="card-body">
-            <div class="icon-wrapper">
-                <img src="{{ asset('images/company.gif') }}" class="card-icon" alt="Companies Icon">
+        <div class="row g-4 master-grid">
+
+            <div class="col-md-3">
+                <div class="master-card load-section" data-url="{{ route('admin.companies.index') }}">
+                    <div class="icon-wrapper">
+                        <img src="{{ asset('images/company.gif') }}" class="card-icon" alt="Companies Icon">
+                    </div>
+                    <h4>Companies</h4>
+                    <p>Manage company information</p>
+                </div>
             </div>
-            <h4>Companies</h4>
-            <p>Manage company information</p>
-        </div>
-    </div>
-</div>
 
-
-        <div class="col-md-3">
-            <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
-                 data-url="{{ route('admin.designations.index') }}">
-                <div class="card-body">
-                     <div class="icon-wrapper">
-                <img src="{{ asset('images/career.gif') }}" class="card-icon" alt="Companies Icon">
-            </div>
+            <div class="col-md-3">
+                <div class="master-card load-section" data-url="{{ route('admin.designations.index') }}">
+                    <div class="icon-wrapper">
+                        <img src="{{ asset('images/career.gif') }}" class="card-icon" alt="Designations Icon">
+                    </div>
                     <h4>Designations</h4>
                     <p>Manage Job Titles</p>
                 </div>
             </div>
-        </div>
 
-       <div class="col-md-3">
-    <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
-         data-url="{{ route('admin.reasons.index') }}">
-        <div class="card-body">
-             <div class="icon-wrapper">
-                <img src="{{ asset('images/metal-detector.gif') }}" class="card-icon" alt="Companies Icon">
+            <div class="col-md-3">
+                <div class="master-card load-section" data-url="{{ route('admin.reasons.index') }}">
+                    <div class="icon-wrapper">
+                        <img src="{{ asset('images/metal-detector.gif') }}" class="card-icon" alt="Reasons Icon">
+                    </div>
+                    <h4>Reasons</h4>
+                    <p>Manage Entry Reasons</p>
+                </div>
             </div>
-            <h4>Reasons</h4>
-            <p>Manage Entry Reasons</p>
-        </div>
-    </div>
-</div>
 
-<div class="col-md-3">
-    <div class="card dashboard-card text-center shadow-sm rounded-3 h-100 load-section"
-         data-url="{{ route('admin.vehicles.index') }}">
-        <div class="card-body">
-             <div class="icon-wrapper">
-                <img src="{{ asset('images/car.gif') }}" class="card-icon" alt="Companies Icon">
+            <div class="col-md-3">
+                <div class="master-card load-section" data-url="{{ route('admin.vehicles.index') }}">
+                    <div class="icon-wrapper">
+                        <img src="{{ asset('images/car.gif') }}" class="card-icon" alt="Vehicles Icon">
+                    </div>
+                    <h4>Vehicles</h4>
+                    <p>Manage Vehicles</p>
+                </div>
             </div>
-            <h4>Vehicles</h4>
-            <p>Manage Vehicles</p>
+
+            <!-- Add other cards -->
+
         </div>
+
+        <!-- Dynamic Content Area -->
+        <div id="dynamic-content"></div>
     </div>
-</div>
-
-        <!-- Add other cards -->
-
-    </div>
-
-    <!-- Dynamic Content Area -->
-    <div id="dynamic-content" class="mt-4"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -146,7 +108,7 @@ $(function(){
         });
     }
 
-    // Click dashboard card
+    // Click master card
     $('.load-section').on('click', function(){
         let url = $(this).data('url');
         loadAjaxContent(url);

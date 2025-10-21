@@ -54,8 +54,8 @@
         vertical-align: middle;
     }
     .card-header-submission {
-        background-color: #42a5f5 !important; /* A nice blue color for the submission ID header */
-        color: white !important;
+        background-color:  #bbd0ff !important; /* A nice blue color for the submission ID header */
+        color: #1e3a8a; !important;
         font-size: 1.1rem;
         font-weight: 600;
         border-top-left-radius: 0.75rem;
@@ -111,6 +111,21 @@
         background: #ffcdd2;
         color: #b71c1c;
     }
+    * ADJUST THIS VALUE: This pixel height should be visually inspected 
+   in your browser to match the exact height of the filter/search section.
+   ~120px to 140px is a common range for single-line form inputs with labels.
+*/
+.report-card-fixed-height {
+    min-height: 125px; 
+}
+
+/* Ensure the card body within the fixed height remains a flex container to align the button */
+.report-card-fixed-height .card-body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
     /* Report card: place Generate button below label */
     .report-card .card-body { padding: 0.75rem 1rem; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:0.75rem; height:100%; }
     .report-card .d-flex.align-items-center { gap: 0.5rem; justify-content:center; }
@@ -122,70 +137,65 @@
     }
 </style>
 
-<div class="container py-4">
-    <div class="permit-dashboard-card">
-        <div class="permit-dashboard-header">
-            <div class="permit-dashboard-title">
-                <i class="fas fa-file-alt me-2"></i> Submitted Permit Requests <small class="text-muted" style="font-size: 1rem;">(Grouped by Submission)</small>
-            </div>
-            </div>
+<div class="row mb-4 align-items-start">
+    <div class="col-md-8">
+        <div class="permit-filter-form-section">
+            <form id="filter-form" method="GET" action="{{ route('permits.submitted') }}" class="row g-2 align-items-end">
+                
+                <div class="col-md-4">
+                    <label class="form-label mb-1" for="date-filter"><i class="fas fa-calendar-alt me-1"></i> Filter by Date</label>
+                    <input type="date" name="date" id="date-filter" class="form-control"
+                        value="{{ request('date', \Carbon\Carbon::today()->toDateString()) }}"
+                        onchange="document.getElementById('filter-form').submit();" style="border-radius:0.5rem;border:1px solid #bbdefb;background:#fff;">
+                </div>
+                
+                <div class="col-md-5">
+                    <label class="form-label mb-1" for="search-query"><i class="fas fa-search me-1"></i> Search</label>
+                    <input type="text" name="q" id="search-query" class="form-control" placeholder="Company, ID, or Name" value="{{ request('q') }}" style="border-radius:0.5rem;border:1px solid #bbdefb;background:#fff;">
+                </div>
+                
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100" style="border-radius:0.5rem;font-weight:500;">
+                        <i class="fas fa-search me-1"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+    <div class="col-md-4">
+        <div class="row g-3"> 
 
-        <div class="row mb-4 align-items-center">
-            <div class="col-md-8">
-                <div class="permit-filter-form-section">
-                    <form id="filter-form" method="GET" action="{{ route('permits.submitted') }}" class="row g-2 align-items-end">
-                        <div class="col-md-4">
-                            <label class="form-label mb-1" for="date-filter"><i class="fas fa-calendar-alt me-1"></i> Filter by Date</label>
-                            <input type="date" name="date" id="date-filter" class="form-control"
-                                value="{{ request('date', \Carbon\Carbon::today()->toDateString()) }}"
-                                onchange="document.getElementById('filter-form').submit();" style="border-radius:0.5rem;border:1px solid #bbdefb;background:#fff;">
+            <div class="col-12 col-sm-6">
+                <div class="card shadow-sm w-100 report-card report-card-fixed-height">
+                    <div class="card-body">
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-alt fa-2x text-primary"></i>
+                                <span class="ms-2 fw-bold">User Reports</span>
+                            </div>
                         </div>
-                        <div class="col-md-5">
-                            <label class="form-label mb-1" for="search-query"><i class="fas fa-search me-1"></i> Search</label>
-                            <input type="text" name="q" id="search-query" class="form-control" placeholder="Company, ID, or Name" value="{{ request('q') }}" style="border-radius:0.5rem;border:1px solid #bbdefb;background:#fff;">
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary w-100" style="border-radius:0.5rem;font-weight:500;">
-                                <i class="fas fa-search me-1"></i> Search
-                            </button>
-                        </div>
-                    </form>
+                        <a href="{{ route('reports.user') }}" class="btn btn-primary btn-sm generate-btn mt-auto">Generate</a>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="row g-3 justify-content-end">
-                    <div class="col-12 col-sm-6">
-                        <div class="card shadow-sm h-100 report-card">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-file-alt fa-2x text-primary"></i>
-                                    <span class="ms-2 fw-bold">User Reports</span>
-                                </div>
-                                <a href="{{ route('reports.user') }}" class="btn btn-primary btn-sm generate-btn">Generate</a>
+            <div class="col-12 col-sm-6">
+                <div class="card shadow-sm w-100 report-card report-card-fixed-height">
+                    <div class="card-body">
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-coins fa-2x text-success"></i>
+                                <span class="ms-2 fw-bold">Revenue Reports</span>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="col-12 col-sm-6">
-                        <div class="card shadow-sm h-100 report-card">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-coins fa-2x text-success"></i>
-                                    <span class="ms-2 fw-bold">Revenue Reports</span>
-                                </div>
-                                <a href="{{ route('reports.payment') }}" class="btn btn-success btn-sm generate-btn">Generate</a>
-                            </div>
-                        </div>
+                        <a href="{{ route('reports.payment') }}" class="btn btn-success btn-sm generate-btn mt-auto">Generate</a>
                     </div>
                 </div>
             </div>
         </div>
-
+    </div>
+</div>
         @if($permits->count())
             @php $grouped = $permits->groupBy('submission_id'); @endphp
 
@@ -372,8 +382,8 @@
 
 @push('styles')
 <style>
-.table-responsive { position: relative; }
-.sticky-col {
+main .table-responsive { position: relative; }
+main .sticky-col {
     position: -webkit-sticky;
     position: sticky;
     background-color: #f8fafc; /* Change sticky background to match new row background */
@@ -381,9 +391,9 @@
     border-left: 1px solid #dee2e6;
     border-right: 1px solid #dee2e6;
 }
-.status-col { left: 0; }
-.actions-col { left: 120px; }
-.view-col { left: 240px; }
+main .status-col { left: 0; }
+main .actions-col { left: 120px; }
+main .view-col { left: 240px; }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 @endpush

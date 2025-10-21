@@ -35,18 +35,19 @@
         border-color: #1976d2;
         box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
     }
-    .form-label {
+        }
+    main .form-label {
         font-weight: 500;
         color: #1976d2;
     }
-    .btn-primary {
+    main .btn-primary {
         background-color: #1976d2;
         border-color: #1976d2;
         border-radius: 0.5rem;
         font-weight: 500;
         transition: background-color 0.2s;
     }
-    .btn-info {
+    main .btn-info {
         background-color: #4fc3f7;
         border-color: #4fc3f7;
         color: #fff;
@@ -54,12 +55,9 @@
         font-weight: 500;
         transition: background-color 0.2s;
     }
-    .btn-secondary {
+    main .btn-secondary {
         border-radius: 0.5rem;
         font-weight: 500;
-        border-color: #6c757d;
-        background-color: #6c757d;
-        color: #fff;
     }
     /* Grouping Card for Sections */
     .form-section-card {

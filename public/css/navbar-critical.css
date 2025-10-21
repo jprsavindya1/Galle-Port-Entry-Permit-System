@@ -1,0 +1,94 @@
+/* CRITICAL NAVBAR STYLES - LOAD FIRST */
+/* This file loads synchronously before any other CSS to prevent navbar glitches */
+
+nav.navbar.navbar-slpa-logo {
+    background-color: #002B5C !important;
+    min-height: 70px !important;
+    max-height: 70px !important;
+    height: 70px !important;
+    border-bottom: 3px solid #FFC107 !important;
+    padding: 0.75rem 1rem !important;
+}
+
+nav.navbar.navbar-slpa-logo .navbar-brand {
+    height: 70px !important;
+    min-height: 70px !important;
+    max-height: 70px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 !important;
+}
+
+nav.navbar.navbar-slpa-logo .navbar-brand img {
+    height: 55px !important;
+    width: 55px !important;
+    min-width: 55px !important;
+    max-width: 55px !important;
+    min-height: 55px !important;
+    max-height: 55px !important;
+    display: block !important;
+    object-fit: contain !important;
+    background: #002B5C !important;
+    flex-shrink: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    content-visibility: auto !important;
+}
+
+/* Reserve space with solid background until image loads */
+nav.navbar.navbar-slpa-logo .navbar-brand img[src*="Sri_Lanka_Ports_Authority_logo.png"] {
+    background: #002B5C !important;
+}
+
+nav.navbar.navbar-slpa-logo .brand-text {
+    color: #FFC107 !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+nav.navbar.navbar-slpa-logo .btn-slpa-logout,
+nav.navbar.navbar-slpa-logo button.btn-slpa-logout,
+nav.navbar.navbar-slpa-logo .btn.btn-slpa-logout,
+nav.navbar.navbar-slpa-logo .btn.btn-sm.btn-slpa-logout {
+    background-color: #FFC107 !important;
+    border-color: #FFC107 !important;
+    color: #002B5C !important;
+    font-weight: 600 !important;
+    padding: 0.375rem 1rem !important;
+    border-radius: 0.25rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+}
+
+nav.navbar.navbar-slpa-logo .btn-slpa-logout:hover,
+nav.navbar.navbar-slpa-logo .btn-slpa-logout:focus,
+nav.navbar.navbar-slpa-logo .btn-slpa-logout:active {
+    background-color: #E5AD00 !important;
+    border-color: #E5AD00 !important;
+    color: #FFFFFF !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+nav.navbar.navbar-slpa-logo .user-name {
+    color: #FFFFFF !important;
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+    margin: 0 !important;
+}
+
+/* Prevent any reflow or repaint during page transitions */
+nav.navbar.navbar-slpa-logo * {
+    will-change: auto !important;
+}
+
+/* Force GPU acceleration for smoother rendering */
+nav.navbar.navbar-slpa-logo {
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    perspective: 1000px !important;
+}

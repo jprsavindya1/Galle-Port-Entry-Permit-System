@@ -7,11 +7,11 @@
 <style>
     .user-dashboard-card { background: linear-gradient(135deg, #e3f2fd 0%, #f8fafc 100%); border-radius:1rem; box-shadow:0 3px 15px rgba(0,0,0,0.08); padding:1.25rem; }
     .user-dashboard-title { font-size:1.5rem; font-weight:600; color:#1976d2; margin-bottom:0.75rem; border-bottom:1px solid #bbdefb; padding-bottom:0.5rem; }
-    .form-control, .form-select { border-radius:0.5rem; border:1px solid #bbdefb; background:#f8fafc; }
-    .form-label { color:#1976d2; font-weight:500; }
-    .table thead th { background:#e3f2fd; color:#1976d2; font-weight:600; }
-    .btn-primary { background:#1976d2; border-color:#1976d2; }
-    .btn-secondary { background:#6c757d; border-color:#6c757d; color:#fff; }
+    main .form-control, main .form-select { border-radius:0.5rem; border:1px solid #bbdefb; background:#f8fafc; }
+    main .form-label { color:#1976d2; font-weight:500; }
+    main .table thead th { background:#e3f2fd; color:#1976d2; font-weight:600; }
+    main .btn-primary { background:#1976d2; border-color:#1976d2; }
+    main .btn-secondary { background:#6c757d; border-color:#6c757d; color:#fff; }
     .export-group a { margin-right:0.5rem; }
 </style>
 

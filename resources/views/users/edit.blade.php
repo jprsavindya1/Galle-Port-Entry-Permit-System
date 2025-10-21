@@ -27,22 +27,22 @@
         font-weight: 500;
         color: #1976d2;
     }
-    .form-control {
+    main .form-control {
         border-radius: 0.5rem;
         border: 1px solid #bbdefb;
         background: #f8fafc;
         color: #333;
     }
-    .btn-primary {
+    main .btn-primary {
         background: #1976d2;
         border-radius: 0.5rem;
         font-weight: 500;
         border: none;
     }
-    .btn-primary:hover {
+    main .btn-primary:hover {
         background: #1565c0;
     }
-    .btn-secondary {
+    main .btn-secondary {
         border-radius: 0.5rem;
         font-weight: 500;
         background: #bbdefb;
