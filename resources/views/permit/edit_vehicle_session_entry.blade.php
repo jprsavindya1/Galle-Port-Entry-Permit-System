@@ -192,7 +192,7 @@
                 </div>
 
                 <fieldset class="mb-3">
-                    <legend class="col-form-label pt-0"><i class="bi bi-cash me-1"></i> Issue Type</legend>
+                    <legend class="col-form-label pt-0"><i class="bi bi-cash me-1"></i> Issue Type</legend><br>
                     @php $issueType = old('issue_type', $permit['issue_type'] ?? 'free'); @endphp
                     <div class="form-check form-check-inline">
                         <input type="radio" name="issue_type" value="free" class="form-check-input" id="issue_free"
@@ -242,6 +242,9 @@
 
 @push('scripts')
 <script>
+// Store checked form data to detect changes
+let checkedFormData = null;
+
 /**
  * Function to check the availability of the vehicle permit for the specified dates and vehicle number.
  * This is the original logic preserved from your request.
@@ -292,15 +295,80 @@ function checkVehicleAvailability() {
             updateBtn.style.borderColor = '';
             updateBtn.style.opacity = '1';
             updateBtn.style.cursor = 'pointer';
+            
+            // Store the checked form data
+            checkedFormData = {
+                vehicle_number: vehicle_number,
+                from_date: from_date,
+                to_date: to_date,
+                company_name: company_name
+            };
+            
+            // Attach change listeners to form fields
+            attachChangeListeners();
         } else {
             // Keep it grey when not available
             updateBtn.style.backgroundColor = '#9e9e9e';
             updateBtn.style.borderColor = '#9e9e9e';
+            checkedFormData = null;
         }
     })
     .catch(err => {
         console.error(err);
         document.getElementById("availability-msg").textContent = "Error checking availability.";
+    });
+}
+
+// Function to check if form data has changed
+function hasFormDataChanged() {
+    if (!checkedFormData) return false;
+    
+    const currentData = {
+        vehicle_number: document.querySelector('input[name="vehicle_number"]').value,
+        from_date: document.querySelector('input[name="from_date"]').value,
+        to_date: document.querySelector('input[name="to_date"]').value,
+        company_name: document.querySelector('input[name="company_name"]').value
+    };
+    
+    return Object.keys(checkedFormData).some(key => checkedFormData[key] !== currentData[key]);
+}
+
+// Function to disable button when form data changes
+function handleFormChange() {
+    if (hasFormDataChanged()) {
+        const updateBtn = document.getElementById('updateBtn');
+        const msg = document.getElementById('availability-msg');
+        
+        updateBtn.disabled = true;
+        updateBtn.style.backgroundColor = '#9e9e9e';
+        updateBtn.style.borderColor = '#9e9e9e';
+        updateBtn.style.opacity = '0.65';
+        updateBtn.style.cursor = 'not-allowed';
+        
+        msg.textContent = 'Form data changed. Please check availability again.';
+        msg.style.color = 'orange';
+        
+        checkedFormData = null;
+    }
+}
+
+// Function to attach change listeners to form fields
+function attachChangeListeners() {
+    const fieldNames = ['vehicle_number', 'from_date', 'to_date', 'company_name'];
+    
+    fieldNames.forEach(fieldName => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            // Remove existing listener if any
+            field.removeEventListener('change', handleFormChange);
+            field.removeEventListener('input', handleFormChange);
+            
+            // Add new listeners
+            field.addEventListener('change', handleFormChange);
+            if (field.type !== 'select-one') {
+                field.addEventListener('input', handleFormChange);
+            }
+        }
     });
 }
 </script>

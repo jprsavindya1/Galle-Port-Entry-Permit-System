@@ -296,6 +296,9 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
+        // Store checked form data to detect changes
+        let checkedFormData = null;
+
         // --- Select2 Initialization ---
         $(document).ready(function() {
             // Initialize Company Name Select2
@@ -367,15 +370,80 @@
                     addBtn.style.borderColor = '';
                     addBtn.style.opacity = '1';
                     addBtn.style.cursor = 'pointer';
+                    
+                    // Store the checked form data
+                    checkedFormData = {
+                        vehicle_number: vehicleNumber,
+                        from_date: fromDate,
+                        to_date: toDate,
+                        company_name: companyName
+                    };
+                    
+                    // Attach change listeners to form fields
+                    attachChangeListeners();
                 } else {
                     // Keep it grey when not available
                     addBtn.style.backgroundColor = '#9e9e9e';
                     addBtn.style.borderColor = '#9e9e9e';
+                    checkedFormData = null;
                 }
             })
             .catch(() => {
                 msg.innerText = "Error checking availability. Please try again.";
                 msg.style.color = 'red';
+            });
+        }
+
+        // Function to check if form data has changed
+        function hasFormDataChanged() {
+            if (!checkedFormData) return false;
+            
+            const currentData = {
+                vehicle_number: document.getElementById('vehicle_number').value.trim(),
+                from_date: document.getElementById('from_date').value,
+                to_date: document.getElementById('to_date').value,
+                company_name: document.getElementById('company_name').value
+            };
+            
+            return Object.keys(checkedFormData).some(key => checkedFormData[key] !== currentData[key]);
+        }
+
+        // Function to disable button when form data changes
+        function handleFormChange() {
+            if (hasFormDataChanged()) {
+                const addBtn = document.getElementById('addToListBtn');
+                const msg = document.getElementById('availability-msg');
+                
+                addBtn.disabled = true;
+                addBtn.style.backgroundColor = '#9e9e9e';
+                addBtn.style.borderColor = '#9e9e9e';
+                addBtn.style.opacity = '0.65';
+                addBtn.style.cursor = 'not-allowed';
+                
+                msg.innerText = 'Form data changed. Please check availability again.';
+                msg.style.color = 'orange';
+                
+                checkedFormData = null;
+            }
+        }
+
+        // Function to attach change listeners to form fields
+        function attachChangeListeners() {
+            const fields = ['vehicle_number', 'from_date', 'to_date', 'company_name'];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    // Remove existing listener if any
+                    field.removeEventListener('change', handleFormChange);
+                    field.removeEventListener('input', handleFormChange);
+                    
+                    // Add new listeners
+                    field.addEventListener('change', handleFormChange);
+                    if (field.tagName !== 'SELECT') {
+                        field.addEventListener('input', handleFormChange);
+                    }
+                }
             });
         }
 

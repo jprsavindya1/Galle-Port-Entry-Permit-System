@@ -227,7 +227,7 @@
                     $selectedPasses = explode(',', $permit['pass_type']);
                 @endphp
                 <fieldset class="mb-3">
-                    <legend class="col-form-label pt-0"><i class="bi bi-layers-half me-1"></i> Pass Type</legend>
+                    <legend class="col-form-label pt-0"><i class="bi bi-layers-half me-1"></i> Pass Type</legend><br>
                     <div class="form-check form-check-inline">
                         <input type="checkbox" name="pass_type[]" value="onboard" id="pass_onboard" class="form-check-input" 
                             {{ in_array('onboard', $selectedPasses) ? 'checked' : '' }}>
@@ -246,7 +246,7 @@
                 </fieldset>
 
                 <fieldset class="mb-4">
-                    <legend class="col-form-label pt-0"><i class="bi bi-cash me-1"></i> Issue Type</legend>
+                    <legend class="col-form-label pt-0"><i class="bi bi-cash me-1"></i> Issue Type</legend><br>
                     <div class="form-check form-check-inline">
                         <input type="radio" name="issue_type" id="issue_free" value="free" class="form-check-input" {{ $permit['issue_type'] == 'free' ? 'checked' : '' }}>
                         <label class="form-check-label" for="issue_free">Free Issue</label>
@@ -280,6 +280,9 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
+        // Store checked form data to detect changes
+        let checkedFormData = null;
+
         // Initialize Select2 on the Designation dropdown
         $('#designation').select2({
             placeholder: "-- Select Designation --",
@@ -394,16 +397,95 @@
                     updateBtn.style.borderColor = '';
                     updateBtn.style.opacity = '1';
                     updateBtn.style.cursor = 'pointer';
+                    
+                    // Store the checked form data
+                    checkedFormData = {
+                        id_type: idType,
+                        id_number: idNumber,
+                        full_name: fullName,
+                        initials: initials,
+                        from_date: fromDate,
+                        to_date: toDate
+                    };
+                    
+                    // Attach change listeners to form fields
+                    attachChangeListeners();
                 } else {
                     // Keep it grey when not available
                     updateBtn.style.backgroundColor = '#9e9e9e';
                     updateBtn.style.borderColor = '#9e9e9e';
+                    checkedFormData = null;
                 }
             })
             .catch(error => {
                 console.error("Availability check failed:", error);
                 msg.innerText = "Something went wrong during availability check.";
                 msg.style.color = 'red';
+            });
+        }
+
+        // Function to check if form data has changed
+        function hasFormDataChanged() {
+            if (!checkedFormData) return false;
+            
+            const currentData = {
+                id_type: document.getElementById('id_type').value,
+                id_number: document.querySelector('input[name="id_number"]').value,
+                full_name: document.querySelector('input[name="full_name"]').value,
+                initials: document.querySelector('input[name="initials"]').value,
+                from_date: document.getElementById('from_date').value,
+                to_date: document.getElementById('to_date').value
+            };
+            
+            return Object.keys(checkedFormData).some(key => checkedFormData[key] !== currentData[key]);
+        }
+
+        // Function to disable button when form data changes
+        function handleFormChange() {
+            if (hasFormDataChanged()) {
+                const updateBtn = document.getElementById('updateBtn');
+                const msg = document.getElementById('availability-msg');
+                
+                updateBtn.disabled = true;
+                updateBtn.style.backgroundColor = '#9e9e9e';
+                updateBtn.style.borderColor = '#9e9e9e';
+                updateBtn.style.opacity = '0.65';
+                updateBtn.style.cursor = 'not-allowed';
+                
+                msg.innerText = 'Form data changed. Please check availability again.';
+                msg.style.color = 'orange';
+                
+                checkedFormData = null;
+            }
+        }
+
+        // Function to attach change listeners to form fields
+        function attachChangeListeners() {
+            const fieldSelectors = [
+                { id: 'id_type', type: 'select' },
+                { name: 'id_number', type: 'input' },
+                { name: 'full_name', type: 'input' },
+                { name: 'initials', type: 'input' },
+                { id: 'from_date', type: 'input' },
+                { id: 'to_date', type: 'input' }
+            ];
+            
+            fieldSelectors.forEach(selector => {
+                const field = selector.id 
+                    ? document.getElementById(selector.id)
+                    : document.querySelector(`[name="${selector.name}"]`);
+                
+                if (field) {
+                    // Remove existing listener if any
+                    field.removeEventListener('change', handleFormChange);
+                    field.removeEventListener('input', handleFormChange);
+                    
+                    // Add new listeners
+                    field.addEventListener('change', handleFormChange);
+                    if (selector.type !== 'select') {
+                        field.addEventListener('input', handleFormChange);
+                    }
+                }
             });
         }
     </script>

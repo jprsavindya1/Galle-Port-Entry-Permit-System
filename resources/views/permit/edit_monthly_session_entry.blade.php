@@ -188,7 +188,7 @@
                 <div class="form-section-title"><i class="bi bi-ticket-perforated me-2"></i> Permit Specifications</div>
 
                 <fieldset class="mb-3">
-                    <legend class="col-form-label pt-0"><i class="bi bi-layers-half me-1"></i> Pass Type</legend>
+                    <legend class="col-form-label pt-0"><i class="bi bi-layers-half me-1"></i> Pass Type</legend><br>
                     @php
                         $selectedTypes = old('pass_type', isset($permit['pass_type']) ? explode(',', $permit['pass_type']) : []);
                     @endphp
@@ -207,7 +207,7 @@
                 </fieldset>
 
                 <fieldset class="mb-3">
-                    <legend class="col-form-label pt-0"><i class="bi bi-cash me-1"></i> Issue Type</legend>
+                    <legend class="col-form-label pt-0"><i class="bi bi-cash me-1"></i> Issue Type</legend><br>
                     @php $issueType = old('issue_type', $permit['issue_type'] ?? 'free'); @endphp
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="issue_type" id="issue_free" value="free" {{ $issueType === 'free' ? 'checked' : '' }}>
@@ -261,6 +261,9 @@
 
 @push('scripts')
 <script>
+// Store checked form data to detect changes
+let checkedFormData = null;
+
 /**
  * Function to check the availability of the Monthly Permit.
  * The `isEdit` flag tells the backend to handle the check in an edit context.
@@ -318,16 +321,85 @@ function checkMonthlyAvailability(isEdit = false) {
             updateBtn.style.borderColor = '';
             updateBtn.style.opacity = '1';
             updateBtn.style.cursor = 'pointer';
+            
+            // Store the checked form data
+            checkedFormData = {
+                id_type: idType,
+                id_number: idNumber,
+                full_name: fullName,
+                initials: initials,
+                from_date: fromDate,
+                to_date: toDate
+            };
+            
+            // Attach change listeners to form fields
+            attachChangeListeners();
         } else {
             // Keep it grey when not available
             updateBtn.style.backgroundColor = '#9e9e9e';
             updateBtn.style.borderColor = '#9e9e9e';
+            checkedFormData = null;
         }
     })
     .catch(error => {
         console.error("Availability check failed:", error);
         msg.innerText = "Something went wrong during availability check.";
         msg.style.color = 'red';
+    });
+}
+
+// Function to check if form data has changed
+function hasFormDataChanged() {
+    if (!checkedFormData) return false;
+    
+    const currentData = {
+        id_type: document.getElementById('id_type').value,
+        id_number: document.getElementById('id_number').value,
+        full_name: document.getElementById('full_name').value,
+        initials: document.getElementById('initials').value,
+        from_date: document.getElementById('from_date').value,
+        to_date: document.getElementById('to_date').value
+    };
+    
+    return Object.keys(checkedFormData).some(key => checkedFormData[key] !== currentData[key]);
+}
+
+// Function to disable button when form data changes
+function handleFormChange() {
+    if (hasFormDataChanged()) {
+        const updateBtn = document.getElementById('updateBtn');
+        const msg = document.getElementById('availability-msg');
+        
+        updateBtn.disabled = true;
+        updateBtn.style.backgroundColor = '#9e9e9e';
+        updateBtn.style.borderColor = '#9e9e9e';
+        updateBtn.style.opacity = '0.65';
+        updateBtn.style.cursor = 'not-allowed';
+        
+        msg.innerText = 'Form data changed. Please check availability again.';
+        msg.style.color = 'orange';
+        
+        checkedFormData = null;
+    }
+}
+
+// Function to attach change listeners to form fields
+function attachChangeListeners() {
+    const fields = ['id_type', 'id_number', 'full_name', 'initials', 'from_date', 'to_date'];
+    
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            // Remove existing listener if any
+            field.removeEventListener('change', handleFormChange);
+            field.removeEventListener('input', handleFormChange);
+            
+            // Add new listeners
+            field.addEventListener('change', handleFormChange);
+            if (field.tagName !== 'SELECT') {
+                field.addEventListener('input', handleFormChange);
+            }
+        }
     });
 }
 </script>
