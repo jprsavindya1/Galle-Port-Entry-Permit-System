@@ -228,7 +228,7 @@
 
             {{-- --- Action Buttons --- --}}
             <div class="d-flex justify-content-end pt-3">
-                <button type="submit" class="btn btn-primary btn-lg me-3">
+                <button type="submit" id="updateBtn" class="btn btn-primary btn-lg me-3" disabled style="background-color: #9e9e9e !important; border-color: #9e9e9e !important; opacity: 0.65; cursor: not-allowed;">
                     <i class="bi bi-save me-1"></i> Update Entry
                 </button>
                 <a href="{{ route('permit.vehicle') }}" class="btn btn-secondary btn-lg">
@@ -251,6 +251,12 @@ function checkVehicleAvailability() {
     let from_date = document.querySelector('input[name="from_date"]').value;
     let to_date = document.querySelector('input[name="to_date"]').value;
     let company_name = document.querySelector('input[name="company_name"]').value;
+    let updateBtn = document.getElementById("updateBtn");
+
+    // Disable button while checking
+    updateBtn.disabled = true;
+    updateBtn.style.opacity = '0.6';
+    updateBtn.style.cursor = 'not-allowed';
 
     // Check for required fields before making the API call
     if (!vehicle_number || !from_date || !to_date || !company_name) {
@@ -278,6 +284,19 @@ function checkVehicleAvailability() {
         let msgEl = document.getElementById("availability-msg");
         msgEl.textContent = data.message;
         msgEl.style.color = data.available ? "green" : "red";
+        
+        // Enable button only if available
+        if (data.available) {
+            updateBtn.disabled = false;
+            updateBtn.style.backgroundColor = '';
+            updateBtn.style.borderColor = '';
+            updateBtn.style.opacity = '1';
+            updateBtn.style.cursor = 'pointer';
+        } else {
+            // Keep it grey when not available
+            updateBtn.style.backgroundColor = '#9e9e9e';
+            updateBtn.style.borderColor = '#9e9e9e';
+        }
     })
     .catch(err => {
         console.error(err);

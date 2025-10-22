@@ -180,28 +180,23 @@
                 oninput="this.value = this.value.toUpperCase();">
             </div>
             
-            <div class="row mb-4 align-items-end">
-                <div class="col-md-8">
-                    <label for="company_name" class="form-label"><i class="bi bi-buildings me-1"></i> Company Name</label>
-                    <select name="company_name" id="company_name" class="form-select" required>
-                        <option value="">-- Select Company --</option>
-                        @foreach($companies as $company)
-                            <option value="{{ $company->name }}" data-address="{{ $company->address }}"
-                                {{ old('company_name', $companyName ?? '') == $company->name ? 'selected' : '' }}>
-                                {{ $company->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-4">
-                    <button type="button" onclick="checkVehicleAvailability()" class="btn btn-info w-100"><i class="bi bi-check-circle-fill me-1"></i> Check Availability</button>
-                </div>
+            <div class="mb-3">
+                <label for="company_name" class="form-label"><i class="bi bi-buildings me-1"></i> Company Name</label>
+                <select name="company_name" id="company_name" class="form-select" required>
+                    <option value="">-- Select Company --</option>
+                    @foreach($companies as $company)
+                        <option value="{{ $company->name }}" data-address="{{ $company->address }}"
+                            {{ old('company_name', $companyName ?? '') == $company->name ? 'selected' : '' }}>
+                            {{ $company->name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
             
-            {{-- This paragraph was empty in the original code, using the div below instead --}}
-            {{-- <p id="availability-msg" class="fw-bold"></p> --}} 
-            <div id="availabilityMessage" class="mb-3"></div> 
+            <div class="mb-4">
+                <button type="button" onclick="checkVehicleAvailability()" class="btn btn-info me-2"><i class="bi bi-check-circle-fill me-1"></i> Check Availability</button>
+                <p id="availability-msg" class="fw-bold d-inline-block"></p>
+            </div>
             
             <div class="mb-3">
                 <label for="owner_address" class="form-label"><i class="bi bi-house me-1"></i> Owner's Address</label>
@@ -238,7 +233,9 @@
                 <input type="text" class="form-control" name="remarks" id="remarks" value="{{ old('remarks') }}">
             </div>
 
-            <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Add to List</button>
+            <button type="submit" id="addToListBtn" class="btn btn-primary" disabled style="background-color: #9e9e9e !important; border-color: #9e9e9e !important; opacity: 0.65; cursor: not-allowed;">
+                <i class="bi bi-plus-circle me-1"></i> Add to List
+            </button>
         </form>
     </div>
 
@@ -329,12 +326,18 @@
             const fromDate = document.getElementById('from_date').value;
             const toDate = document.getElementById('to_date').value;
             const companyName = document.getElementById('company_name').value;
-            const availabilityMessage = document.getElementById('availabilityMessage');
+            const msg = document.getElementById('availability-msg');
+            const addBtn = document.getElementById('addToListBtn');
 
-            availabilityMessage.innerHTML = '';
+            msg.innerText = '';
+            // Disable button while checking
+            addBtn.disabled = true;
+            addBtn.style.opacity = '0.6';
+            addBtn.style.cursor = 'not-allowed';
 
             if (!vehicleNumber || !fromDate || !toDate || !companyName) {
-                availabilityMessage.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i> Please fill **Vehicle Number**, **Company Name**, **From Date**, and **To Date** to check availability.</div>';
+                msg.innerText = "Please fill in all required fields.";
+                msg.style.color = 'red';
                 return;
             }
 
@@ -354,10 +357,25 @@
             })
             .then(response => response.json())
             .then(data => {
-                availabilityMessage.innerHTML = '<div class="alert ' + (data.available ? 'alert-success' : 'alert-danger') + '"><i class="bi bi-' + (data.available ? 'check-circle' : 'x-circle') + '-fill me-1"></i> ' + data.message + '</div>';
+                msg.innerText = data.message;
+                msg.style.color = data.available ? 'green' : 'red';
+                
+                // Enable button only if available
+                if (data.available) {
+                    addBtn.disabled = false;
+                    addBtn.style.backgroundColor = '';
+                    addBtn.style.borderColor = '';
+                    addBtn.style.opacity = '1';
+                    addBtn.style.cursor = 'pointer';
+                } else {
+                    // Keep it grey when not available
+                    addBtn.style.backgroundColor = '#9e9e9e';
+                    addBtn.style.borderColor = '#9e9e9e';
+                }
             })
             .catch(() => {
-                availabilityMessage.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i> Error checking availability. Please try again.</div>';
+                msg.innerText = "Error checking availability. Please try again.";
+                msg.style.color = 'red';
             });
         }
 

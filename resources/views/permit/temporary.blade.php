@@ -272,7 +272,9 @@
                 </select>
             </div>
 
-            <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Add to List</button>
+            <button type="submit" id="addToListBtn" class="btn btn-primary" disabled style="background-color: #9e9e9e !important; border-color: #9e9e9e !important; opacity: 0.65; cursor: not-allowed;">
+                <i class="bi bi-plus-circle me-1"></i> Add to List
+            </button>
         </form>
     </div>
 
@@ -426,7 +428,13 @@
             const companyName = document.getElementById('company_name').value;
 
             const msg = document.getElementById('availability-msg');
+            const addBtn = document.getElementById('addToListBtn');
+            
             msg.innerText = '';
+            // Disable button while checking
+            addBtn.disabled = true;
+            addBtn.style.opacity = '0.6';
+            addBtn.style.cursor = 'not-allowed';
 
             if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate || !companyName) {
                 msg.innerText = "Please fill in all required fields.";
@@ -454,6 +462,19 @@
             .then(data => {
                 msg.innerText = data.message;
                 msg.style.color = data.available ? 'green' : 'red';
+                
+                // Enable button only if available
+                if (data.available) {
+                    addBtn.disabled = false;
+                    addBtn.style.backgroundColor = '';
+                    addBtn.style.borderColor = '';
+                    addBtn.style.opacity = '1';
+                    addBtn.style.cursor = 'pointer';
+                } else {
+                    // Keep it grey when not available
+                    addBtn.style.backgroundColor = '#9e9e9e';
+                    addBtn.style.borderColor = '#9e9e9e';
+                }
             })
             .catch(error => {
                 console.error("Availability check failed:", error);

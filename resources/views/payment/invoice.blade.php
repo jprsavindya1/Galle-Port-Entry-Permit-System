@@ -128,8 +128,26 @@
         visibility: visible;
     }
 
-    .btn, a.btn, button, .no-print, .print-controls {
+    /* Hide all navigation, header, footer, sidebar, and non-printable elements */
+    .btn, a.btn, button, .no-print, .print-controls,
+    nav, header, footer, .navbar, .nav, .sidebar, 
+    .sidebar-slpa-logo, .d-flex > .sidebar-slpa-logo,
+    .navigation, .menu, .header, .footer {
         display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Ensure main content takes full width when printing */
+    main, main.flex-grow-1 {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Remove flexbox layout during print */
+    .d-flex {
+        display: block !important;
     }
 
    table {

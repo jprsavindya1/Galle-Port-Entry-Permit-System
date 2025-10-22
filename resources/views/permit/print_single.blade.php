@@ -33,7 +33,46 @@
         @media print { #printControls { display: none !important; } body { margin: 0; } }
 
         #printControls { margin: 20px; text-align: center; }
-        #printControls button { margin: 0 10px; padding: 10px 20px; font-size: 16px; }
+        #printControls button {
+            margin: 0 10px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #printControls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        #printControls button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #btnPrintAgain {
+            background-color: #3b82f6;
+            color: white;
+        }
+        #btnPrintAgain:hover {
+            background-color: #2563eb;
+        }
+        #btnBackInvoice {
+            background-color: #8b5cf6;
+            color: white;
+        }
+        #btnBackInvoice:hover {
+            background-color: #7c3aed;
+        }
+        #btnBack {
+            background-color: #6b7280;
+            color: white;
+        }
+        #btnBack:hover {
+            background-color: #4b5563;
+        }
     </style>
 </head>
 <body>
