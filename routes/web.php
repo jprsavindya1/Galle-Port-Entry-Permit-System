@@ -181,6 +181,7 @@ Route::get('/permits/search', [PermitController::class, 'search'])->name('permit
 // ------------------------------
 Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(function () {
     Route::get('/', [BlacklistController::class, 'index'])->name('index');
+    Route::get('/history', [BlacklistController::class, 'history'])->name('history');
     Route::get('/create', [BlacklistController::class, 'create'])->name('create');
     Route::post('/', [BlacklistController::class, 'store'])->name('store');
     Route::get('/{blacklist}/edit', [BlacklistController::class, 'edit'])->name('edit');

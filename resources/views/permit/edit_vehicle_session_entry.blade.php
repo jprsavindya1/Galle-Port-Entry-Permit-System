@@ -170,12 +170,12 @@
                     <div class="col-md-6 mb-3 mb-md-0">
                         <label for="from_date" class="form-label"><i class="bi bi-calendar-date me-1"></i> From Date</label>
                         <input type="date" name="from_date" id="from_date" class="form-control"
-                               value="{{ old('from_date', $permit['from_date']) }}" required>
+                               value="{{ old('from_date', $permit['from_date']) }}" min="{{ date('Y-m-d') }}" required>
                     </div>
                     <div class="col-md-6">
                         <label for="to_date" class="form-label"><i class="bi bi-calendar-range me-1"></i> To Date</label>
                         <input type="date" name="to_date" id="to_date" class="form-control"
-                               value="{{ old('to_date', $permit['to_date']) }}" required>
+                               value="{{ old('to_date', $permit['to_date']) }}" min="{{ date('Y-m-d') }}" required>
                     </div>
                 </div>
             </div>

@@ -104,7 +104,7 @@
 }
 
 
-/* ===== Print Styles (Ensure these work correctly) ===== */
+/* ===== Print Styles (80mm Thermal Paper) ===== */
 @media print {
     body {
         margin: 0;
@@ -121,7 +121,7 @@
         top: 0;
         width: 100%;
         background: white;
-        padding: 0.5cm; /* Slightly reduced overall padding for more space */
+        padding: 2mm; /* Minimal padding for thermal paper */
     }
 
     #print-area * {
@@ -150,43 +150,106 @@
         display: block !important;
     }
 
-   table {
-        width: 100% !important;
-        table-layout: fixed !important; /* CRITICAL: Forces columns to respect width */
-        border-collapse: collapse !important;
-        font-size: 7pt !important; /* Made font even smaller for aggressive fit */
+    /* Optimize header for thermal paper */
+    .invoice-title {
+        font-size: 12pt !important;
+        text-align: center;
+        margin-bottom: 3mm !important;
     }
 
-     .invoice-table th, .invoice-table td {
+    .mb-4 h6, .mb-4 p {
+        font-size: 8pt !important;
+        margin-bottom: 1mm !important;
+        line-height: 1.2 !important;
+    }
+
+    .badge-status {
+        font-size: 7pt !important;
+        padding: 1px 3px !important;
+    }
+
+    /* Table optimized for 80mm paper */
+    table {
+        width: 100% !important;
+        table-layout: auto !important; /* Auto layout works better for narrow paper */
+        border-collapse: collapse !important;
+        font-size: 4pt !important; /* Extra extra small font for 80mm paper */
+        margin: 2mm 0 !important;
+    }
+
+    .invoice-table, .invoice-table tbody, .invoice-table tbody tr {
+        font-size: 4pt !important;
+    }
+
+    .invoice-table th, .invoice-table td {
         border: 1px solid #000 !important;
-        padding: 2px !important; /* Minimal padding */
+        padding: 0.3mm !important; /* Ultra minimal padding */
         text-align: left !important;
         background-color: transparent !important;
+        line-height: 0.9 !important; /* Super tight line height */
+        font-size: 4pt !important; /* Force small font on cells */
         
-        /* --- CRITICAL: FORCE TEXT TO FIT CELL --- */
+        /* Force text to wrap and fit */
         overflow: hidden;
         white-space: normal;
         word-wrap: break-word; 
-        word-break: break-all; /* MOST AGGRESSIVE BREAKING */
+        word-break: break-word;
+        max-width: 0; /* Forces equal distribution of columns */
     }
 
     .invoice-table th {
-        background-color: #f0f0f0 !important;
+        background-color: #e0e0e0 !important;
         color: #000 !important;
+        font-weight: bold !important;
+        font-size: 4pt !important; /* Match table font size */
+    }
+
+    /* Remove min-width constraints for thermal paper */
+    .invoice-table th[style*="min-width"],
+    .invoice-table td[style*="min-width"] {
+        min-width: auto !important;
+    }
+
+    /* Override inline styles */
+    .invoice-table td[style] {
+        font-size: 4pt !important;
     }
 
     thead {
         display: table-header-group !important;
     }
 
-    html, body {
-        height: 100%;
-        overflow: hidden;
+    /* Summary section optimization */
+    .summary-card {
+        border: 1px solid #000 !important;
+        padding: 2mm !important;
+        margin-top: 3mm !important;
     }
 
+    .summary-card h5 {
+        font-size: 9pt !important;
+        margin-bottom: 2mm !important;
+    }
+
+    .summary-card p {
+        font-size: 7pt !important;
+        margin-bottom: 1mm !important;
+    }
+
+    .summary-card h4 {
+        font-size: 10pt !important;
+        margin-top: 2mm !important;
+    }
+
+    html, body {
+        height: 100%;
+        overflow: visible;
+    }
+
+    /* 80mm thermal paper size (80mm width x continuous length) */
     @page {
-        size: A4 portrait;
-        margin: 10mm;
+        size: 80mm auto; /* Width: 80mm, Height: auto (continuous) */
+        margin: 2mm; /* Minimal margins */
     }
 
 }

@@ -97,15 +97,15 @@
 
    <!-- --- Summary Cards Row --- -->
 <div class="row mb-3">
-    <!-- Total Permits Card -->
+    <!-- Daily Permits Card -->
     <div class="col-md-4 mb-2">
         <div class="summary-card h-100">
-            <h5>Total Permits</h5>
-            <h3>{{ ($totalPermits['TP'] ?? 0) + ($totalPermits['MP'] ?? 0) + ($totalPermits['VP'] ?? 0) }}</h3>
+            <h5>Daily Permits ({{ now()->format('Y-m-d') }})</h5>
+            <h3>{{ ($dailyPermits['TP'] ?? 0) + ($dailyPermits['MP'] ?? 0) + ($dailyPermits['VP'] ?? 0) }}</h3>
             <div class="summary-breakdown">
-                <div>TP<br>{{ $totalPermits['TP'] ?? 0 }}</div>
-                <div>MP<br>{{ $totalPermits['MP'] ?? 0 }}</div>
-                <div>VP<br>{{ $totalPermits['VP'] ?? 0 }}</div>
+                <div>TP<br>{{ $dailyPermits['TP'] ?? 0 }}</div>
+                <div>MP<br>{{ $dailyPermits['MP'] ?? 0 }}</div>
+                <div>VP<br>{{ $dailyPermits['VP'] ?? 0 }}</div>
             </div>
         </div>
     </div>
@@ -346,7 +346,7 @@
 
         // Update Total Cards
         const cards = $('.summary-card h3');
-        cards.eq(0).text(res.totalPermitsAll); // Total Permits
+        cards.eq(0).text(res.dailyPermitsAll); // Daily Permits
         cards.eq(1).text('LKR ' + Number(res.dailyRevenue).toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
@@ -358,9 +358,9 @@
 
         // Update Breakdown
         const breakdown = $('.summary-breakdown div');
-        breakdown.eq(0).html('TP<br>' + res.totalPermits.TP);
-        breakdown.eq(1).html('MP<br>' + res.totalPermits.MP);
-        breakdown.eq(2).html('VP<br>' + res.totalPermits.VP);
+        breakdown.eq(0).html('TP<br>' + res.dailyPermits.TP);
+        breakdown.eq(1).html('MP<br>' + res.dailyPermits.MP);
+        breakdown.eq(2).html('VP<br>' + res.dailyPermits.VP);
 
         // Update Charts
         renderCharts(res.companies, res.permitCounts, ['TP','MP','VP'], res.permitRevenue);

@@ -103,26 +103,14 @@ if (session()->has('temporary_company_name')) {
         // Load payment settings from DB or use defaults
         $settings = PaymentSetting::first();
 
-        $prices = [
-            'onboard' => $settings->price_onboard ?? 100,
-            'afloat' => $settings->price_afloat ?? 80,
-            'ashore' => $settings->price_ashore ?? 50,
-        ];
-
-        $sslRate = $settings->ssl ?? 2;   // SSL %
-        $vatRate = $settings->vat ?? 15;  // VAT %
+        $baseRate = $settings->rate ?? 100;
+        $sslRate = $settings->ssl ?? 2.5;   // SSL % (e.g., 2.5)
+        $vatRate = $settings->vat ?? 18;    // VAT % (e.g., 18)
 
         foreach ($cart as $item) {
             $days = \Carbon\Carbon::parse($item['from_date'])->diffInDays($item['to_date']) + 1;
 
-            $passes = explode(',', $item['pass_type']);
-            $rate = 0;
-
-            foreach ($passes as $pass) {
-                $rate += ($prices[$pass] ?? 0);
-            }
-
-            $tRate = $rate * $days;
+            $tRate = $baseRate * $days;
 
             if ($item['issue_type'] === 'free') {
                 $tRate = 0;
@@ -130,8 +118,16 @@ if (session()->has('temporary_company_name')) {
                 $vat = 0;
                 $amount = 0;
             } else {
-                $ssl = round(($tRate * $sslRate) / 100, 2);
-                $vat = round((($tRate + $ssl) / 100) * $vatRate, 2);
+                // Original formula: SSL = (tRate / 97.5) * 2.5
+                // Convert readable SSL% to original format: (100 - SSL%)
+                $sslDivisor = 100 - $sslRate;
+                $dblNSSL = ($tRate / $sslDivisor) * $sslRate;
+                $ssl = round($dblNSSL, 2);
+                
+                // VAT calculation uses unrounded SSL (original formula)
+                $dblVAT = (($tRate + $dblNSSL) / 100) * $vatRate;
+                $vat = round($dblVAT, 2);
+                
                 $amount = round($tRate + $ssl + $vat, 2);
             }
 
@@ -168,26 +164,14 @@ if (session()->has('temporary_company_name')) {
 
         $settings = PaymentSetting::first();
 
-        $prices = [
-            'onboard' => $settings->price_onboard ?? 100,
-            'afloat' => $settings->price_afloat ?? 80,
-            'ashore' => $settings->price_ashore ?? 50,
-        ];
-
-        $sslRate = $settings->ssl ?? 2;
-        $vatRate = $settings->vat ?? 15;
+        $baseRate = $settings->rate ?? 100;
+        $sslRate = $settings->ssl ?? 2.5;   // SSL % (e.g., 2.5)
+        $vatRate = $settings->vat ?? 18;    // VAT % (e.g., 18)
 
         foreach ($cart as $item) {
             $days = \Carbon\Carbon::parse($item['from_date'])->diffInDays($item['to_date']) + 1;
 
-            $passes = explode(',', $item['pass_type']);
-            $rate = 0;
-
-            foreach ($passes as $pass) {
-                $rate += ($prices[$pass] ?? 0);
-            }
-
-            $tRate = $rate * $days;
+            $tRate = $baseRate * $days;
 
             if ($item['issue_type'] === 'free') {
                 $tRate = 0;
@@ -195,8 +179,16 @@ if (session()->has('temporary_company_name')) {
                 $vat = 0;
                 $amount = 0;
             } else {
-                $ssl = round(($tRate * $sslRate) / 100, 2);
-                $vat = round((($tRate + $ssl) / 100) * $vatRate, 2);
+                // Original formula: SSL = (tRate / 97.5) * 2.5
+                // Convert readable SSL% to original format: (100 - SSL%)
+                $sslDivisor = 100 - $sslRate;
+                $dblNSSL = ($tRate / $sslDivisor) * $sslRate;
+                $ssl = round($dblNSSL, 2);
+                
+                // VAT calculation uses unrounded SSL (original formula)
+                $dblVAT = (($tRate + $dblNSSL) / 100) * $vatRate;
+                $vat = round($dblVAT, 2);
+                
                 $amount = round($tRate + $ssl + $vat, 2);
             }
 
@@ -328,7 +320,7 @@ public function removeEntry($index)
         ]);
     }
 
-    return response()->json(['available' => true, 'message' => 'Temporary permit available!']);
+    return response()->json(['available' => true, 'message' => 'Success!']);
 }
 
 

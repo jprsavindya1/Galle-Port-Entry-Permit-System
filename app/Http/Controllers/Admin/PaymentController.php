@@ -43,8 +43,15 @@ class PaymentController extends Controller
                     $vat = 0;
                     $amount = 0;
                 } else {
-                    $ssl = round(($tRate * $sslRate) / 100, 2);
-                    $vat = round((($tRate + $ssl) * $vatRate) / 100, 2);
+                    // Original formula: SSL = (tRate / 97.5) * 2.5
+                    $sslDivisor = 100 - $sslRate;
+                    $dblNSSL = ($tRate / $sslDivisor) * $sslRate;
+                    $ssl = round($dblNSSL, 2);
+                    
+                    // VAT calculation uses unrounded SSL (original formula)
+                    $dblVAT = (($tRate + $dblNSSL) / 100) * $vatRate;
+                    $vat = round($dblVAT, 2);
+                    
                     $amount = round($tRate + $ssl + $vat, 2);
                 }
 
@@ -68,8 +75,15 @@ class PaymentController extends Controller
                     $vat = 0;
                     $amount = 0;
                 } else {
-                    $ssl = round(($tRate * $sslRate) / 100, 2);
-                    $vat = round((($tRate + $ssl) * $vatRate) / 100, 2);
+                    // Original formula: SSL = (tRate / 97.5) * 2.5
+                    $sslDivisor = 100 - $sslRate;
+                    $dblNSSL = ($tRate / $sslDivisor) * $sslRate;
+                    $ssl = round($dblNSSL, 2);
+                    
+                    // VAT calculation uses unrounded SSL (original formula)
+                    $dblVAT = (($tRate + $dblNSSL) / 100) * $vatRate;
+                    $vat = round($dblVAT, 2);
+                    
                     $amount = round($tRate + $ssl + $vat, 2);
                 }
 

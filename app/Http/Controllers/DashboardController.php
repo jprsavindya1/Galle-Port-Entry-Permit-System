@@ -18,7 +18,22 @@ class DashboardController extends Controller
     $dailyRevenue = Permit::whereDate('created_at', $today)
         ->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
 
-    // --- Total Permits by Type ---
+    // --- Daily Permits by Type ---
+    $dailyTypesData = Permit::select('type', \DB::raw('COUNT(*) as total'))
+        ->whereDate('created_at', $today)
+        ->groupBy('type')
+        ->get()
+        ->keyBy('type');
+
+    $dailyPermits = [
+        'TP' => $dailyTypesData->has('TP') ? $dailyTypesData['TP']->total : 0,
+        'MP' => $dailyTypesData->has('MP') ? $dailyTypesData['MP']->total : 0,
+        'VP' => $dailyTypesData->has('VP') ? $dailyTypesData['VP']->total : 0,
+    ];
+
+    $dailyPermitsAll = array_sum($dailyPermits);
+
+    // --- Total Permits by Type (Monthly) ---
     $typesData = Permit::select('type', \DB::raw('COUNT(*) as total'))
         ->whereYear('created_at', $year)
         ->whereMonth('created_at', $month)
@@ -70,6 +85,8 @@ class DashboardController extends Controller
     ];
 
     return view('dashboard', [
+        'dailyPermits' => $dailyPermits,
+        'dailyPermitsAll' => $dailyPermitsAll,
         'totalPermits' => $totalPermits,
         'totalPermitsAll' => $totalPermitsAll,
         'totalRevenue' => $totalRevenue,
@@ -139,9 +156,25 @@ class DashboardController extends Controller
         ->whereDate('created_at', Carbon::today())
         ->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
 
+    // Daily Permits (always today, regardless of month filter)
+    $dailyTypesData = Permit::select('type', \DB::raw('COUNT(*) as total'))
+        ->whereDate('created_at', Carbon::today())
+        ->groupBy('type')
+        ->get()
+        ->keyBy('type');
+
+    $dailyPermits = [
+        'TP' => $dailyTypesData->has('TP') ? $dailyTypesData['TP']->total : 0,
+        'MP' => $dailyTypesData->has('MP') ? $dailyTypesData['MP']->total : 0,
+        'VP' => $dailyTypesData->has('VP') ? $dailyTypesData['VP']->total : 0,
+    ];
+
     return response()->json([
         'totalRevenue' => $totalRevenue,
         'totalPermits' => $totalPermits,
+        'totalPermitsAll' => array_sum($totalPermits),
+        'dailyPermits' => $dailyPermits,
+        'dailyPermitsAll' => array_sum($dailyPermits),
         'companies' => $companies,
         'permitCounts' => $permitCounts,
         'permitRevenue' => array_values($permitRevenue),

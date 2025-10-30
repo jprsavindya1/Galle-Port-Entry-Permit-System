@@ -102,8 +102,8 @@ public function paymentVehicleSummary()
     $detailedPayments = [];
 
     $settings = PaymentSetting::first();
-    $sslRate = $settings->ssl ?? 0;
-    $vatRate = $settings->vat ?? 15;
+    $sslRate = $settings->ssl ?? 2.5;   // SSL % (e.g., 2.5)
+    $vatRate = $settings->vat ?? 18;    // VAT % (e.g., 18)
 
     foreach ($cart as $item) {
         $item['type'] = 'VP';
@@ -113,7 +113,7 @@ public function paymentVehicleSummary()
 
         $days = \Carbon\Carbon::parse($item['from_date'])->diffInDays(\Carbon\Carbon::parse($item['to_date'])) + 1;
 
-        $baseRate = $vehicle->rate * $days;
+        $tRate = $vehicle->rate * $days;
 
         if ($item['issue_type'] === 'free') {
             $tRate = 0;
@@ -121,9 +121,16 @@ public function paymentVehicleSummary()
             $vat = 0;
             $amount = 0;
         } else {
-            $tRate = $baseRate;
-           $ssl = round(($tRate * $sslRate) / 100, 2);
-            $vat = round((($tRate + $ssl) * $vatRate) / 100, 2);
+            // Original formula: SSL = (tRate / 97.5) * 2.5
+            // Convert readable SSL% to original format: (100 - SSL%)
+            $sslDivisor = 100 - $sslRate;
+            $dblNSSL = ($tRate / $sslDivisor) * $sslRate;
+            $ssl = round($dblNSSL, 2);
+            
+            // VAT calculation uses unrounded SSL (original formula)
+            $dblVAT = (($tRate + $dblNSSL) / 100) * $vatRate;
+            $vat = round($dblVAT, 2);
+            
             $amount = round($tRate + $ssl + $vat, 2);
         }
 
@@ -300,7 +307,7 @@ public function checkVehicleAvailability(Request $request)
         return response()->json(['available' => false, 'message' => 'Vehicle permit NOT available for these dates.']);
     }
 
-    return response()->json(['available' => true, 'message' => 'Vehicle permit available.']);
+    return response()->json(['available' => true, 'message' => 'Success!']);
 }
 
 public function submitAllVehicle(Request $request)

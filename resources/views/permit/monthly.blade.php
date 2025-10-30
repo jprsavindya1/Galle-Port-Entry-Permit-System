@@ -148,12 +148,12 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="from_date" class="form-label"><i class="bi bi-calendar-date me-1"></i> From Date</label>
-                    <input type="date" class="form-control" name="from_date" id="from_date" value="{{ old('from_date') }}" required>
+                    <input type="date" class="form-control" name="from_date" id="from_date" value="{{ old('from_date') }}" min="{{ date('Y-m-d') }}" required>
                 </div>
                 <div class="col-md-6">
                     <label for="to_date" class="form-label"><i class="bi bi-calendar-range me-1"></i> To Date</label>
                     {{-- To Date will be auto-calculated to 30 days from from_date, so it is made readonly --}}
-                    <input type="date" class="form-control" name="to_date" id="to_date" value="{{ old('to_date') }}" required readonly>
+                    <input type="date" class="form-control" name="to_date" id="to_date" value="{{ old('to_date') }}" min="{{ date('Y-m-d') }}" required readonly>
                 </div>
             </div>
 

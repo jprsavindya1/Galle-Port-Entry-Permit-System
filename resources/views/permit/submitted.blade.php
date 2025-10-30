@@ -135,6 +135,130 @@
         .report-card .card-body { max-height:120px; }
         .generate-btn { min-width: 120px; }
     }
+
+    /* Custom Toast Notification Styles */
+    .custom-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        min-width: 300px;
+        max-width: 400px;
+        background: white;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideInRight 0.3s ease-out;
+        border-left: 4px solid;
+    }
+
+    .custom-toast.success {
+        border-left-color: #4caf50;
+        background: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
+    }
+
+    .custom-toast.error {
+        border-left-color: #f44336;
+        background: linear-gradient(135deg, #ffebee 0%, #ffffff 100%);
+    }
+
+    .custom-toast.info {
+        border-left-color: #1976d2;
+        background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+    }
+
+    .custom-toast-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 20px;
+    }
+
+    .custom-toast.success .custom-toast-icon {
+        background: #4caf50;
+        color: white;
+    }
+
+    .custom-toast.error .custom-toast-icon {
+        background: #f44336;
+        color: white;
+    }
+
+    .custom-toast.info .custom-toast-icon {
+        background: #1976d2;
+        color: white;
+    }
+
+    .custom-toast-content {
+        flex: 1;
+    }
+
+    .custom-toast-title {
+        font-weight: 600;
+        font-size: 15px;
+        margin-bottom: 4px;
+        color: #333;
+    }
+
+    .custom-toast-message {
+        font-size: 13px;
+        color: #666;
+        line-height: 1.4;
+    }
+
+    .custom-toast-close {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.1);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background 0.2s;
+        color: #666;
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    .custom-toast-close:hover {
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+
+    .custom-toast.hiding {
+        animation: slideOutRight 0.3s ease-in forwards;
+    }
 </style>
 
 <div class="row mb-4 align-items-start">
@@ -403,17 +527,56 @@ main .view-col { left: 240px; }
 
 document.addEventListener("DOMContentLoaded", function () {
     
-
-    const container = document.querySelector('.container');
     const userRole = "{{ Auth::user()->role }}";
 
+    // Custom Toast Notification Function
+    function showToast(type, title, message) {
+        // Remove any existing toasts
+        const existingToast = document.querySelector('.custom-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        // Icon mapping
+        const icons = {
+            success: '✓',
+            error: '✕',
+            info: 'ℹ'
+        };
+
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `custom-toast ${type}`;
+        toast.innerHTML = `
+            <div class="custom-toast-icon">${icons[type] || 'ℹ'}</div>
+            <div class="custom-toast-content">
+                <div class="custom-toast-title">${title}</div>
+                <div class="custom-toast-message">${message}</div>
+            </div>
+            <button class="custom-toast-close" onclick="this.parentElement.remove()">×</button>
+        `;
+
+        // Add to page
+        document.body.appendChild(toast);
+
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.classList.add('hiding');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 4000);
+    }
+
+
     // Delegate Cancel Permit
-    container.addEventListener('submit', async function(e){
-            if(e.target.classList.contains('cancel-permit-form')){
+    document.addEventListener('submit', async function(e){
+        if(e.target.classList.contains('cancel-permit-form')){
             e.preventDefault();
+            e.stopPropagation();
 
             if(!['admin','super-admin'].includes(userRole)) {
-                alert("Only admins can cancel permits.");
+                showToast('error', 'Permission Denied', 'Only admins can cancel permits.');
                 return;
             }
 
@@ -429,7 +592,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (finalReason === 'Other') {
                         // require typed reason when Other is selected
                         if (!cancelOther || !cancelOther.value.trim()) {
-                            alert('Please enter a reason when "Other" is selected.');
+                            showToast('error', 'Reason Required', 'Please enter a reason when "Other" is selected.');
                             return;
                         }
                         finalReason = cancelOther.value.trim();
@@ -447,12 +610,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: formData
                 });
 
-                if (!response.ok) throw new Error(await response.text());
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error:', errorText);
+                    throw new Error(errorText);
+                }
 
                 const data = await response.json();
                 if (data.status === 'cancelled') {
@@ -461,6 +629,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (modal) {
                          modal.hide();
                     }
+                    
+                    // Remove modal backdrop if it exists
+                    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
 
                     // Replace Active button with Cancelled form
                     const statusCol = document.querySelector(`#status-col-${data.id}`);
@@ -486,22 +660,26 @@ document.addEventListener("DOMContentLoaded", function () {
                         btn.style.backgroundColor = '';
                         btn.style.borderColor = '';
                     });
+                    
+                    // Show success message
+                    showToast('error', 'Permit Cancelled', 'The permit has been successfully cancelled.');
                 }
 
             } catch(err) {
-                console.error(err);
-                alert("Network error or server error. Check console.");
+                console.error('Error cancelling permit:', err);
+                showToast('error', 'Error', 'An error occurred while cancelling the permit. Please try again.');
             }
         }
     });
 
     // Delegate Activate Permit
-    container.addEventListener('submit', async function(e){
+    document.addEventListener('submit', async function(e){
         if(e.target.classList.contains('activate-permit-form')){
             e.preventDefault();
+            e.stopPropagation();
 
             if(!['admin','super-admin'].includes(userRole)) {
-                alert("Only admins can activate cancelled permits.");
+                showToast('error', 'Permission Denied', 'Only admins can activate cancelled permits.');
                 return;
             }
 
@@ -514,12 +692,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: formData
                 });
 
-                if (!response.ok) throw new Error(await response.text());
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error:', errorText);
+                    throw new Error(errorText);
+                }
 
                 const data = await response.json();
                 if (data.status === 'activated') {
@@ -577,11 +760,14 @@ document.addEventListener("DOMContentLoaded", function () {
                             btn.classList.add('btn-primary');
                         }
                     });
+                    
+                    // Show success message
+                    showToast('success', 'Permit Activated', 'The permit has been successfully activated.');
                 }
 
             } catch(err) {
-                console.error(err);
-                alert("Network error or server error. Check console.");
+                console.error('Error activating permit:', err);
+                showToast('error', 'Error', 'An error occurred while activating the permit. Please try again.');
             }
         }
     });

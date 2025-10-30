@@ -152,11 +152,11 @@
                 <div class="row mb-4">
                     <div class="col-md-6 mb-3 mb-md-0">
                         <label for="from_date" class="form-label"><i class="bi bi-calendar-date me-1"></i> From Date</label>
-                        <input type="date" id="from_date" name="from_date" value="{{ $permit['from_date'] }}" onchange="setMaxToDate()" class="form-control" required>
+                        <input type="date" id="from_date" name="from_date" value="{{ $permit['from_date'] }}" onchange="setMaxToDate()" class="form-control" min="{{ date('Y-m-d') }}" required>
                     </div>
                     <div class="col-md-6">
                         <label for="to_date" class="form-label"><i class="bi bi-calendar-range me-1"></i> To Date</label>
-                        <input type="date" id="to_date" name="to_date" value="{{ $permit['to_date'] }}" class="form-control" required>
+                        <input type="date" id="to_date" name="to_date" value="{{ $permit['to_date'] }}" class="form-control" min="{{ date('Y-m-d') }}" required>
                     </div>
                 </div>
             </div>

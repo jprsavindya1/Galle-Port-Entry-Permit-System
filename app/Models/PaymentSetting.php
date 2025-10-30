@@ -4,8 +4,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class PaymentSetting extends Model
-{// Fillable fields 
+{
+    // Fillable fields 
     protected $fillable = [
-        'rate', 'ssl', 'vat',
+        'rate',  // Base rate for temporary and monthly permits
+        'ssl',   // SSL percentage
+        'vat',   // VAT percentage
     ];
 }

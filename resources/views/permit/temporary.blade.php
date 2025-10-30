@@ -158,11 +158,11 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="from_date" class="form-label"><i class="bi bi-calendar-date me-1"></i> From Date</label>
-                    <input type="date" id="from_date" name="from_date" value="{{ old('from_date') }}" onchange="setMaxToDate()" class="form-control" required>
+                    <input type="date" id="from_date" name="from_date" value="{{ old('from_date') }}" onchange="setMaxToDate()" class="form-control" min="{{ date('Y-m-d') }}" required>
                 </div>
                 <div class="col-md-6">
                     <label for="to_date" class="form-label"><i class="bi bi-calendar-range me-1"></i> To Date</label>
-                    <input type="date" id="to_date" name="to_date" value="{{ old('to_date') }}" class="form-control" required>
+                    <input type="date" id="to_date" name="to_date" value="{{ old('to_date') }}" class="form-control" min="{{ date('Y-m-d') }}" required>
                 </div>
             </div>
 
