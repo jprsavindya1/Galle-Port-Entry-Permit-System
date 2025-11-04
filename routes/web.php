@@ -19,8 +19,18 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
 
-// Keep the "/" redirect
-Route::get('/', fn () => redirect()->route('dashboard'));
+// Health check endpoint for hosting platforms
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok'], 200);
+});
+
+// Root route - check if authenticated, otherwise show login
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
+});
 
 // Old-style inline route — now calls the controller with Request
 Route::get('/dashboard', function (Request $request) {
