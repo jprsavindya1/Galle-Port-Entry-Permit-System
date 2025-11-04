@@ -19,8 +19,15 @@ return new class extends Migration
             }
         });
         
-        // Update existing record to have default SSL value if it's 0 or null
-        \Illuminate\Support\Facades\DB::statement("UPDATE payment_settings SET ssl = 2.5 WHERE ssl IS NULL OR ssl = 0");
+        // Update existing records to have default SSL value if it's 0 or null
+        try {
+            DB::table('payment_settings')
+                ->whereNull('ssl')
+                ->orWhere('ssl', 0)
+                ->update(['ssl' => 2.5]);
+        } catch (\Exception $e) {
+            // Silently fail if no records exist
+        }
     }
 
     /**
