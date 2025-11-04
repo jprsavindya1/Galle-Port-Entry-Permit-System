@@ -149,8 +149,14 @@ foreach ($cart as $entry) {
         $vat = 0;
         $total = 0;
     } else {
-        $ssl = round(($rate * $sslRate) / 100, 2);
-        $vat = round((($rate + $ssl) * $vatRate) / 100, 2);
+        // Use same formula as summary page for consistency
+        $sslDivisor = 100 - $sslRate;
+        $dblNSSL = ($rate / $sslDivisor) * $sslRate;
+        $ssl = round($dblNSSL, 2);
+        
+        $dblVAT = (($rate + $dblNSSL) / 100) * $vatRate;
+        $vat = round($dblVAT, 2);
+        
         $total = round($rate + $ssl + $vat, 2);
     }
 
@@ -181,8 +187,13 @@ foreach ($cart as $entry) {
                     $vehicle = Vehicle::where('name', $entry['vehicle_type'])->first();
                     $baseRate = ($vehicle ? $vehicle->rate : 0) * $days;
 
-                    $ssl = round(($baseRate * $sslRate) / 100, 2);
-                    $vat = round((($baseRate + $ssl) * $vatRate) / 100, 2);
+                    // Use same formula as summary page for consistency
+                    $sslDivisor = 100 - $sslRate;
+                    $dblNSSL = ($baseRate / $sslDivisor) * $sslRate;
+                    $ssl = round($dblNSSL, 2);
+                    
+                    $dblVAT = (($baseRate + $dblNSSL) / 100) * $vatRate;
+                    $vat = round($dblVAT, 2);
 
                     $rateTotal += $baseRate;
                     $sslTotal += $ssl;
@@ -192,8 +203,13 @@ foreach ($cart as $entry) {
                     // TP / MP from settings
                     $baseRate = $rateSetting * $days;
 
-                    $ssl = round(($baseRate * $sslRate) / 100, 2);
-                    $vat = round((($baseRate + $ssl) * $vatRate) / 100, 2);
+                    // Use same formula as summary page for consistency
+                    $sslDivisor = 100 - $sslRate;
+                    $dblNSSL = ($baseRate / $sslDivisor) * $sslRate;
+                    $ssl = round($dblNSSL, 2);
+                    
+                    $dblVAT = (($baseRate + $dblNSSL) / 100) * $vatRate;
+                    $vat = round($dblVAT, 2);
 
                     $rateTotal += $baseRate;
                     $sslTotal += $ssl;
