@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('payment_settings', function (Blueprint $table) {
-            $table->decimal('ssl', 10, 2)->default(0)->after('vat');
+            if (!Schema::hasColumn('payment_settings', 'ssl')) {
+                $table->decimal('ssl', 10, 2)->default(0)->after('vat');
+            }
         });
     }
 
