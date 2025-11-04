@@ -21,7 +21,19 @@ use Illuminate\Http\Request;
 
 // Health check endpoint for hosting platforms
 Route::get('/health', function () {
-    return response()->json(['status' => 'ok'], 200);
+    try {
+        // Check database connection
+        \DB::connection()->getPdo();
+        $dbStatus = 'connected';
+    } catch (\Exception $e) {
+        $dbStatus = 'disconnected';
+    }
+    
+    return response()->json([
+        'status' => 'ok',
+        'database' => $dbStatus,
+        'timestamp' => now()->toIso8601String()
+    ], 200);
 });
 
 // Root route - check if authenticated, otherwise show login
