@@ -11,25 +11,34 @@ return new class extends Migration
      */
     public function up()
 {
-    // Step 1: Add column without unique constraint
-    Schema::table('payments', function (Blueprint $table) {
-       $table->string('invoice_id', 25)->unique()->after('id');
+    // Check if column already exists before adding
+    if (!Schema::hasColumn('payments', 'invoice_id')) {
+        // Step 1: Add column with unique constraint
+        Schema::table('payments', function (Blueprint $table) {
+           $table->string('invoice_id', 25)->after('id');
+        });
 
-    });
+        // Step 2: Assign temporary unique values to existing rows
+        DB::statement("
+            UPDATE payments
+            SET invoice_id = CONCAT('TEMP-', id)
+            WHERE invoice_id IS NULL OR invoice_id = ''
+        ");
 
-    // Step 2: Assign temporary unique values to existing rows
-    DB::statement("
-        UPDATE payments
-        SET invoice_id = CONCAT('TEMP-', id)
-        WHERE invoice_id IS NULL OR invoice_id = ''
-    ");
-
-    // Step 3: Add unique index
-    Schema::table('payments', function (Blueprint $table) {
-        $table->unique('invoice_id');
-    });
+        // Step 3: Add unique index
+        Schema::table('payments', function (Blueprint $table) {
+            $table->unique('invoice_id');
+        });
+    }
 }
 
-
-    
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('payments', function (Blueprint $table) {
+            $table->dropColumn('invoice_id');
+        });
+    }
 };
