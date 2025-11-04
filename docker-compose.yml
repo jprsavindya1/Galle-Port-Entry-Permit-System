@@ -1,0 +1,156 @@
+# ============================================================================
+# SLPA PORT ENTRY PERMIT SYSTEM - DOCKER COMPOSE
+# ============================================================================
+# Docker Compose configuration for local development and production deployment
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # Laravel Application
+  # ----------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: slpa-permit-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    ports:
+      - "${APP_PORT:-8000}:80"
+    volumes:
+      # Mount storage for persistent data (uploads, logs, etc.)
+      - ./storage:/var/www/html/storage
+      # Mount .env file
+      - ./.env:/var/www/html/.env
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-port_entry_permit}
+      - DB_USERNAME=${DB_USERNAME:-laravel}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - slpa-network
+
+  # ----------------------------------------------------------------------------
+  # MySQL Database
+  # ----------------------------------------------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: slpa-permit-db
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-port_entry_permit}
+      MYSQL_USER: ${DB_USERNAME:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+    volumes:
+      # Persistent database storage
+      - db-data:/var/lib/mysql
+      # Optional: Import initial SQL dump
+      # - ./database/backups:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootsecret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - slpa-network
+
+  # ----------------------------------------------------------------------------
+  # Redis (for cache, sessions, queues)
+  # ----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: slpa-permit-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - slpa-network
+
+  # ----------------------------------------------------------------------------
+  # Queue Worker (for background jobs)
+  # ----------------------------------------------------------------------------
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: slpa-permit-queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work --tries=3 --timeout=90
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./.env:/var/www/html/.env
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-port_entry_permit}
+      - DB_USERNAME=${DB_USERNAME:-laravel}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - app
+      - db
+      - redis
+    networks:
+      - slpa-network
+
+  # ----------------------------------------------------------------------------
+  # phpMyAdmin (optional - for database management)
+  # ----------------------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: slpa-permit-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+      UPLOAD_LIMIT: 50M
+    depends_on:
+      - db
+    networks:
+      - slpa-network
+    profiles:
+      - tools
+
+# ----------------------------------------------------------------------------
+# Volumes for persistent data
+# ----------------------------------------------------------------------------
+volumes:
+  db-data:
+    driver: local
+  redis-data:
+    driver: local
+
+# ----------------------------------------------------------------------------
+# Network configuration
+# ----------------------------------------------------------------------------
+networks:
+  slpa-network:
+    driver: bridge
