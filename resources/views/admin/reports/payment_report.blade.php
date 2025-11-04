@@ -187,7 +187,7 @@
                         <td>{{ number_format($p->ssl_total,2) }}</td>
                         <td>{{ number_format($p->vat_total,2) }}</td>
                         <td class="fw-bold text-primary-light">{{ number_format($p->amount_total,2) }}</td>
-                        <td>{{ $p->payment_date->format('Y-m-d H:i') }}</td>
+                        <td>{{ $p->paid_at ? $p->paid_at->format('Y-m-d H:i') : ($p->payment_date ? $p->payment_date->format('Y-m-d') : '-') }}</td>
                     </tr>
                 @endforeach
             </tbody>

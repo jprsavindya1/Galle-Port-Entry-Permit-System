@@ -301,7 +301,7 @@ public function exportPaymentCsv(Request $request)
                 $p->ssl_total,
                 $p->vat_total,
                 $p->amount_total,
-                $p->payment_date,
+                $p->paid_at ? $p->paid_at->format('Y-m-d H:i:s') : $p->payment_date,
             ]);
         }
 
