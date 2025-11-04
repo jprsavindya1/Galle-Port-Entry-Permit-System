@@ -7,9 +7,8 @@ cmds = ["composer install --no-dev --optimize-autoloader"]
 [phases.build]
 cmds = [
   "php artisan config:cache",
-  "php artisan route:cache",
   "php artisan view:cache"
 ]
 
 [start]
-cmd = "php artisan migrate --force && php artisan user:create-admin admin@slpa.lk Admin123 || true"
+cmd = "php artisan route:clear && php artisan migrate --force && php artisan user:create-admin admin@slpa.lk Admin123 || true"
