@@ -9,7 +9,7 @@ use App\Models\Payment;
 class PrintController extends Controller
 {
     /**
-     * Display the print view for a given submission.
+     * Display the print view for a given submissions.
      */
     public function show($submission_id)
     {
