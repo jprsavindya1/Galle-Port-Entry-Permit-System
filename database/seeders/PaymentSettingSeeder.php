@@ -12,15 +12,20 @@ class PaymentSettingSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create default payment settings
-        PaymentSetting::create([
-            'temporary_permit_rate' => 100.00,
-            'monthly_permit_rate' => 2000.00,
-            'vehicle_permit_rate' => 500.00,
-            'stamp_duty' => 50.00,
-            'ssc_rate' => 2.5, // SSC percentage
-        ]);
+        // Create default payment settings only if table is empty
+        if (PaymentSetting::count() === 0) {
+            PaymentSetting::create([
+                'rate' => 100.00,           // Base rate per day
+                'ssl' => 2.5,               // SSL percentage (2.5%)
+                'vat' => 18.00,             // VAT percentage (18%)
+                'price_onboard' => 100.00,  // Onboard pass price
+                'price_afloat' => 80.00,    // Afloat pass price
+                'price_ashore' => 50.00,    // Ashore pass price
+            ]);
 
-        $this->command->info('Payment settings seeded successfully!');
+            $this->command->info('Payment settings seeded successfully!');
+        } else {
+            $this->command->info('Payment settings already exist, skipping seed.');
+        }
     }
 }

@@ -47,6 +47,15 @@ class AppServiceProvider extends ServiceProvider
                     ]);
                     \Illuminate\Support\Facades\Log::info('Auto-seeded master data tables');
                 }
+                
+                // Auto-seed payment settings if empty
+                if (\App\Models\PaymentSetting::count() === 0) {
+                    \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                        '--class' => 'Database\\Seeders\\PaymentSettingSeeder',
+                        '--force' => true
+                    ]);
+                    \Illuminate\Support\Facades\Log::info('Auto-seeded payment settings');
+                }
             } catch (\Exception $e) {
                 // Silently fail if database not ready yet
                 \Illuminate\Support\Facades\Log::warning('Could not auto-seed data: ' . $e->getMessage());
