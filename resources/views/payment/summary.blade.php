@@ -189,10 +189,10 @@
                                 <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($vat, 2) }}</td>
                                 <td><strong>{{ number_format($payment['total'], 2) }}</strong></td>
                                 <td>
-                                    <form method="POST" action="{{ route('permit.remove', $index) }}" onsubmit="return confirm('Are you sure you want to remove this entry from the payment summary?');">
+                                    <form method="POST" action="{{ route('permit.remove', $index) }}" class="delete-payment-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" type="submit"><i class="bi bi-trash"></i> Remove</button>
+                                        <button class="btn btn-sm btn-danger delete-payment-btn" type="button"><i class="bi bi-trash"></i> Remove</button>
                                     </form>
                                 </td>
                             </tr>
@@ -268,10 +268,10 @@
                                 <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($vat, 2) }}</td>
                                 <td><strong>{{ number_format($payment['total'], 2) }}</strong></td>
                                 <td>
-                                    <form method="POST" action="{{ route('permit.remove', $index) }}" onsubmit="return confirm('Are you sure you want to remove this entry from the payment summary?');">
+                                    <form method="POST" action="{{ route('permit.remove', $index) }}" class="delete-payment-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" type="submit"><i class="bi bi-trash"></i> Remove</button>
+                                        <button class="btn btn-sm btn-danger delete-payment-btn" type="button"><i class="bi bi-trash"></i> Remove</button>
                                     </form>
                                 </td>
                             </tr>
@@ -316,4 +316,88 @@
 
     </div>
 </div>
+
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle delete button clicks in payment summary
+        const deleteForms = document.querySelectorAll('.delete-payment-form');
+        
+        deleteForms.forEach(form => {
+            const deleteBtn = form.querySelector('.delete-payment-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    Swal.fire({
+                        title: 'Remove Entry?',
+                        text: 'Are you sure you want to remove this entry from the payment summary?',
+                        icon: 'warning',
+                        iconColor: '#e53935',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e53935',
+                        cancelButtonColor: '#757575',
+                        confirmButtonText: 'Yes, Remove',
+                        cancelButtonText: 'Cancel',
+                        customClass: {
+                            popup: 'delete-popup',
+                            title: 'delete-title',
+                            confirmButton: 'delete-confirm-btn',
+                            cancelButton: 'delete-cancel-btn'
+                        },
+                        buttonsStyling: true,
+                        width: '400px'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            }
+        });
+    });
+</script>
+
+<style>
+    /* Custom SweetAlert2 styling for delete action */
+    .delete-popup {
+        border-radius: 0.75rem !important;
+        padding: 1.5rem !important;
+    }
+    
+    .delete-title {
+        color: #e53935 !important;
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .swal2-html-container {
+        font-size: 0.95rem !important;
+        color: #555 !important;
+    }
+    
+    .delete-confirm-btn {
+        border-radius: 0.375rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+    }
+    
+    .delete-cancel-btn {
+        border-radius: 0.375rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+    }
+    
+    .swal2-icon.swal2-warning {
+        border-color: #e53935 !important;
+        color: #e53935 !important;
+    }
+</style>
+
 @endsection

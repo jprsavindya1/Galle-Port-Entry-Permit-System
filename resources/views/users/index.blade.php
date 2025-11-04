@@ -154,9 +154,9 @@
                         <td><span class="user-role-badge">{{ ucfirst($user->role) }}</span></td>
                         <td class="text-center">
                             <a href="{{ route('users.edit', $user) }}" class="user-action-btn edit"><i class="bi bi-pencil-square"></i> Edit</a>
-                            <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline">
+                            <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline delete-form">
                                 @csrf @method('DELETE')
-                                <button class="user-action-btn delete" onclick="return confirm('Delete this user?')"><i class="bi bi-trash"></i> Delete</button>
+                                <button type="button" class="user-action-btn delete delete-btn"><i class="bi bi-trash"></i> Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -179,4 +179,88 @@
 
 <!-- Bootstrap Icons CDN -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle delete button clicks
+        const deleteForms = document.querySelectorAll('.delete-form');
+        
+        deleteForms.forEach(form => {
+            const deleteBtn = form.querySelector('.delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    Swal.fire({
+                        title: 'Delete User?',
+                        text: 'Are you sure you want to delete this user?',
+                        icon: 'warning',
+                        iconColor: '#e53935',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e53935',
+                        cancelButtonColor: '#757575',
+                        confirmButtonText: 'Yes, Delete',
+                        cancelButtonText: 'Cancel',
+                        customClass: {
+                            popup: 'delete-popup',
+                            title: 'delete-title',
+                            confirmButton: 'delete-confirm-btn',
+                            cancelButton: 'delete-cancel-btn'
+                        },
+                        buttonsStyling: true,
+                        width: '400px'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            }
+        });
+    });
+</script>
+
+<style>
+    /* Custom SweetAlert2 styling for delete action */
+    .delete-popup {
+        border-radius: 0.75rem !important;
+        padding: 1.5rem !important;
+    }
+    
+    .delete-title {
+        color: #e53935 !important;
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .swal2-html-container {
+        font-size: 0.95rem !important;
+        color: #555 !important;
+    }
+    
+    .delete-confirm-btn {
+        border-radius: 0.375rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+    }
+    
+    .delete-cancel-btn {
+        border-radius: 0.375rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+    }
+    
+    .swal2-icon.swal2-warning {
+        border-color: #e53935 !important;
+        color: #e53935 !important;
+    }
+</style>
+
 @endsection

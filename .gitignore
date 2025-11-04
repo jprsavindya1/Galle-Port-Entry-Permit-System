@@ -1,24 +1,76 @@
+# Laravel & PHP
 *.log
-.DS_Store
 .env
 .env.backup
 .env.production
+.env.staging
+.env.testing
 .phpactor.json
 .phpunit.result.cache
+auth.json
+composer.phar
+php_errors.log
+phpunit.xml.bak
+
+# Node & NPM
+/node_modules
+/public/build
+/public/hot
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Laravel Storage & Cache
+/storage/*.key
+/storage/pail
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+# Public Storage
+/public/storage
+
+# Vendor
+/vendor
+
+# IDE & Editors
 /.fleet
 /.idea
 /.nova
 /.phpunit.cache
 /.vscode
 /.zed
-/auth.json
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
+*.swp
+*.swo
+*~
+.project
+.settings/
+.buildpath
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Homestead & Vagrant
 Homestead.json
 Homestead.yaml
-Thumbs.db
+.vagrant/
+
+# Docker
+docker-compose.override.yml
+
+# Backup & Temporary Files
+*.bak
+*.tmp
+*.temp
+*~
+
+# Uploads & User Generated Content (if you want to ignore them)
+# /storage/app/public/uploads
+
+# Database files (SQLite)
+*.sqlite
+*.sqlite-journal
+*.db

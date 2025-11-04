@@ -2,6 +2,8 @@
 
 @section('title', 'Edit Master Data')
 
+@section('content')
+
 <style>
     .user-dashboard-card {
         background: linear-gradient(135deg, #e3f2fd 0%, #f8fafc 100%);
@@ -37,10 +39,43 @@
     .master-grid h4 { color:#0d47a1; font-weight:700; margin-bottom:.25rem }
     .master-grid p { color:#386fa4; margin-bottom:0 }
     #dynamic-content { margin-top:1.25rem }
+    
+    /* Custom SweetAlert2 styling for delete action */
+    .delete-popup {
+        border-radius: 0.75rem !important;
+        padding: 1.5rem !important;
+    }
+    
+    .delete-title {
+        color: #e53935 !important;
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .swal2-html-container {
+        font-size: 0.95rem !important;
+        color: #555 !important;
+    }
+    
+    .delete-confirm-btn {
+        border-radius: 0.375rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+    }
+    
+    .delete-cancel-btn {
+        border-radius: 0.375rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+    }
+    
+    .swal2-icon.swal2-warning {
+        border-color: #e53935 !important;
+        color: #e53935 !important;
+    }
 </style>
-
-
-@section('content')
 <div class="container py-4">
     <div class="user-dashboard-card">
         <div class="user-dashboard-title"><i class="bi bi-tools me-2"></i> Edit Master Data</div>
@@ -120,31 +155,52 @@ $(function(){
         loadAjaxContent($(this).attr('href'));
     });
 
-    // Ajax delete inside dynamic content
+    // Ajax delete inside dynamic content with SweetAlert2
     $('#dynamic-content').on('submit', '.ajax-delete', function(e){
         e.preventDefault();
-        if (!confirm('Are you sure you want to delete this item?')) return;
-
+        
         let form = $(this);
         let reloadUrl = form.data('reload-url');  // URL to reload after delete
 
-        $.ajax({
-            url: form.attr('action'),
-            type: 'POST',
-            data: form.serialize(),
-            success: function(response){
-                if(response.success){
-                    if(reloadUrl){
-                        loadAjaxContent(reloadUrl);
-                    } else {
-                        alert('Reload URL not specified.');
-                    }
-                } else {
-                    alert(response.message || 'Delete failed.');
-                }
+        Swal.fire({
+            title: 'Delete Item?',
+            text: 'Are you sure you want to delete this item?',
+            icon: 'warning',
+            iconColor: '#e53935',
+            showCancelButton: true,
+            confirmButtonColor: '#e53935',
+            cancelButtonColor: '#757575',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'delete-popup',
+                title: 'delete-title',
+                confirmButton: 'delete-confirm-btn',
+                cancelButton: 'delete-cancel-btn'
             },
-            error: function(){
-                alert('An error occurred while deleting.');
+            buttonsStyling: true,
+            width: '400px'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function(response){
+                        if(response.success){
+                            if(reloadUrl){
+                                loadAjaxContent(reloadUrl);
+                            } else {
+                                alert('Reload URL not specified.');
+                            }
+                        } else {
+                            alert(response.message || 'Delete failed.');
+                        }
+                    },
+                    error: function(){
+                        alert('An error occurred while deleting.');
+                    }
+                });
             }
         });
     });
@@ -178,7 +234,11 @@ $(function(){
         loadAjaxContent(url + '?' + query);
     });
 });
-
 </script>
+
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 @endsection

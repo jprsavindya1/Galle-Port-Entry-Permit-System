@@ -270,10 +270,10 @@
                             <td>{{ ucfirst($entry['issue_type']) }}</td>
                             <td class="text-center"><a href="{{ route('permit.vehicle.editVehicleSessionEntry', $index) }}" class="user-action-btn edit"><i class="bi bi-pencil-square"></i> Edit</a></td>
                             <td class="text-center">
-                                <form method="POST" action="{{ route('permit.vehicle.removeVehicleSessionEntry', $index) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to remove this entry?');">
+                                <form method="POST" action="{{ route('permit.vehicle.removeVehicleSessionEntry', $index) }}" style="display:inline;" class="delete-cart-form">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="user-action-btn delete"><i class="bi bi-trash"></i> Remove</button>
+                                    <button type="button" class="user-action-btn delete delete-cart-btn"><i class="bi bi-trash"></i> Remove</button>
                                 </form>
                             </td>
                         </tr>
@@ -294,6 +294,8 @@
 @push('scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         // Store checked form data to detect changes
@@ -490,5 +492,84 @@
                 idTypeInput.addEventListener('change', setMaxToDate);
             }
         });
+
+        // SweetAlert2 for cart delete confirmation
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteForms = document.querySelectorAll('.delete-cart-form');
+            
+            deleteForms.forEach(form => {
+                const deleteBtn = form.querySelector('.delete-cart-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        Swal.fire({
+                            title: 'Remove Entry?',
+                            text: 'Are you sure you want to remove this entry?',
+                            icon: 'warning',
+                            iconColor: '#e53935',
+                            showCancelButton: true,
+                            confirmButtonColor: '#e53935',
+                            cancelButtonColor: '#757575',
+                            confirmButtonText: 'Yes, Remove',
+                            cancelButtonText: 'Cancel',
+                            customClass: {
+                                popup: 'delete-popup',
+                                title: 'delete-title',
+                                confirmButton: 'delete-confirm-btn',
+                                cancelButton: 'delete-cancel-btn'
+                            },
+                            buttonsStyling: true,
+                            width: '400px'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                form.submit();
+                            }
+                        });
+                    });
+                }
+            });
+        });
     </script>
+
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <style>
+        /* Custom SweetAlert2 styling for delete action */
+        .delete-popup {
+            border-radius: 0.75rem !important;
+            padding: 1.5rem !important;
+        }
+        
+        .delete-title {
+            color: #e53935 !important;
+            font-size: 1.25rem !important;
+            font-weight: 600 !important;
+        }
+        
+        .swal2-html-container {
+            font-size: 0.95rem !important;
+            color: #555 !important;
+        }
+        
+        .delete-confirm-btn {
+            border-radius: 0.375rem !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.9rem !important;
+            font-weight: 500 !important;
+        }
+        
+        .delete-cancel-btn {
+            border-radius: 0.375rem !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.9rem !important;
+            font-weight: 500 !important;
+        }
+        
+        .swal2-icon.swal2-warning {
+            border-color: #e53935 !important;
+            color: #e53935 !important;
+        }
+    </style>
 @endpush
