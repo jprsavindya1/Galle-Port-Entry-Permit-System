@@ -55,7 +55,15 @@ class TemporaryPermitController extends PermitController
             'pass_type.*' => 'in:onboard,afloat,ashore',
             'issue_type' => 'required|string|in:free,payment',
             'reason' => 'required|string',
+            'doc_nic' => 'nullable|boolean',
+            'doc_passport' => 'nullable|boolean',
+            'doc_driving_licence' => 'nullable|boolean',
         ]);
+        
+        // Convert checkbox values (checkboxes only send value if checked, otherwise null)
+        $validated['doc_nic'] = $request->has('doc_nic') ? 1 : 0;
+        $validated['doc_passport'] = $request->has('doc_passport') ? 1 : 0;
+        $validated['doc_driving_licence'] = $request->has('doc_driving_licence') ? 1 : 0;
 
         $cart = session()->get('temporary_permit_cart', []);
 

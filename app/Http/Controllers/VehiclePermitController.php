@@ -52,10 +52,16 @@ public function addVehicleToSession(Request $request)
         'remarks' => 'nullable|string',
         'reason' => 'required|string',
         'insurance_number' => 'nullable|string',
+        'doc_revenue_licence' => 'nullable|boolean',
+        'doc_insurance' => 'nullable|boolean',
     ]);
 
     // Ensure company_address exists
     $validated['company_address'] = $validated['company_address'] ?? '';
+    
+    // Convert checkbox values (checkboxes only send value if checked, otherwise null)
+    $validated['doc_revenue_licence'] = $request->has('doc_revenue_licence') ? 1 : 0;
+    $validated['doc_insurance'] = $request->has('doc_insurance') ? 1 : 0;
 
     $cart = session()->get('vehicle_permit_cart', []);
 

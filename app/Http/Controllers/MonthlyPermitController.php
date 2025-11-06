@@ -55,7 +55,13 @@ class MonthlyPermitController extends PermitController
             'reason' => 'required|string',
             'police_issue_date' => 'required|date',
             'police_expire_date' => 'required|date|after:police_issue_date',
+            'doc_nic' => 'nullable|boolean',
+            'doc_police_report' => 'nullable|boolean',
         ]);
+        
+        // Convert checkbox values (checkboxes only send value if checked, otherwise null)
+        $validated['doc_nic'] = $request->has('doc_nic') ? 1 : 0;
+        $validated['doc_police_report'] = $request->has('doc_police_report') ? 1 : 0;
 
         $cart = session()->get('monthly_permit_cart', []);
 
