@@ -230,21 +230,29 @@
                                     <td title="{{ $permit->reason }}">{{ Str::limit($permit->reason, 15) }}</td>
                                     <td>
                                         @php
-                                            $docs = [];
+                                            $submittedDocs = [];
+                                            $hasAnyDoc = false;
+                                            
                                             if ($type === 'TP') {
-                                                if ($permit->doc_nic) $docs[] = '<span title="NIC" style="color:green;">✓N</span>';
-                                                if ($permit->doc_passport) $docs[] = '<span title="Passport" style="color:green;">✓P</span>';
-                                                if ($permit->doc_driving_licence) $docs[] = '<span title="Driving Licence" style="color:green;">✓DL</span>';
+                                                if ($permit->doc_nic) { $submittedDocs[] = 'NIC'; $hasAnyDoc = true; }
+                                                if ($permit->doc_passport) { $submittedDocs[] = 'Passport'; $hasAnyDoc = true; }
+                                                if ($permit->doc_driving_licence) { $submittedDocs[] = 'Driving Licence'; $hasAnyDoc = true; }
                                             } elseif ($type === 'MP') {
-                                                if ($permit->doc_nic) $docs[] = '<span title="NIC" style="color:green;">✓N</span>';
-                                                if ($permit->doc_police_report) $docs[] = '<span title="Police Report" style="color:green;">✓PR</span>';
+                                                if ($permit->doc_nic) { $submittedDocs[] = 'NIC'; $hasAnyDoc = true; }
+                                                if ($permit->doc_police_report) { $submittedDocs[] = 'Police Report'; $hasAnyDoc = true; }
                                             } elseif ($type === 'VP') {
-                                                if ($permit->doc_revenue_licence) $docs[] = '<span title="Revenue Licence" style="color:green;">✓RL</span>';
-                                                if ($permit->doc_insurance) $docs[] = '<span title="Insurance" style="color:green;">✓I</span>';
+                                                if ($permit->doc_revenue_licence) { $submittedDocs[] = 'Revenue Licence'; $hasAnyDoc = true; }
+                                                if ($permit->doc_insurance) { $submittedDocs[] = 'Insurance'; $hasAnyDoc = true; }
                                             }
+                                            
+                                            $tooltipText = count($submittedDocs) > 0 ? implode(', ', $submittedDocs) : 'No documents submitted';
                                         @endphp
-                                        <span style="font-size:0.7rem;">
-                                            {!! count($docs) > 0 ? implode(' ', $docs) : '<span style="color:#999;">-</span>' !!}
+                                        <span title="{{ $tooltipText }}" style="cursor: help; font-size: 1rem;">
+                                            @if($hasAnyDoc)
+                                                <span style="color: green;">✓</span>
+                                            @else
+                                                <span style="color: #999;">✗</span>
+                                            @endif
                                         </span>
                                     </td> 
                                     <td>
