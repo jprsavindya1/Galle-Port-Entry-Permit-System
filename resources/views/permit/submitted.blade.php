@@ -365,7 +365,7 @@
                                         @endif
 
                                         <th class="sticky-col status-col" style="width:120px;">Status</th>
-                                        <th class="sticky-col actions-col" style="width:120px;">Actions</th>
+                                        {{-- <th class="sticky-col actions-col" style="width:120px;">Actions</th> --}}
                                         <th class="sticky-col view-col" style="width:120px;">View</th>
                                     </tr>
                                 </thead>
@@ -461,13 +461,13 @@
                                                 @endif
                                             </td>
 
-                                            <td class="sticky-col actions-col">
+                                            {{-- <td class="sticky-col actions-col">
                                                 <a href="{{ route('permits.edit', $permit) }}"
                                                    class="btn btn-sm {{ $permit->status === 'cancelled' ? 'btn-secondary' : 'btn-warning' }} w-100 mb-1"
                                                    @if($permit->status === 'cancelled') style="pointer-events: none; opacity: 0.5;" aria-disabled="true" @endif>
-                                                    Edit
+                                                    <i class="fas fa-edit"></i> Edit
                                                 </a>
-                                            </td>
+                                            </td> --}}
 
                                             <td class="sticky-col view-col">
                                                 <a href="{{ route('payment.invoice', $permit->submission_id) }}"
@@ -516,8 +516,8 @@ main .sticky-col {
     border-right: 1px solid #dee2e6;
 }
 main .status-col { left: 0; }
-main .actions-col { left: 120px; }
-main .view-col { left: 240px; }
+/* main .actions-col { left: 120px; } */
+main .view-col { left: 120px; } /* Changed from 240px to 120px since actions column is hidden */
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 @endpush
@@ -746,7 +746,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                     `;
 
-                    // Enable Edit / View / Print buttons
+                    // Enable Edit / View / Print buttons (Edit commented out for testing)
                     const row = document.querySelector(`#permit-row-${data.id}`);
                     row.querySelectorAll('a.btn').forEach(btn => {
                         btn.removeAttribute('disabled');
@@ -754,7 +754,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         btn.style.opacity = '';
                         // Restore original classes
                         btn.classList.remove('btn-secondary'); 
-                        if (btn.textContent.trim() === 'Edit' || btn.textContent.trim() === 'View Group') {
+                        /* if (btn.textContent.trim() === 'Edit' || btn.textContent.trim() === 'View Group') {
+                            btn.classList.add('btn-warning');
+                        } else */ if (btn.textContent.trim() === 'View Group') {
                             btn.classList.add('btn-warning');
                         } else if (btn.textContent.trim() === 'Print') {
                             btn.classList.add('btn-primary');
