@@ -13,7 +13,8 @@ class CompanyController extends Controller
     public function index(Request $request)
 {
     $companies = Company::when($request->search, function($query, $search) {
-        $query->where('name', 'like', "%$search%");
+        $query->where('name', 'like', "%$search%")
+              ->orWhere('address', 'like', "%$search%");
     })->paginate(10);
 
     if ($request->ajax()) {

@@ -47,7 +47,7 @@
     .company-action-btn.delete { background: #ffebee; color:#e53935; border:1px solid #ffcdd2 }
 </style>
 
-<div class="container">
+<div class="container" id="company-list-container">
     <div class="company-dashboard-card">
         <div class="company-dashboard-header">
             <div class="company-dashboard-title"><i class="bi bi-building me-2"></i> Company List</div>
@@ -58,7 +58,7 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <form id="company-search-form" method="GET" action="{{ route('admin.companies.index') }}" class="row g-3 mb-3 align-items-end" style="background:linear-gradient(135deg,#e3f2fd 0%,#f8fafc 100%);border-radius:0.75rem;padding:0.75rem;">
+        <form id="company-search-form" method="GET" action="{{ route('admin.companies.index') }}" class="row g-3 mb-3 align-items-end ajax-search-form" style="background:linear-gradient(135deg,#e3f2fd 0%,#f8fafc 100%);border-radius:0.75rem;padding:0.75rem;">
             <div class="col-md-8">
                 <label class="form-label mb-1" for="search"><i class="bi bi-search me-1"></i> Search</label>
                 <input type="text" name="search" id="search" value="{{ request('search') }}" class="form-control" placeholder="Search by company name or address" style="border-radius:0.5rem;border:1px solid #bbdefb;background:#f8fafc;">
@@ -111,3 +111,57 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle search form submission via AJAX
+    const searchForm = document.getElementById('company-search-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const searchValue = this.querySelector('input[name="search"]').value;
+            const url = this.getAttribute('action');
+            const urlWithSearch = url + '?search=' + encodeURIComponent(searchValue);
+            
+            fetch(urlWithSearch, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('company-list-container').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Search failed:', error);
+                alert('Search failed. Please try again.');
+            });
+        });
+    }
+    
+    // Handle pagination links via AJAX
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.pagination a')) {
+            e.preventDefault();
+            const link = e.target.closest('.pagination a');
+            const url = link.getAttribute('href');
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('company-list-container').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Pagination failed:', error);
+            });
+        }
+    });
+});
+</script>
+@endpush
