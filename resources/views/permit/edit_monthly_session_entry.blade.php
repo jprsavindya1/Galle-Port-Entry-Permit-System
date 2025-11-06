@@ -121,7 +121,8 @@
                     <div class="col-md-6">
                         <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
                         <input type="text" class="form-control" name="id_number" id="id_number" 
-                               value="{{ old('id_number', $permit['id_number']) }}" required>
+                               value="{{ old('id_number', $permit['id_number']) }}" required oninput="this.value = this.value.toUpperCase(); updateIdValidation();">
+                        <span id="id_number_error" class="text-danger small"></span>
                     </div>
                 </div>
 
@@ -263,6 +264,41 @@
 <script>
 // Store checked form data to detect changes
 let checkedFormData = null;
+
+// Initialize validation on page load
+document.addEventListener('DOMContentLoaded', function() {
+    validateId(); // Initial validation
+});
+
+/**
+ * Validates ID number based on NIC format
+ */
+function validateId() {
+    const idNumber = document.getElementById('id_number').value.trim();
+    const errorSpan = document.getElementById('id_number_error');
+
+    if (!idNumber) {
+        errorSpan.textContent = '';
+        return true;
+    }
+
+    // Old format: 9 digits + V/X or New format: 12 digits
+    const nicPattern = /^(?:\d{9}[VXvx]|\d{12})$/;
+    const isValid = nicPattern.test(idNumber);
+
+    if (isValid) {
+        errorSpan.textContent = '';
+        errorSpan.style.display = 'none';
+    } else {
+        errorSpan.textContent = 'Invalid NIC format. Use 9 digits + V/X or 12 digits';
+        errorSpan.style.display = 'block';
+    }
+
+    return isValid;
+}
+
+// Make validateId available globally for inline event handlers
+window.updateIdValidation = validateId;
 
 /**
  * Function to check the availability of the Monthly Permit.

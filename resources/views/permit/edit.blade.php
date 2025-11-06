@@ -117,7 +117,7 @@
                 <div class="row mb-3">
                     <div class="col-md-6 mb-3 mb-md-0">
                         <label for="id_type" class="form-label">ID Type</label>
-                        <select name="id_type" id="id_type" class="form-select" required>
+                        <select name="id_type" id="id_type" class="form-select" required onchange="updateIdValidation();">
                             <option value="NIC" {{ old('id_type', $permit->id_type) == 'NIC' ? 'selected' : '' }}>NIC</option>
                             <option value="Passport" {{ old('id_type', $permit->id_type) == 'Passport' ? 'selected' : '' }}>Passport</option>
                             <option value="Driving License" {{ old('id_type', $permit->id_type) == 'Driving License' ? 'selected' : '' }}>Driving License</option>
@@ -125,7 +125,8 @@
                     </div>
                     <div class="col-md-6">
                         <label for="id_number" class="form-label">ID Number</label>
-                        <input type="text" name="id_number" id="id_number" class="form-control" value="{{ old('id_number', $permit->id_number) }}" required>
+                        <input type="text" name="id_number" id="id_number" class="form-control" value="{{ old('id_number', $permit->id_number) }}" required oninput="this.value = this.value.toUpperCase(); updateIdValidation();">
+                        <span id="id_number_error" class="text-danger small"></span>
                     </div>
                 </div>
 
@@ -298,7 +299,63 @@
                  document.getElementById('company_address').value = selectedOption.getAttribute('data-address') || '';
             }
         }
+
+        // Initialize validation on page load
+        validateId();
     });
+
+    /**
+     * Validates ID number based on selected ID type
+     */
+    function validateId() {
+        const idType = document.getElementById('id_type').value;
+        const idNumber = document.getElementById('id_number').value.trim();
+        const errorSpan = document.getElementById('id_number_error');
+
+        if (!idNumber) {
+            errorSpan.textContent = '';
+            return true;
+        }
+
+        let isValid = false;
+        let errorMessage = '';
+
+        switch(idType) {
+            case 'NIC':
+                // Old format: 9 digits + V/X or New format: 12 digits
+                const nicPattern = /^(?:\d{9}[VXvx]|\d{12})$/;
+                isValid = nicPattern.test(idNumber);
+                errorMessage = 'Invalid NIC format. Use 9 digits + V/X or 12 digits';
+                break;
+            case 'Passport':
+                // 1 or 2 letters followed by 6 or 7 digits
+                const passportPattern = /^[A-Z]{1,2}\d{6,7}$/i;
+                isValid = passportPattern.test(idNumber);
+                errorMessage = 'Invalid Passport format. Use 1-2 letters followed by 6-7 digits';
+                break;
+            case 'Driving License':
+                // 7-8 digits OR letter + 7 digits OR old NIC format OR new NIC format
+                const licensePattern = /^(?:\d{7,8}|[A-Z]\d{7}|\d{9}[VXvx]|\d{12})$/;
+                isValid = licensePattern.test(idNumber);
+                errorMessage = 'Invalid License format';
+                break;
+            default:
+                isValid = true;
+        }
+
+        if (isValid) {
+            errorSpan.textContent = '';
+            errorSpan.style.display = 'none';
+        } else {
+            errorSpan.textContent = errorMessage;
+            errorSpan.style.display = 'block';
+        }
+
+        return isValid;
+    }
+
+    // Make validateId available globally for inline event handlers
+    window.updateIdValidation = validateId;
 
     // --- Original Script Functions (Preserved) ---
 
