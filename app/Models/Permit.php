@@ -45,6 +45,13 @@ class Permit extends Model
         'ssl',
         'vat',
         'total',
+        // Document checkboxes
+        'doc_nic',
+        'doc_passport',
+        'doc_driving_licence',
+        'doc_police_report',
+        'doc_revenue_licence',
+        'doc_insurance',
     ];
 
     public function payment()

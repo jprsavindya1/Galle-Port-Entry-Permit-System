@@ -133,6 +133,26 @@
         <form action="{{ route('permit.vehicle.addToSession') }}" method="POST">
             @csrf
             
+            {{-- DOCUMENTS ATTACHED SECTION --}}
+            <fieldset class="mb-4">
+                <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached </legend>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_revenue_licence" value="1" id="doc_revenue_licence" class="form-check-input">
+                            <label class="form-check-label" for="doc_revenue_licence">Revenue Licence</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_insurance" value="1" id="doc_insurance" class="form-check-input">
+                            <label class="form-check-label" for="doc_insurance">Insurance</label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            {{-- END DOCUMENTS ATTACHED --}}
+            
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="vehicle_type" class="form-label"><i class="bi bi-truck me-1"></i> Vehicle Type</label>

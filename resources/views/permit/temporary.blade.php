@@ -136,6 +136,32 @@
             @csrf
             <input type="hidden" name="type" value="temporary">
             
+            {{-- DOCUMENTS ATTACHED SECTION --}}
+            <fieldset class="mb-4">
+                <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached </legend>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input">
+                            <label class="form-check-label" for="doc_nic">NIC</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input">
+                            <label class="form-check-label" for="doc_passport">Passport</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input">
+                            <label class="form-check-label" for="doc_driving_licence">Driving Licence</label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            {{-- END DOCUMENTS ATTACHED --}}
+            
             <div class="row mb-3 align-items-end">
                 <div class="col-md-4">
                     <label for="id_type" class="form-label"><i class="bi bi-card-heading me-1"></i> Identification Type</label>

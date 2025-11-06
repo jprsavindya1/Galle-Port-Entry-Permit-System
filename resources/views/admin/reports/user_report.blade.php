@@ -104,7 +104,8 @@
     main .table tbody td:nth-child(4) { max-width: 120px; } /* Company */
     main .table tbody td:nth-child(5), 
     main .table tbody td:nth-child(6) { max-width: 85px; } /* Dates */
-    main .table tbody td:nth-child(9) { max-width: 100px; } /* Reason */
+    main .table tbody td:nth-child(8) { max-width: 100px; } /* Reason */
+    main .table tbody td:nth-child(9) { max-width: 65px; white-space: nowrap; } /* Docs */
     main .table tbody td:nth-child(10) { max-width: 75px; } /* Status */
     main .table tbody td:nth-child(11),
     main .table tbody td:nth-child(12) { max-width: 110px; } /* Submission/Invoice ID */
@@ -205,6 +206,7 @@
                                 <th>To Date</th>
                                 <th>Issue Type</th>
                                 <th>Reason</th>
+                                <th>Docs</th>
                                 <th>Status</th>
                                 <th>Submission ID</th>
                                 <th>Invoice ID</th>
@@ -225,7 +227,26 @@
                                     <td>{{ $permit->from_date }}</td>
                                     <td>{{ $permit->to_date }}</td>
                                     <td>{{ ucfirst($permit->issue_type) }}</td>
-                                    <td title="{{ $permit->reason }}">{{ Str::limit($permit->reason, 15) }}</td> 
+                                    <td title="{{ $permit->reason }}">{{ Str::limit($permit->reason, 15) }}</td>
+                                    <td>
+                                        @php
+                                            $docs = [];
+                                            if ($type === 'TP') {
+                                                if ($permit->doc_nic) $docs[] = '<span title="NIC" style="color:green;">✓N</span>';
+                                                if ($permit->doc_passport) $docs[] = '<span title="Passport" style="color:green;">✓P</span>';
+                                                if ($permit->doc_driving_licence) $docs[] = '<span title="Driving Licence" style="color:green;">✓DL</span>';
+                                            } elseif ($type === 'MP') {
+                                                if ($permit->doc_nic) $docs[] = '<span title="NIC" style="color:green;">✓N</span>';
+                                                if ($permit->doc_police_report) $docs[] = '<span title="Police Report" style="color:green;">✓PR</span>';
+                                            } elseif ($type === 'VP') {
+                                                if ($permit->doc_revenue_licence) $docs[] = '<span title="Revenue Licence" style="color:green;">✓RL</span>';
+                                                if ($permit->doc_insurance) $docs[] = '<span title="Insurance" style="color:green;">✓I</span>';
+                                            }
+                                        @endphp
+                                        <span style="font-size:0.7rem;">
+                                            {!! count($docs) > 0 ? implode(' ', $docs) : '<span style="color:#999;">-</span>' !!}
+                                        </span>
+                                    </td> 
                                     <td>
                                         <span class="badge rounded-pill 
                                             @if($permit->status === 'Active') badge-status-active
