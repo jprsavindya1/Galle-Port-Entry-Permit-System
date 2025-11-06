@@ -274,12 +274,22 @@
                 <div class="col-md-5">
                     <fieldset>
                         <legend class="col-form-label pt-0"><i class="bi bi-cash me-1"></i> Issue Type</legend><br>
+                        @php
+                            $savedIssueType = session('temporary_permit_cart') && count(session('temporary_permit_cart')) > 0 
+                                ? session('temporary_permit_cart')[0]['issue_type'] 
+                                : old('issue_type', 'free');
+                        @endphp
+                        @if(session('temporary_permit_cart') && count(session('temporary_permit_cart')) > 0)
+                            <div class="alert alert-warning py-2 px-3 mb-2" style="font-size: 0.85rem;">
+                                <i class="bi bi-info-circle-fill me-1"></i> Previous choice: <strong>{{ ucfirst($savedIssueType) }}</strong> (you can change if needed)
+                            </div>
+                        @endif
                         <div class="form-check form-check-inline">
-                            <input type="radio" name="issue_type" id="issue_free" value="free" class="form-check-input" {{ old('issue_type', 'free') == 'free' ? 'checked' : '' }}>
+                            <input type="radio" name="issue_type" id="issue_free" value="free" class="form-check-input" {{ $savedIssueType == 'free' ? 'checked' : '' }}>
                             <label class="form-check-label" for="issue_free">Free Issue</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input type="radio" name="issue_type" id="issue_payment" value="payment" class="form-check-input" {{ old('issue_type') == 'payment' ? 'checked' : '' }}>
+                            <input type="radio" name="issue_type" id="issue_payment" value="payment" class="form-check-input" {{ $savedIssueType == 'payment' ? 'checked' : '' }}>
                             <label class="form-check-label" for="issue_payment">On Payment</label>
                         </div>
                     </fieldset>
