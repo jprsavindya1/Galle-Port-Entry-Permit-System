@@ -142,19 +142,19 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input">
+                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input" onchange="syncIdType('NIC')">
                             <label class="form-check-label" for="doc_nic">NIC</label>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input">
+                            <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input" onchange="syncIdType('Passport')">
                             <label class="form-check-label" for="doc_passport">Passport</label>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input">
+                            <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input" onchange="syncIdType('Driving License')">
                             <label class="form-check-label" for="doc_driving_licence">Driving Licence</label>
                         </div>
                     </div>
@@ -176,7 +176,8 @@
                     <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> Identification Number</label>
                     <input type="text" name="id_number" id="id_number" 
                             value="{{ old('id_number') }}" class="form-control" required
-                            oninput="this.value = this.value.toUpperCase();">
+                            oninput="this.value = this.value.toUpperCase();"
+                            onblur="fetchPersonDetails()">
                     <span id="id_number_error" class="text-danger small"></span>
                 </div>
             </div>
@@ -371,6 +372,65 @@
     <script>
         // Store checked form data to detect changes
         let checkedFormData = null;
+
+        // Function to sync ID type when document checkbox is checked
+        window.syncIdType = function(idType) {
+            const checkbox = event.target;
+            if (checkbox.checked) {
+                // Uncheck other document checkboxes
+                document.getElementById('doc_nic').checked = false;
+                document.getElementById('doc_passport').checked = false;
+                document.getElementById('doc_driving_licence').checked = false;
+                
+                // Check the current checkbox
+                checkbox.checked = true;
+                
+                // Update the identification type dropdown
+                document.getElementById('id_type').value = idType;
+                
+                // Trigger validation and date limit updates
+                updateIdValidation();
+                setMaxToDate();
+            }
+        }
+
+        // Function to fetch person details from database
+        window.fetchPersonDetails = function() {
+            const idNumber = document.getElementById('id_number').value.trim();
+            
+            if (!idNumber) {
+                return;
+            }
+
+            fetch("{{ route('permit.fetchPersonDetails') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ id_number: idNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.found) {
+                    // Auto-fill the fields
+                    document.getElementById('full_name').value = data.data.full_name || '';
+                    document.getElementById('initials').value = data.data.initials || '';
+                    
+                    // Set designation using Select2
+                    if (data.data.designation) {
+                        $('#designation').val(data.data.designation).trigger('change');
+                    }
+                    
+                    document.getElementById('residence_address').value = data.data.residence_address || '';
+                    
+                    console.log('Person details auto-filled successfully');
+                }
+            })
+            .catch(error => {
+                console.error("Failed to fetch person details:", error);
+            });
+        }
 
         // All existing functions are preserved.
         // The DOMContentLoaded listener for ID validation

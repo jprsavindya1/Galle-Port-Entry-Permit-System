@@ -316,6 +316,53 @@ public function checkVehicleAvailability(Request $request)
     return response()->json(['available' => true, 'message' => 'Success!']);
 }
 
+/**
+ * Fetch vehicle details from database based on vehicle number
+ */
+public function fetchVehicleDetails(Request $request)
+{
+    try {
+        $vehicleNumber = $request->input('vehicle_number');
+        
+        if (empty($vehicleNumber)) {
+            return response()->json([
+                'found' => false,
+                'message' => 'Vehicle number is required'
+            ]);
+        }
+
+        // Find the most recent permit with this vehicle number
+        $permit = Permit::where('vehicle_number', $vehicleNumber)
+            ->where('type', 'VP')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($permit) {
+            return response()->json([
+                'found' => true,
+                'data' => [
+                    'revenue_license_number' => $permit->revenue_license_number,
+                    'insurance_number' => $permit->insurance_number,
+                    'owner_name' => $permit->owner_name,
+                    'owner_address' => $permit->owner_address,
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'found' => false,
+            'message' => 'No records found for this vehicle number'
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Fetch vehicle details failed: ' . $e->getMessage());
+        return response()->json([
+            'found' => false,
+            'message' => 'Server error occurred.'
+        ], 500);
+    }
+}
+
 public function submitAllVehicle(Request $request)
 {
     $cart = session()->get('vehicle_permit_cart', []);

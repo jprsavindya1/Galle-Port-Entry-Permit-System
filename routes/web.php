@@ -141,6 +141,7 @@ Route::prefix('temporary-permit')->controller(TemporaryPermitController::class)-
 });
 
 Route::post('/permits/check-availability', [PermitController::class, 'checkAvailability'])->name('permit.checkAvailability');
+Route::post('/permits/fetch-person-details', [PermitController::class, 'fetchPersonDetails'])->name('permit.fetchPersonDetails');
 
 // ------------------------------
 // Monthly Permit Routes
@@ -169,6 +170,7 @@ Route::prefix('permit/vehicle')->controller(VehiclePermitController::class)->gro
     Route::put('/update-session-entry/{index}', 'updateVehicleSessionEntry')->name('permit.vehicle.updateSessionEntry');
     Route::post('/submit', 'submitAllVehicle')->name('permit.vehicle.submitAllVehicle');
     Route::post('/checkAvailability', 'checkVehicleAvailability')->name('permit.vehicle.checkVehicleAvailability');
+    Route::post('/fetchVehicleDetails', 'fetchVehicleDetails')->name('permit.vehicle.fetchVehicleDetails');
     Route::get('/edit/{index}', 'editVehicleSessionEntry')->name('permit.vehicle.editVehicleSessionEntry');
     Route::put('/edit/{index}', 'updatevehicleSessionEntry')->name('permit.vehicle.updateVehicleSessionEntry');
     Route::delete('/remove/{index}', 'removevehicleSessionEntry')->name('permit.vehicle.removeVehicleSessionEntry');

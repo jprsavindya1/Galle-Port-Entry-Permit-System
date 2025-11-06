@@ -168,7 +168,7 @@
 
                 <div class="col-md-6">
                     <label for="vehicle_number" class="form-label"><i class="bi bi-hash me-1"></i> Vehicle Number</label>
-                    <input type="text" class="form-control" name="vehicle_number" id="vehicle_number" required value="{{ old('vehicle_number') }}" oninput="this.value = this.value.toUpperCase();">
+                    <input type="text" class="form-control" name="vehicle_number" id="vehicle_number" required value="{{ old('vehicle_number') }}" oninput="this.value = this.value.toUpperCase();" onblur="fetchVehicleDetails()">
                 </div>
             </div>
 
@@ -320,6 +320,39 @@
     <script>
         // Store checked form data to detect changes
         let checkedFormData = null;
+
+        // Function to fetch vehicle details from database
+        window.fetchVehicleDetails = function() {
+            const vehicleNumber = document.getElementById('vehicle_number').value.trim();
+            
+            if (!vehicleNumber) {
+                return;
+            }
+
+            fetch("{{ route('permit.vehicle.fetchVehicleDetails') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ vehicle_number: vehicleNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.found) {
+                    // Auto-fill the fields
+                    document.getElementById('revenue_license_number').value = data.data.revenue_license_number || '';
+                    document.getElementById('insurance_number').value = data.data.insurance_number || '';
+                    document.getElementById('owner_name').value = data.data.owner_name || '';
+                    document.getElementById('owner_address').value = data.data.owner_address || '';
+                    
+                    console.log('Vehicle details auto-filled successfully');
+                }
+            })
+            .catch(error => {
+                console.error("Failed to fetch vehicle details:", error);
+            });
+        }
 
         // --- Select2 Initialization ---
         $(document).ready(function() {

@@ -324,6 +324,52 @@ public function checkAvailability(Request $request)
         ], 500);
     }
 }
+
+/**
+ * Fetch person details from database based on ID number
+ */
+public function fetchPersonDetails(Request $request)
+{
+    try {
+        $idNumber = $request->input('id_number');
+        
+        if (empty($idNumber)) {
+            return response()->json([
+                'found' => false,
+                'message' => 'ID number is required'
+            ]);
+        }
+
+        // Find the most recent permit with this ID number
+        $permit = Permit::where('id_number', $idNumber)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($permit) {
+            return response()->json([
+                'found' => true,
+                'data' => [
+                    'full_name' => $permit->full_name,
+                    'initials' => $permit->initials,
+                    'designation' => $permit->designation,
+                    'residence_address' => $permit->residence_address,
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'found' => false,
+            'message' => 'No records found for this ID number'
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Fetch person details failed: ' . $e->getMessage());
+        return response()->json([
+            'found' => false,
+            'message' => 'Server error occurred.'
+        ], 500);
+    }
+}
     
    
 }

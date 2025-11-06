@@ -160,7 +160,8 @@
                 <div class="col-md-10">
                     <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
                     <input type="text" class="form-control" name="id_number" id="id_number" value="{{ old('id_number') }}" required
-                        oninput="this.value = this.value.toUpperCase();">
+                        oninput="this.value = this.value.toUpperCase();"
+                        onblur="fetchPersonDetails()">
                     <span id="id_number_error" class="text-danger small"></span>
                 </div>
             </div>
@@ -371,6 +372,44 @@
     <script>
         // Store checked form data to detect changes
         let checkedFormData = null;
+
+        // Function to fetch person details from database
+        window.fetchPersonDetails = function() {
+            const idNumber = document.getElementById('id_number').value.trim();
+            
+            if (!idNumber) {
+                return;
+            }
+
+            fetch("{{ route('permit.fetchPersonDetails') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ id_number: idNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.found) {
+                    // Auto-fill the fields
+                    document.getElementById('full_name').value = data.data.full_name || '';
+                    document.getElementById('initials').value = data.data.initials || '';
+                    
+                    // Set designation using Select2
+                    if (data.data.designation) {
+                        $('#designation').val(data.data.designation).trigger('change');
+                    }
+                    
+                    document.getElementById('residence_address').value = data.data.residence_address || '';
+                    
+                    console.log('Person details auto-filled successfully');
+                }
+            })
+            .catch(error => {
+                console.error("Failed to fetch person details:", error);
+            });
+        }
 
         // --- Document Ready and Select2 Initialization ---
         $(document).ready(function() {
