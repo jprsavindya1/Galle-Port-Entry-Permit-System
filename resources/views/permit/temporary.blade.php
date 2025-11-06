@@ -142,19 +142,19 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input" onchange="syncIdType('NIC')">
+                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input doc-checkbox" onchange="syncIdType('NIC')">
                             <label class="form-check-label" for="doc_nic">NIC</label>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input" onchange="syncIdType('Passport')">
+                            <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input doc-checkbox" onchange="syncIdType('Passport')">
                             <label class="form-check-label" for="doc_passport">Passport</label>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input" onchange="syncIdType('Driving License')">
+                            <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input doc-checkbox" onchange="syncIdType('Driving License')">
                             <label class="form-check-label" for="doc_driving_licence">Driving Licence</label>
                         </div>
                     </div>
@@ -381,6 +381,8 @@
         // Function to sync ID type when document checkbox is checked
         window.syncIdType = function(idType) {
             const checkbox = event.target;
+            const idTypeDropdown = document.getElementById('id_type');
+            
             if (checkbox.checked) {
                 // Uncheck other document checkboxes
                 document.getElementById('doc_nic').checked = false;
@@ -391,13 +393,41 @@
                 checkbox.checked = true;
                 
                 // Update the identification type dropdown
-                document.getElementById('id_type').value = idType;
+                idTypeDropdown.value = idType;
+                
+                // Lock the identification type dropdown
+                idTypeDropdown.disabled = true;
+                idTypeDropdown.style.backgroundColor = '#e9ecef';
+                idTypeDropdown.style.cursor = 'not-allowed';
                 
                 // Trigger validation and date limit updates
                 updateIdValidation();
                 setMaxToDate();
+            } else {
+                // If unchecked, check if any other document checkbox is checked
+                const anyChecked = document.querySelector('.doc-checkbox:checked');
+                
+                if (!anyChecked) {
+                    // Unlock the dropdown if no documents are checked
+                    idTypeDropdown.disabled = false;
+                    idTypeDropdown.style.backgroundColor = '#f8fafc';
+                    idTypeDropdown.style.cursor = '';
+                }
             }
         }
+
+        // Enable ID type dropdown before form submission (to ensure value is sent)
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form[action="{{ route('permit.addToSession') }}"]');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const idTypeDropdown = document.getElementById('id_type');
+                    if (idTypeDropdown && idTypeDropdown.disabled) {
+                        idTypeDropdown.disabled = false;
+                    }
+                });
+            }
+        });
 
         // Function to fetch person details from database
         window.fetchPersonDetails = function() {
