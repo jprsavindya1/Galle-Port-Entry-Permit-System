@@ -199,7 +199,7 @@
                                     <th>Vehicle Number</th>
                                 @else
                                     <th>Full Name</th>
-                                    <th>ID Number</th>
+                                    <th>Identification Number</th>
                                 @endif
                                 <th>Company Name</th>
                                 <th>From Date</th>
