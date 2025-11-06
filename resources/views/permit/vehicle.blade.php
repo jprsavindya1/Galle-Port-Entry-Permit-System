@@ -231,11 +231,6 @@
                         ? session('vehicle_permit_cart')[0]['issue_type'] 
                         : old('issue_type', 'free');
                 @endphp
-                @if(session('vehicle_permit_cart') && count(session('vehicle_permit_cart')) > 0)
-                    <div class="alert alert-warning py-2 px-3 mb-2" style="font-size: 0.85rem;">
-                        <i class="bi bi-info-circle-fill me-1"></i> Previous choice: <strong>{{ ucfirst($savedIssueType) }}</strong> (you can change if needed)
-                    </div>
-                @endif
                 <div class="form-check form-check-inline">
                     <input type="radio" name="issue_type" id="issue_free" value="free" class="form-check-input" {{ $savedIssueType == 'free' ? 'checked' : '' }}>
                     <label class="form-check-label" for="issue_free">Free Issue</label>
@@ -403,8 +398,15 @@
             addBtn.style.opacity = '0.6';
             addBtn.style.cursor = 'not-allowed';
 
-            if (!vehicleNumber || !fromDate || !toDate || !companyName) {
-                msg.innerText = "Please fill in all required fields.";
+            // Check for empty fields and build detailed message
+            const missingFields = [];
+            if (!vehicleNumber) missingFields.push('Vehicle Number');
+            if (!fromDate) missingFields.push('From Date');
+            if (!toDate) missingFields.push('To Date');
+            if (!companyName) missingFields.push('Company Name');
+
+            if (missingFields.length > 0) {
+                msg.innerText = "Please fill in: " + missingFields.join(', ');
                 msg.style.color = 'red';
                 return;
             }
