@@ -313,7 +313,7 @@ public function checkAvailability(Request $request)
 
         return response()->json([
             'available' => true, 
-            'message' => 'Permit available!'
+            'message' => 'Success!'
         ]);
 
     } catch (\Exception $e) {
