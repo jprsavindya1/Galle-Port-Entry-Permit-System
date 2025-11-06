@@ -17,7 +17,9 @@
     }
 
     main .container {
-        max-width: 1400px; /* Maximize usable width for table */
+        max-width: 100%; /* Use full width available */
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 
     main h4, main h5, main h6 {
@@ -71,7 +73,7 @@
         --bs-table-striped-bg: var(--light-blue); /* Light blue stripe */
         border-radius: 10px;
         overflow: hidden; 
-        font-size: 0.8rem; /* Even smaller font size for reports with many columns */
+        font-size: 0.75rem; /* Smaller font for better fit */
     }
 
     main .table-bordered {
@@ -84,14 +86,28 @@
         color: var(--dark-heading); 
         font-weight: 600;
         white-space: nowrap; /* Prevent header wrap */
-        padding: 0.4rem 0.5rem; /* Reduced padding for extreme compactness */
+        padding: 0.35rem 0.4rem; /* Reduced padding for compactness */
+        font-size: 0.7rem; /* Smaller header font */
     }
 
     /* Table Body Cells */
     main .table tbody td {
-        padding: 0.4rem 0.5rem; /* Reduced padding for compactness */
-        white-space: nowrap; /* Keep content from wrapping to save horizontal space */
+        padding: 0.35rem 0.4rem; /* Reduced padding for compactness */
+        white-space: normal; /* Allow wrapping for better fit */
+        word-wrap: break-word;
+        max-width: 150px; /* Prevent cells from growing too wide */
+        font-size: 0.75rem;
     }
+    
+    /* Specific column width controls */
+    main .table tbody td:nth-child(1) { max-width: 90px; } /* Permit ID */
+    main .table tbody td:nth-child(4) { max-width: 120px; } /* Company */
+    main .table tbody td:nth-child(5), 
+    main .table tbody td:nth-child(6) { max-width: 85px; } /* Dates */
+    main .table tbody td:nth-child(9) { max-width: 100px; } /* Reason */
+    main .table tbody td:nth-child(10) { max-width: 75px; } /* Status */
+    main .table tbody td:nth-child(11),
+    main .table tbody td:nth-child(12) { max-width: 110px; } /* Submission/Invoice ID */
 
     /* Ensure table-responsive container handles overflow gracefully */
     main .table-responsive {
@@ -110,16 +126,16 @@
     }
 </style>
 
-<div class="container py-4">
-    <h4 class="mb-4">User / Entity Permit Report</h4>
+<div class="container-fluid py-4">
+    <h4 class="mb-3">User / Entity Permit Report</h4>
 
     <!-- Filters -->
-    <form method="GET" action="{{ route('reports.user') }}" class="row g-2 mb-4 align-items-end">
+    <form method="GET" action="{{ route('reports.user') }}" class="row g-2 mb-3 align-items-end">
         <div class="col-md-5">
             <label class="form-label visually-hidden" for="query-input">Search NIC / Name / Company</label>
             <input id="query-input" type="text" name="query" class="form-control" placeholder="Enter NIC / Name / Company" value="{{ request('query') }}">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label visually-hidden" for="type-select">Permit Type</label>
             <select id="type-select" name="type" class="form-select">
                 <option value="">All Types</option>
@@ -128,9 +144,9 @@
                 <option value="VP" {{ request('type')=='VP'?'selected':'' }}>VP</option>
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <button class="btn btn-primary w-100">
-                <i class="fas fa-search me-2"></i>Search
+                <i class="fas fa-search me-1"></i>Search
             </button>
         </div>
     </form>
@@ -209,8 +225,7 @@
                                     <td>{{ $permit->from_date }}</td>
                                     <td>{{ $permit->to_date }}</td>
                                     <td>{{ ucfirst($permit->issue_type) }}</td>
-                                    <!-- Truncate reason if too long, or assume it's short -->
-                                    <td>{{ Str::limit($permit->reason, 20) }}</td> 
+                                    <td title="{{ $permit->reason }}">{{ Str::limit($permit->reason, 15) }}</td> 
                                     <td>
                                         <span class="badge rounded-pill 
                                             @if($permit->status === 'Active') badge-status-active
