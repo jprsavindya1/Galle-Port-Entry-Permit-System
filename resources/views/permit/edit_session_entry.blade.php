@@ -138,9 +138,9 @@
                     <div class="col-md-6 mb-3 mb-md-0">
                         <label for="id_type" class="form-label"><i class="bi bi-fingerprint me-1"></i> Identification Type</label>
                         <select name="id_type" id="id_type" onchange="setMaxToDate()" class="form-select" required>
-                            <option value="NIC" {{ $permit['id_type'] == 'NIC' ? 'selected' : '' }}>NIC Number</option>
-                            <option value="Passport" {{ $permit['id_type'] == 'Passport' ? 'selected' : '' }}>Passport Number</option>
-                            <option value="License" {{ $permit['id_type'] == 'License' ? 'selected' : '' }}>Driving Licence</option>
+                            <option value="NIC" {{ $permit['id_type'] == 'NIC' ? 'selected' : '' }}>NIC</option>
+                            <option value="Passport" {{ $permit['id_type'] == 'Passport' ? 'selected' : '' }}>Passport</option>
+                            <option value="Driving License" {{ $permit['id_type'] == 'Driving License' ? 'selected' : '' }}>Driving License</option>
                         </select>
                     </div>
                     <div class="col-md-6">
