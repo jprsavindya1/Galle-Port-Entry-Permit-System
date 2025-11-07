@@ -6,6 +6,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
+    
+    <!-- Favicon - Browser Tab Icon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/Sri_Lanka_Ports_Authority_logo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/Sri_Lanka_Ports_Authority_logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/Sri_Lanka_Ports_Authority_logo.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">

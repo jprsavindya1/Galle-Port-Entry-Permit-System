@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     
+    <!-- Favicon - Browser Tab Icon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/Sri_Lanka_Ports_Authority_logo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/Sri_Lanka_Ports_Authority_logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/Sri_Lanka_Ports_Authority_logo.png') }}">
+    
     <!-- CRITICAL: Preload logo FIRST with absolute highest priority -->
     <link rel="preload" href="{{ asset('images/Sri_Lanka_Ports_Authority_logo.png') }}" as="image" type="image/png" fetchpriority="high">
     <link rel="preload" href="{{ asset('css/navbar-critical.css') }}" as="style" fetchpriority="high">
