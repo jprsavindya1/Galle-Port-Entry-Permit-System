@@ -397,21 +397,6 @@
             };
         })();
     </script>
-            
-            // Handle fetch API errors
-            const originalFetch = window.fetch;
-            window.fetch = function(...args) {
-                return originalFetch.apply(this, args)
-                    .then(response => {
-                        if (response.status === 401 || response.status === 419) {
-                            alert('Your session has expired. Please login again.');
-                            window.location.href = '{{ route('login') }}';
-                        }
-                        return response;
-                    });
-            };
-        })();
-    </script>
     
     @stack('scripts')
 </body>
