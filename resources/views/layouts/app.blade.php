@@ -322,6 +322,97 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {{-- Session Expiration Modal --}}
+    <div class="modal fade" id="sessionExpiredModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: 3px solid #FFC107; border-radius: 1rem;">
+                <div class="modal-header" style="background-color: #002B5C; border-bottom: 3px solid #FFC107; border-radius: 0.85rem 0.85rem 0 0;">
+                    <h5 class="modal-title text-white">
+                        <i class="bi bi-clock-history me-2"></i>Session Expired
+                    </h5>
+                </div>
+                <div class="modal-body text-center py-4" style="background-color: #f8f9fa;">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: #FFC107;"></i>
+                    <p class="mt-3 mb-0" style="font-size: 1.1rem; color: #002B5C; font-weight: 500;">
+                        Your session has expired due to inactivity.
+                    </p>
+                    <p class="text-muted mb-0">You will be redirected to the login page.</p>
+                </div>
+                <div class="modal-footer justify-content-center" style="border-top: 2px solid #FFC107; background-color: #f8f9fa; border-radius: 0 0 0.85rem 0.85rem;">
+                    <button type="button" class="btn" onclick="window.location.href='{{ route('login') }}'" 
+                            style="background-color: #FFC107; border-color: #FFC107; color: #002B5C; font-weight: 600; padding: 0.5rem 2rem; border-radius: 0.5rem;">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Go to Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {{-- Session Expiration Handler --}}
+    <script>
+        (function() {
+            // Auto-logout after session lifetime expires
+            const sessionLifetime = {{ config('session.lifetime', 120) }} * 60 * 1000; // Convert to milliseconds
+            
+            // Set auto-logout timer
+            setTimeout(function() {
+                // Show styled modal instead of alert
+                const modal = new bootstrap.Modal(document.getElementById('sessionExpiredModal'));
+                modal.show();
+                
+                // Auto-redirect after 5 seconds if user doesn't click button
+                setTimeout(function() {
+                    window.location.href = '{{ route('login') }}';
+                }, 5000);
+            }, sessionLifetime);
+            
+            // Global AJAX error handler for session expiration
+            if (typeof jQuery !== 'undefined') {
+                $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+                    if (jqxhr.status === 401 || jqxhr.status === 419) {
+                        const modal = new bootstrap.Modal(document.getElementById('sessionExpiredModal'));
+                        modal.show();
+                        setTimeout(function() {
+                            window.location.href = '{{ route('login') }}';
+                        }, 3000);
+                    }
+                });
+            }
+            
+            // Handle fetch API errors
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                return originalFetch.apply(this, args)
+                    .then(response => {
+                        if (response.status === 401 || response.status === 419) {
+                            const modal = new bootstrap.Modal(document.getElementById('sessionExpiredModal'));
+                            modal.show();
+                            setTimeout(function() {
+                                window.location.href = '{{ route('login') }}';
+                            }, 3000);
+                        }
+                        return response;
+                    });
+            };
+        })();
+    </script>
+            
+            // Handle fetch API errors
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                return originalFetch.apply(this, args)
+                    .then(response => {
+                        if (response.status === 401 || response.status === 419) {
+                            alert('Your session has expired. Please login again.');
+                            window.location.href = '{{ route('login') }}';
+                        }
+                        return response;
+                    });
+            };
+        })();
+    </script>
+    
     @stack('scripts')
 </body>
 </html>

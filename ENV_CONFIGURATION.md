@@ -450,10 +450,36 @@ BCRYPT_ROUNDS=12
 
 ### Session Security
 ```env
-SESSION_LIFETIME=120        # Minutes
+SESSION_LIFETIME=120        # Minutes (default: 120 = 2 hours)
 SESSION_ENCRYPT=false       # Set to true if extra security needed
-SESSION_DOMAIN=.slpa.lk     # For subdomains
+SESSION_EXPIRE_ON_CLOSE=false  # true = expires when browser closes
+SESSION_DOMAIN=.slpa.lk     # For subdomains (production)
 SESSION_SECURE_COOKIE=true  # Require HTTPS (production only)
+SESSION_SAME_SITE=lax       # CSRF protection (lax or strict)
+```
+
+**Session Driver Options:**
+```env
+# Development - Simple file storage
+SESSION_DRIVER=file
+
+# Production - Database storage (recommended)
+SESSION_DRIVER=database
+
+# Production - Redis storage (best performance)
+SESSION_DRIVER=redis
+```
+
+**Session Lifetime Recommendations:**
+- Development: `SESSION_LIFETIME=480` (8 hours)
+- Production: `SESSION_LIFETIME=120` (2 hours)
+- High Security: `SESSION_LIFETIME=30` (30 minutes)
+
+**Database Session Setup:**
+```bash
+# Create sessions table
+php artisan session:table
+php artisan migrate
 ```
 
 ---
