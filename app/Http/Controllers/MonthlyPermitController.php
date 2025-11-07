@@ -84,6 +84,14 @@ if (session()->has('monthly_company_name')) {
     session(['monthly_company_address' => $validated['company_address']]);
 }
 
+        // Check for duplicate NIC in session cart
+        foreach ($cart as $existingEntry) {
+            if (strtolower(trim($existingEntry['id_number'])) === strtolower(trim($validated['id_number']))) {
+                return redirect()->route('permit.monthly')
+                    ->withErrors(['id_number' => 'This NIC is already added to the cart. Cannot add duplicate entries.'])
+                    ->withInput();
+            }
+        }
 
         // Convert pass_type array to comma-separated string for storage
         $validated['pass_type'] = implode(',', $validated['pass_type']);

@@ -130,6 +130,31 @@
             <input type="hidden" name="company_name" value="{{ $permit['company_name'] ?? '' }}">
             <input type="hidden" name="company_address" value="{{ $permit['company_address'] ?? '' }}">
 
+            {{-- DOCUMENTS ATTACHED SECTION --}}
+            <fieldset class="mb-4">
+                <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached</legend>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input doc-checkbox" onchange="syncIdType('NIC')" {{ ($permit['doc_nic'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <label class="form-check-label" for="doc_nic">NIC</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input doc-checkbox" onchange="syncIdType('Passport')" {{ ($permit['doc_passport'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <label class="form-check-label" for="doc_passport">Passport</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input doc-checkbox" onchange="syncIdType('Driving License')" {{ ($permit['doc_driving_licence'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <label class="form-check-label" for="doc_driving_licence">Driving License</label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
             {{-- --- Section 1: Identification & Validity --- --}}
             <div class="form-section-card">
                 <div class="form-section-title"><i class="bi bi-card-heading me-2"></i> ID and Duration</div>
@@ -301,7 +326,64 @@
         document.addEventListener('DOMContentLoaded', function() {
             setMaxToDate();
             validateId(); // Initial validation
+            
+            // Enable form submission on enter
+            const form = document.querySelector('form[action="{{ route('permit.updateSessionEntry', $index) }}"]');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const idTypeDropdown = document.getElementById('id_type');
+                    if (idTypeDropdown && idTypeDropdown.disabled) {
+                        idTypeDropdown.disabled = false;
+                    }
+                });
+            }
         });
+
+        /**
+         * Syncs the ID Type dropdown based on document checkbox selection
+         * and locks/unlocks the dropdown accordingly
+         */
+        function syncIdType(selectedType) {
+            const idTypeDropdown = document.getElementById('id_type');
+            const checkboxes = document.querySelectorAll('.doc-checkbox');
+            
+            // Find the checkbox that was just clicked
+            let clickedCheckbox = null;
+            checkboxes.forEach(cb => {
+                const checkboxType = cb.id === 'doc_nic' ? 'NIC' : 
+                                    cb.id === 'doc_passport' ? 'Passport' : 'Driving License';
+                if (checkboxType === selectedType && cb.checked) {
+                    clickedCheckbox = cb;
+                }
+            });
+            
+            if (clickedCheckbox && clickedCheckbox.checked) {
+                // Set and lock the dropdown
+                idTypeDropdown.value = selectedType;
+                idTypeDropdown.disabled = true;
+                idTypeDropdown.style.backgroundColor = '#e9ecef';
+                idTypeDropdown.style.cursor = 'not-allowed';
+                
+                // Uncheck other checkboxes
+                checkboxes.forEach(cb => {
+                    if (cb !== clickedCheckbox) {
+                        cb.checked = false;
+                    }
+                });
+                
+                // Trigger validation and date constraint update
+                updateIdValidation();
+                setMaxToDate();
+            } else {
+                // Unlock dropdown if no checkbox is checked
+                const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                if (!anyChecked) {
+                    idTypeDropdown.disabled = false;
+                    idTypeDropdown.style.backgroundColor = '';
+                    idTypeDropdown.style.cursor = '';
+                }
+            }
+        }
 
         /**
          * Validates ID number based on selected ID type
@@ -415,6 +497,17 @@
 
             if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
                 msg.innerText = "Please fill in all required fields to check availability.";
+                msg.style.color = 'red';
+                return;
+            }
+
+            // Check document checkboxes - at least one must be checked (NIC, Passport, or Driving License)
+            const docNic = document.getElementById('doc_nic').checked;
+            const docPassport = document.getElementById('doc_passport').checked;
+            const docDrivingLicence = document.getElementById('doc_driving_licence').checked;
+
+            if (!docNic && !docPassport && !docDrivingLicence) {
+                msg.innerText = "Please check at least one document: NIC, Passport, or Driving License";
                 msg.style.color = 'red';
                 return;
             }

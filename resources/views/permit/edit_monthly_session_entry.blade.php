@@ -109,6 +109,25 @@
             <input type="hidden" name="company_name" value="{{ $permit['company_name'] ?? '' }}">
             <input type="hidden" name="company_address" value="{{ $permit['company_address'] ?? '' }}">
 
+            {{-- DOCUMENTS ATTACHED SECTION --}}
+            <fieldset class="mb-4">
+                <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached</legend>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input" {{ ($permit['doc_nic'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <label class="form-check-label" for="doc_nic">NIC</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_police_report" value="1" id="doc_police_report" class="form-check-input" {{ ($permit['doc_police_report'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <label class="form-check-label" for="doc_police_report">Police Report</label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
             {{-- --- Section 1: Identification & Validity --- --}}
             <div class="form-section-card">
                 <div class="form-section-title"><i class="bi bi-card-heading me-2"></i> ID and Validity Period</div>
@@ -323,6 +342,16 @@ function checkMonthlyAvailability(isEdit = false) {
 
     if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
         msg.innerText = "Please fill in all required fields to check availability.";
+        msg.style.color = 'red';
+        return;
+    }
+
+    // Check document checkboxes - both NIC and Police Report must be checked
+    const docNic = document.getElementById('doc_nic').checked;
+    const docPoliceReport = document.getElementById('doc_police_report').checked;
+
+    if (!docNic || !docPoliceReport) {
+        msg.innerText = "Please check both required documents: NIC and Police Report";
         msg.style.color = 'red';
         return;
     }

@@ -177,8 +177,9 @@
                     <input type="text" name="id_number" id="id_number" 
                             value="{{ old('id_number') }}" class="form-control" required
                             oninput="this.value = this.value.toUpperCase();"
-                            onblur="fetchPersonDetails()">
+                            onblur="fetchPersonDetails(); checkDuplicateInCart();">
                     <span id="id_number_error" class="text-danger small"></span>
+                    <span id="duplicate_error" class="text-danger small d-block"></span>
                 </div>
             </div>
 
@@ -429,6 +430,47 @@
             }
         });
 
+        // Function to check for duplicate ID in session cart
+        window.checkDuplicateInCart = function() {
+            const idNumber = document.getElementById('id_number').value.trim();
+            const duplicateError = document.getElementById('duplicate_error');
+            const addBtn = document.getElementById('addToListBtn');
+            
+            if (!idNumber) {
+                duplicateError.textContent = '';
+                return;
+            }
+
+            // Get current cart from the page
+            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            let isDuplicate = false;
+
+            cartRows.forEach(row => {
+                const cartIdNumber = row.cells[1]?.textContent.trim().toUpperCase();
+                if (cartIdNumber === idNumber.toUpperCase()) {
+                    isDuplicate = true;
+                }
+            });
+
+            if (isDuplicate) {
+                duplicateError.textContent = '⚠️ This ID number is already in the cart. Cannot add duplicate entries.';
+                duplicateError.style.display = 'block';
+                duplicateError.style.color = '#dc3545';
+                duplicateError.style.fontWeight = '500';
+                // Disable the add button
+                if (addBtn) {
+                    addBtn.disabled = true;
+                    addBtn.style.backgroundColor = '#9e9e9e';
+                    addBtn.style.borderColor = '#9e9e9e';
+                    addBtn.style.opacity = '0.65';
+                    addBtn.style.cursor = 'not-allowed';
+                }
+            } else {
+                duplicateError.textContent = '';
+                duplicateError.style.display = 'none';
+            }
+        }
+
         // Function to fetch person details from database
         window.fetchPersonDetails = function() {
             const idNumber = document.getElementById('id_number').value.trim();
@@ -574,6 +616,17 @@
 
             if (missingFields.length > 0) {
                 msg.innerText = "Please fill in: " + missingFields.join(', ');
+                msg.style.color = 'red';
+                return;
+            }
+
+            // Check document checkboxes - at least one must be checked (NIC, Passport, or Driving License)
+            const docNic = document.getElementById('doc_nic').checked;
+            const docPassport = document.getElementById('doc_passport').checked;
+            const docDrivingLicence = document.getElementById('doc_driving_licence').checked;
+
+            if (!docNic && !docPassport && !docDrivingLicence) {
+                msg.innerText = "Please check at least one document: NIC, Passport, or Driving License";
                 msg.style.color = 'red';
                 return;
             }

@@ -168,7 +168,8 @@
 
                 <div class="col-md-6">
                     <label for="vehicle_number" class="form-label"><i class="bi bi-hash me-1"></i> Vehicle Number</label>
-                    <input type="text" class="form-control" name="vehicle_number" id="vehicle_number" required value="{{ old('vehicle_number') }}" oninput="this.value = this.value.toUpperCase();" onblur="fetchVehicleDetails()">
+                    <input type="text" class="form-control" name="vehicle_number" id="vehicle_number" required value="{{ old('vehicle_number') }}" oninput="this.value = this.value.toUpperCase();" onblur="fetchVehicleDetails(); checkDuplicateInCart();">
+                    <span id="duplicate_error" class="text-danger small d-block"></span>
                 </div>
             </div>
 
@@ -326,6 +327,47 @@
         // Store checked form data to detect changes
         let checkedFormData = null;
 
+        // Function to check for duplicate vehicle number in session cart
+        window.checkDuplicateInCart = function() {
+            const vehicleNumber = document.getElementById('vehicle_number').value.trim();
+            const duplicateError = document.getElementById('duplicate_error');
+            const addBtn = document.getElementById('addToListBtn');
+            
+            if (!vehicleNumber) {
+                duplicateError.textContent = '';
+                return;
+            }
+
+            // Get current cart from the page
+            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            let isDuplicate = false;
+
+            cartRows.forEach(row => {
+                const cartVehicleNumber = row.cells[1]?.textContent.trim().toUpperCase(); // Column 1 is vehicle number
+                if (cartVehicleNumber === vehicleNumber.toUpperCase()) {
+                    isDuplicate = true;
+                }
+            });
+
+            if (isDuplicate) {
+                duplicateError.textContent = '⚠️ This vehicle number is already in the cart. Cannot add duplicate entries.';
+                duplicateError.style.display = 'block';
+                duplicateError.style.color = '#dc3545';
+                duplicateError.style.fontWeight = '500';
+                // Disable the add button
+                if (addBtn) {
+                    addBtn.disabled = true;
+                    addBtn.style.backgroundColor = '#9e9e9e';
+                    addBtn.style.borderColor = '#9e9e9e';
+                    addBtn.style.opacity = '0.65';
+                    addBtn.style.cursor = 'not-allowed';
+                }
+            } else {
+                duplicateError.textContent = '';
+                duplicateError.style.display = 'none';
+            }
+        }
+
         // Function to fetch vehicle details from database
         window.fetchVehicleDetails = function() {
             const vehicleNumber = document.getElementById('vehicle_number').value.trim();
@@ -408,6 +450,38 @@
             if (missingFields.length > 0) {
                 msg.innerText = "Please fill in: " + missingFields.join(', ');
                 msg.style.color = 'red';
+                return;
+            }
+
+            // Check document checkboxes - both Revenue License and Insurance must be checked
+            const docRevenueLicence = document.getElementById('doc_revenue_licence').checked;
+            const docInsurance = document.getElementById('doc_insurance').checked;
+
+            if (!docRevenueLicence || !docInsurance) {
+                msg.innerText = "Please check both required documents: Revenue License and Insurance";
+                msg.style.color = 'red';
+                return;
+            }
+
+            // Check for duplicate in cart before making API call
+            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            let isDuplicate = false;
+
+            cartRows.forEach(row => {
+                const cartVehicleNumber = row.cells[1]?.textContent.trim().toUpperCase(); // Column 1 is vehicle number
+                if (cartVehicleNumber === vehicleNumber.toUpperCase()) {
+                    isDuplicate = true;
+                }
+            });
+
+            if (isDuplicate) {
+                msg.innerText = "⚠️ This vehicle number is already in the cart. Cannot add duplicate entries.";
+                msg.style.color = 'red';
+                addBtn.disabled = true;
+                addBtn.style.backgroundColor = '#9e9e9e';
+                addBtn.style.borderColor = '#9e9e9e';
+                addBtn.style.opacity = '0.65';
+                addBtn.style.cursor = 'not-allowed';
                 return;
             }
 

@@ -83,6 +83,15 @@ public function addVehicleToSession(Request $request)
         session(['vehicle_company_address' => $validated['company_address']]);
     }
 
+    // Check for duplicate vehicle number in session cart
+    foreach ($cart as $existingEntry) {
+        if (strtolower(trim($existingEntry['vehicle_number'])) === strtolower(trim($validated['vehicle_number']))) {
+            return redirect()->route('permit.vehicle')
+                ->withErrors(['vehicle_number' => 'This vehicle number is already added to the cart. Cannot add duplicate entries.'])
+                ->withInput();
+        }
+    }
+
     // Convert pass_type array to comma-separated string (if you still use pass_type)
     if (isset($validated['pass_type']) && is_array($validated['pass_type'])) {
         $validated['pass_type'] = implode(',', $validated['pass_type']);

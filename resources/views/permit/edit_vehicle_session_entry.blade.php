@@ -107,6 +107,25 @@
             <input type="hidden" name="company_name" value="{{ $permit['company_name'] ?? '' }}">
             <input type="hidden" name="company_address" value="{{ $permit['company_address'] ?? '' }}">
 
+            {{-- DOCUMENTS ATTACHED SECTION --}}
+            <fieldset class="mb-4">
+                <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached</legend>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_revenue_licence" value="1" id="doc_revenue_licence" class="form-check-input" {{ ($permit['doc_revenue_licence'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <label class="form-check-label" for="doc_revenue_licence">Revenue License</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input type="checkbox" name="doc_insurance" value="1" id="doc_insurance" class="form-check-input" {{ ($permit['doc_insurance'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <label class="form-check-label" for="doc_insurance">Insurance</label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
             {{-- --- Section 1: Vehicle Details --- --}}
             <div class="form-section-card">
                 <div class="form-section-title"><i class="bi bi-gear me-2"></i> Vehicle Identification</div>
@@ -265,6 +284,17 @@ function checkVehicleAvailability() {
     if (!vehicle_number || !from_date || !to_date || !company_name) {
         let msgEl = document.getElementById("availability-msg");
         msgEl.textContent = "Please fill in Vehicle Number, Company, From Date, and To Date.";
+        msgEl.style.color = "red";
+        return;
+    }
+
+    // Check document checkboxes - both Revenue License and Insurance must be checked
+    const docRevenueLicence = document.getElementById('doc_revenue_licence').checked;
+    const docInsurance = document.getElementById('doc_insurance').checked;
+
+    if (!docRevenueLicence || !docInsurance) {
+        let msgEl = document.getElementById("availability-msg");
+        msgEl.textContent = "Please check both required documents: Revenue License and Insurance";
         msgEl.style.color = "red";
         return;
     }
