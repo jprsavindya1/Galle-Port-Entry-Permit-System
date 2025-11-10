@@ -92,6 +92,9 @@
     </script>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -255,9 +258,9 @@
 
         <div class="ms-auto pe-4">
             @auth
-                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                <form method="POST" action="{{ route('logout') }}" id="logout-form" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-sm btn-slpa-logout">Logout</button>
+                    <button type="button" onclick="confirmLogout()" class="btn btn-sm btn-slpa-logout">Logout</button>
                 </form>
             @endauth
         </div>
@@ -326,6 +329,47 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {{-- Logout Confirmation Modal --}}
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: 3px solid #FFC107; border-radius: 1rem;">
+                <div class="modal-header" style="background-color: #002B5C; border-bottom: 3px solid #FFC107; border-radius: 0.85rem 0.85rem 0 0;">
+                    <h5 class="modal-title text-white">
+                        <i class="bi bi-box-arrow-right me-2"></i>Confirm Logout
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4" style="background-color: #f8f9fa;">
+                    <i class="bi bi-question-circle-fill" style="font-size: 3rem; color: #FFC107;"></i>
+                    <p class="mt-3 mb-0" style="font-size: 1.1rem; color: #002B5C; font-weight: 500;">
+                        Are you sure you want to logout?
+                    </p>
+                    <p class="text-muted mb-0">You will need to login again to access the system.</p>
+                </div>
+                <div class="modal-footer justify-content-center" style="border-top: 2px solid #FFC107; background-color: #f8f9fa; border-radius: 0 0 0.85rem 0.85rem;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="padding: 0.5rem 1.5rem; border-radius: 0.5rem;">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </button>
+                    <button type="button" onclick="performLogout()" class="btn" style="background-color: #FFC107; border-color: #FFC107; color: #002B5C; font-weight: 600; padding: 0.5rem 1.5rem; border-radius: 0.5rem;">
+                        <i class="bi bi-box-arrow-right me-2"></i>Yes, Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {{-- Logout Confirmation Script --}}
+    <script>
+        function confirmLogout() {
+            const modal = new bootstrap.Modal(document.getElementById('logoutConfirmModal'));
+            modal.show();
+        }
+        
+        function performLogout() {
+            document.getElementById('logout-form').submit();
+        }
+    </script>
     
     {{-- Session Expiration Modal --}}
     <div class="modal fade" id="sessionExpiredModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
