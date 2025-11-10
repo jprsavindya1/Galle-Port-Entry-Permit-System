@@ -87,13 +87,26 @@
 </style>
 
 <div class="container">
-    <h2 class="mb-3">Dashboard</h2>
-
-    @auth
-        <div class="alert alert-info">
-            Logged in as: {{ Auth::user()->name }} (Role: {{ Auth::user()->role }})
+    <div class="row align-items-center mb-4 pb-3" style="border-bottom: 3px solid #002B5C;">
+        <div class="col-md-6">
+            <h2 class="mb-0" style="font-weight: 700; color: #002B5C;">Dashboard</h2>
         </div>
-    @endauth
+        @auth
+            <div class="col-md-6">
+                <div class="d-flex align-items-center justify-content-md-end gap-3">
+                    <div class="text-end">
+                        <div style="font-size: 0.7rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Current User</div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: #002B5C;">{{ Auth::user()->name }}</div>
+                    </div>
+                    <div class="vr" style="height: 40px; opacity: 0.3;"></div>
+                    <div class="px-4 py-2 rounded" style="background-color: #002B5C; border-left: 4px solid #FFC107;">
+                        <div style="font-size: 0.65rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 2px;">Role</div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #FFC107; text-transform: uppercase; letter-spacing: 0.5px;">{{ Auth::user()->role }}</div>
+                    </div>
+                </div>
+            </div>
+        @endauth
+    </div>
 
    <!-- --- Summary Cards Row --- -->
 <div class="row mb-3">

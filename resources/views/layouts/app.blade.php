@@ -255,10 +255,9 @@
 
         <div class="ms-auto pe-4">
             @auth
-                <span class="user-name me-2">{{ Auth::user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-sm btn-slpa-logout ms-2">Logout</button>
+                    <button type="submit" class="btn btn-sm btn-slpa-logout">Logout</button>
                 </form>
             @endauth
         </div>
