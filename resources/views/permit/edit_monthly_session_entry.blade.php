@@ -160,13 +160,6 @@
                                value="{{ old('to_date', $permit['to_date']) }}" min="{{ date('Y-m-d') }}" required>
                     </div>
                 </div>
-
-                <div class="mb-3 d-flex align-items-center">
-                    <button type="button" onclick="checkMonthlyAvailability(true)" class="btn btn-info me-3">
-                        <i class="bi bi-search me-1"></i> Check Availability
-                    </button>
-                    <p id="availability-msg" class="fw-bold my-0"></p>
-                </div>
             </div>
 
             {{-- --- Section 2: Personal & Contact Details --- --}}
@@ -203,6 +196,13 @@
                 <div class="mb-4">
                     <label for="residence_address" class="form-label"><i class="bi bi-house-door me-1"></i> Residence Address</label>
                     <textarea class="form-control" name="residence_address" id="residence_address" rows="2">{{ old('residence_address', $permit['residence_address']) }}</textarea>
+                </div>
+
+                <div class="mb-3 d-flex align-items-center">
+                    <button type="button" onclick="checkMonthlyAvailability(true)" class="btn btn-info me-3">
+                        <i class="bi bi-search me-1"></i> Check Availability
+                    </button>
+                    <p id="availability-msg" class="fw-bold my-0"></p>
                 </div>
             </div>
 
