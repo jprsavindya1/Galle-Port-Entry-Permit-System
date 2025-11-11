@@ -111,15 +111,17 @@
             <fieldset class="mb-4">
                 <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached</legend>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-3">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_revenue_licence" value="1" id="doc_revenue_licence" class="form-check-input" {{ ($permit['doc_revenue_licence'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <input type="checkbox" class="form-check-input" id="doc_revenue_licence" name="documents[]" value="Revenue License"
+                                {{ (isset($permit['documents']) && in_array('Revenue License', $permit['documents'])) || !isset($permit['documents']) ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_revenue_licence">Revenue License</label>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-3">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_insurance" value="1" id="doc_insurance" class="form-check-input" {{ ($permit['doc_insurance'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <input type="checkbox" class="form-check-input" id="doc_insurance" name="documents[]" value="Insurance"
+                                {{ (isset($permit['documents']) && in_array('Insurance', $permit['documents'])) || !isset($permit['documents']) ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_insurance">Insurance</label>
                         </div>
                     </div>

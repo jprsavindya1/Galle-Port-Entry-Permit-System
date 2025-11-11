@@ -113,15 +113,18 @@
             <fieldset class="mb-4">
                 <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached</legend>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-3">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input" {{ ($permit['doc_nic'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <input type="checkbox" class="form-check-input doc-checkbox" id="doc_nic" name="documents[]" value="NIC" 
+                                {{ (isset($permit['documents']) && in_array('NIC', $permit['documents'])) || (!isset($permit['documents']) && ($permit['id_type'] ?? '') == 'NIC') ? 'checked' : '' }}
+                                onchange="syncIdType('NIC')">
                             <label class="form-check-label" for="doc_nic">NIC</label>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-3">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_police_report" value="1" id="doc_police_report" class="form-check-input" {{ ($permit['doc_police_report'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <input type="checkbox" class="form-check-input" id="doc_police_report" name="documents[]" value="Police Report"
+                                {{ (isset($permit['documents']) && in_array('Police Report', $permit['documents'])) || !isset($permit['documents']) ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_police_report">Police Report</label>
                         </div>
                     </div>
@@ -283,11 +286,62 @@
 <script>
 // Store checked form data to detect changes
 let checkedFormData = null;
+// Store ID validation state globally
+let isIdValid = false;
+// Store original values from the form (from monthly form)
+let originalValues = {
+    id_type: 'NIC',
+    id_number: '{{ $permit["id_number"] ?? "" }}'
+};
 
 // Initialize validation on page load
 document.addEventListener('DOMContentLoaded', function() {
     validateId(); // Initial validation
+    autoFillToDate(); // Set initial to_date
+    
+    // Enable ID type dropdown before form submission
+    const form = document.querySelector('form[action="{{ route('permit.monthly.updateMonthlySessionEntry', $index) }}"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const idTypeDropdown = document.getElementById('id_type');
+            idTypeDropdown.disabled = false;
+            
+            // Check if ID is valid before allowing submission
+            if (!isIdValid && document.getElementById('id_number').value.trim() !== '') {
+                e.preventDefault();
+                alert('Please enter a valid NIC Number before submitting.');
+                idTypeDropdown.disabled = true;
+                return false;
+            }
+        });
+    }
 });
+
+/**
+ * Syncs the ID Type dropdown based on document checkbox selection
+ */
+function syncIdType(selectedType) {
+    const idTypeDropdown = document.getElementById('id_type');
+    const idNumberInput = document.getElementById('id_number');
+    const idNumberError = document.getElementById('id_number_error');
+    const availabilityMsg = document.getElementById('availability-msg');
+    const updateBtn = document.getElementById('updateBtn');
+    
+    // For monthly, ID type is always NIC
+    idTypeDropdown.value = 'NIC';
+    
+    // Check if NIC checkbox is checked - if yes, restore original value
+    const nicCheckbox = document.getElementById('doc_nic');
+    if (nicCheckbox && nicCheckbox.checked && selectedType === 'NIC') {
+        // Restore original NIC number if it was cleared
+        if (!idNumberInput.value && originalValues.id_number) {
+            idNumberInput.value = originalValues.id_number;
+        }
+    }
+    
+    // Validate the current ID number
+    validateId();
+}
 
 /**
  * Validates ID number based on NIC format
@@ -298,26 +352,50 @@ function validateId() {
 
     if (!idNumber) {
         errorSpan.textContent = '';
-        return true;
+        errorSpan.style.display = 'none';
+        isIdValid = false;
+        return false;
     }
 
     // Old format: 9 digits + V/X or New format: 12 digits
     const nicPattern = /^(?:\d{9}[VXvx]|\d{12})$/;
-    const isValid = nicPattern.test(idNumber);
+    const valid = nicPattern.test(idNumber);
 
-    if (isValid) {
+    if (valid) {
         errorSpan.textContent = '';
         errorSpan.style.display = 'none';
+        isIdValid = true;
     } else {
         errorSpan.textContent = 'Invalid NIC format. Use 9 digits + V/X or 12 digits';
         errorSpan.style.display = 'block';
+        isIdValid = false;
     }
 
-    return isValid;
+    return valid;
 }
 
 // Make validateId available globally for inline event handlers
 window.updateIdValidation = validateId;
+
+/**
+ * Auto-fills the To Date to 30 days from From Date
+ */
+function autoFillToDate() {
+    const fromDateInput = document.getElementById('from_date');
+    const toDateInput = document.getElementById('to_date');
+    
+    if (!fromDateInput.value) return;
+    
+    const fromDate = new Date(fromDateInput.value);
+    const toDate = new Date(fromDate);
+    toDate.setDate(toDate.getDate() + 29); // 30 days total (from_date + 29)
+    
+    const yyyy = toDate.getFullYear();
+    const mm = String(toDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(toDate.getDate()).padStart(2, '0');
+    
+    toDateInput.value = `${yyyy}-${mm}-${dd}`;
+}
 
 /**
  * Function to check the availability of the Monthly Permit.
@@ -339,6 +417,13 @@ function checkMonthlyAvailability(isEdit = false) {
     updateBtn.disabled = true;
     updateBtn.style.opacity = '0.6';
     updateBtn.style.cursor = 'not-allowed';
+
+    // Validate ID before checking availability
+    if (!isIdValid) {
+        msg.innerText = 'Please enter a valid NIC Number';
+        msg.style.color = 'red';
+        return;
+    }
 
     if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
         msg.innerText = "Please fill in all required fields to check availability.";

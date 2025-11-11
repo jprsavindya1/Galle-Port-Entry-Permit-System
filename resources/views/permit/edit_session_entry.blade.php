@@ -134,22 +134,28 @@
             <fieldset class="mb-4">
                 <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached</legend>
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-3">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input doc-checkbox" onchange="syncIdType('NIC')" {{ ($permit['doc_nic'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <input type="checkbox" class="form-check-input doc-checkbox" id="doc_nic" name="documents[]" value="NIC"
+                                {{ (isset($permit['documents']) && in_array('NIC', $permit['documents'])) || (!isset($permit['documents']) && ($permit['id_type'] ?? '') == 'NIC') ? 'checked' : '' }}
+                                onchange="syncIdType('NIC')">
                             <label class="form-check-label" for="doc_nic">NIC</label>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-3">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input doc-checkbox" onchange="syncIdType('Passport')" {{ ($permit['doc_passport'] ?? 0) == 1 ? 'checked' : '' }}>
+                            <input type="checkbox" class="form-check-input doc-checkbox" id="doc_passport" name="documents[]" value="Passport"
+                                {{ (isset($permit['documents']) && in_array('Passport', $permit['documents'])) || (!isset($permit['documents']) && ($permit['id_type'] ?? '') == 'Passport') ? 'checked' : '' }}
+                                onchange="syncIdType('Passport')">
                             <label class="form-check-label" for="doc_passport">Passport</label>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-3">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input doc-checkbox" onchange="syncIdType('Driving License')" {{ ($permit['doc_driving_licence'] ?? 0) == 1 ? 'checked' : '' }}>
-                            <label class="form-check-label" for="doc_driving_licence">Driving License</label>
+                            <input type="checkbox" class="form-check-input doc-checkbox" id="doc_license" name="documents[]" value="License"
+                                {{ (isset($permit['documents']) && in_array('License', $permit['documents'])) || (!isset($permit['documents']) && ($permit['id_type'] ?? '') == 'License') ? 'checked' : '' }}
+                                onchange="syncIdType('License')">
+                            <label class="form-check-label" for="doc_license">Driving License</label>
                         </div>
                     </div>
                 </div>
@@ -157,32 +163,39 @@
 
             {{-- --- Section 1: Identification & Validity --- --}}
             <div class="form-section-card">
-                <div class="form-section-title"><i class="bi bi-card-heading me-2"></i> ID and Duration</div>
+                <div class="form-section-title"><i class="bi bi-card-heading me-2"></i> ID and Validity Period</div>
 
-                <div class="row mb-3">
-                    <div class="col-md-6 mb-3 mb-md-0">
-                        <label for="id_type" class="form-label"><i class="bi bi-fingerprint me-1"></i> Identification Type</label>
-                        <select name="id_type" id="id_type" onchange="setMaxToDate(); updateIdValidation();" class="form-select" required>
-                            <option value="NIC" {{ $permit['id_type'] == 'NIC' ? 'selected' : '' }}>NIC</option>
-                            <option value="Passport" {{ $permit['id_type'] == 'Passport' ? 'selected' : '' }}>Passport</option>
-                            <option value="Driving License" {{ $permit['id_type'] == 'Driving License' ? 'selected' : '' }}>Driving License</option>
+                <div class="row mb-3 align-items-start">
+                    <div class="col-md-6">
+                        <label for="id_type" class="form-label">Identification Type <span class="text-danger">*</span></label>
+                        <select id="id_type" name="id_type" class="form-select" required disabled style="background-color: #e9ecef; cursor: not-allowed;" onchange="validateId(); setMaxToDate();">
+                            <option value="">-- Select ID Type --</option>
+                            <option value="NIC" {{ ($permit['id_type'] ?? '') == 'NIC' ? 'selected' : '' }}>NIC</option>
+                            <option value="Passport" {{ ($permit['id_type'] ?? '') == 'Passport' ? 'selected' : '' }}>Passport</option>
+                            <option value="License" {{ ($permit['id_type'] ?? '') == 'License' ? 'selected' : '' }}>Driving License</option>
                         </select>
+                        <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i>ID type is controlled by document selection</small>
                     </div>
                     <div class="col-md-6">
-                        <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
-                        <input type="text" name="id_number" id="id_number" value="{{ $permit['id_number'] }}" class="form-control" required oninput="this.value = this.value.toUpperCase(); updateIdValidation();">
-                        <span id="id_number_error" class="text-danger small"></span>
+                        <label for="id_number" class="form-label">Identification Number <span class="text-danger">*</span></label>
+                        <input type="text" id="id_number" name="id_number" class="form-control" required
+                               value="{{ $permit['id_number'] ?? '' }}" oninput="updateIdValidation()">
+                        <div style="min-height: 20px;">
+                            <span id="id_number_error" class="text-danger" style="font-size: 0.875rem; display: none;"></span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row mb-4">
-                    <div class="col-md-6 mb-3 mb-md-0">
-                        <label for="from_date" class="form-label"><i class="bi bi-calendar-date me-1"></i> From Date</label>
-                        <input type="date" id="from_date" name="from_date" value="{{ $permit['from_date'] }}" onchange="setMaxToDate()" class="form-control" min="{{ date('Y-m-d') }}" required>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="from_date" class="form-label">From Date <span class="text-danger">*</span></label>
+                        <input type="date" id="from_date" name="from_date" class="form-control" required
+                               value="{{ $permit['from_date'] ?? '' }}" onchange="setMaxToDate()">
                     </div>
                     <div class="col-md-6">
-                        <label for="to_date" class="form-label"><i class="bi bi-calendar-range me-1"></i> To Date</label>
-                        <input type="date" id="to_date" name="to_date" value="{{ $permit['to_date'] }}" class="form-control" min="{{ date('Y-m-d') }}" required>
+                        <label for="to_date" class="form-label">To Date <span class="text-danger">*</span></label>
+                        <input type="date" id="to_date" name="to_date" class="form-control" required
+                               value="{{ $permit['to_date'] ?? '' }}">
                     </div>
                 </div>
             </div>
@@ -308,6 +321,15 @@
     <script>
         // Store checked form data to detect changes
         let checkedFormData = null;
+        // Store ID validation state globally
+        let isIdValid = false;
+        // Store previous ID type to detect changes
+        let previousIdType = null;
+        // Store original values from the form (from temporary form)
+        let originalValues = {
+            id_type: '{{ $permit["id_type"] ?? "" }}',
+            id_number: '{{ $permit["id_number"] ?? "" }}'
+        };
 
         // Initialize Select2 on the Designation dropdown
         $('#designation').select2({
@@ -327,13 +349,23 @@
             setMaxToDate();
             validateId(); // Initial validation
             
-            // Enable form submission on enter
+            // Initialize previous ID type
+            const idTypeDropdown = document.getElementById('id_type');
+            previousIdType = idTypeDropdown.value;
+            
+            // Enable ID type dropdown before form submission
             const form = document.querySelector('form[action="{{ route('permit.updateSessionEntry', $index) }}"]');
             if (form) {
                 form.addEventListener('submit', function(e) {
-                    const idTypeDropdown = document.getElementById('id_type');
-                    if (idTypeDropdown && idTypeDropdown.disabled) {
-                        idTypeDropdown.disabled = false;
+                    // Enable ID type dropdown before form submission
+                    idTypeDropdown.disabled = false;
+                    
+                    // Check if ID is valid before allowing submission
+                    if (!isIdValid && document.getElementById('id_number').value.trim() !== '') {
+                        e.preventDefault();
+                        alert('Please enter a valid Identification Number before submitting.');
+                        idTypeDropdown.disabled = true;
+                        return false;
                     }
                 });
             }
@@ -345,47 +377,75 @@
          */
         function syncIdType(selectedType) {
             const idTypeDropdown = document.getElementById('id_type');
+            const idNumberInput = document.getElementById('id_number');
+            const idNumberError = document.getElementById('id_number_error');
+            const availabilityMsg = document.getElementById('availability-msg');
+            const updateBtn = document.getElementById('updateBtn');
             const checkboxes = document.querySelectorAll('.doc-checkbox');
             
             // Find the checkbox that was just clicked
             let clickedCheckbox = null;
             checkboxes.forEach(cb => {
-                const checkboxType = cb.id === 'doc_nic' ? 'NIC' : 
-                                    cb.id === 'doc_passport' ? 'Passport' : 'Driving License';
-                if (checkboxType === selectedType && cb.checked) {
+                if (cb.value === selectedType) {
                     clickedCheckbox = cb;
                 }
             });
             
             if (clickedCheckbox && clickedCheckbox.checked) {
-                // Set and lock the dropdown
-                idTypeDropdown.value = selectedType;
-                idTypeDropdown.disabled = true;
-                idTypeDropdown.style.backgroundColor = '#e9ecef';
-                idTypeDropdown.style.cursor = 'not-allowed';
-                
-                // Uncheck other checkboxes
+                // Uncheck all other document checkboxes
                 checkboxes.forEach(cb => {
                     if (cb !== clickedCheckbox) {
                         cb.checked = false;
                     }
                 });
                 
-                // Trigger validation and date constraint update
-                updateIdValidation();
+                // Set the ID type dropdown to match the checked document
+                idTypeDropdown.value = selectedType;
+                
+                // Check if ID type has changed
+                if (previousIdType !== null && previousIdType !== selectedType) {
+                    // Check if switching back to original ID type from temporary form
+                    if (selectedType === originalValues.id_type) {
+                        // Restore original ID number
+                        idNumberInput.value = originalValues.id_number;
+                    } else {
+                        // Clear the fields for a different ID type
+                        idNumberInput.value = '';
+                    }
+                    
+                    // Clear error and availability messages
+                    idNumberError.textContent = '';
+                    idNumberError.style.display = 'none';
+                    if (availabilityMsg) {
+                        availabilityMsg.textContent = '';
+                    }
+                    isIdValid = false;
+                    updateBtn.disabled = true;
+                    updateBtn.style.backgroundColor = '#9e9e9e';
+                    updateBtn.style.borderColor = '#9e9e9e';
+                    updateBtn.style.opacity = '0.65';
+                    updateBtn.style.cursor = 'not-allowed';
+                }
+                
+                // Update previous ID type
+                previousIdType = selectedType;
+                
+                // Validate the current ID number
+                validateId();
                 setMaxToDate();
             } else {
-                // Unlock dropdown if no checkbox is checked
-                const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                // If all checkboxes are unchecked, keep the dropdown disabled
+                let anyChecked = false;
+                checkboxes.forEach(cb => {
+                    if (cb.checked) anyChecked = true;
+                });
+                
                 if (!anyChecked) {
-                    idTypeDropdown.disabled = false;
-                    idTypeDropdown.style.backgroundColor = '';
-                    idTypeDropdown.style.cursor = '';
+                    idTypeDropdown.value = '';
+                    previousIdType = null;
                 }
             }
-        }
-
-        /**
+        }        /**
          * Validates ID number based on selected ID type
          */
         function validateId() {
@@ -395,44 +455,49 @@
 
             if (!idNumber) {
                 errorSpan.textContent = '';
-                return true;
+                errorSpan.style.display = 'none';
+                isIdValid = false;
+                return false;
             }
 
-            let isValid = false;
+            let valid = false;
             let errorMessage = '';
 
             switch(idType) {
                 case 'NIC':
                     // Old format: 9 digits + V/X or New format: 12 digits
                     const nicPattern = /^(?:\d{9}[VXvx]|\d{12})$/;
-                    isValid = nicPattern.test(idNumber);
+                    valid = nicPattern.test(idNumber);
                     errorMessage = 'Invalid NIC format. Use 9 digits + V/X or 12 digits';
                     break;
                 case 'Passport':
-                    // 1 or 2 letters followed by 6 or 7 digits
-                    const passportPattern = /^[A-Z]{1,2}\d{6,7}$/i;
-                    isValid = passportPattern.test(idNumber);
-                    errorMessage = 'Invalid Passport format. Use 1-2 letters followed by 6-7 digits';
+                    // Starts with P, OL, or D followed by numbers
+                    const passportPattern = /^(?:P|OL|D)\d+$/i;
+                    valid = passportPattern.test(idNumber);
+                    errorMessage = 'Invalid Passport format. Must start with P, OL, or D followed by numbers';
                     break;
-                case 'Driving License':
-                    // 7-8 digits OR letter + 7 digits OR old NIC format OR new NIC format
-                    const licensePattern = /^(?:\d{7,8}|[A-Z]\d{7}|\d{9}[VXvx]|\d{12})$/;
-                    isValid = licensePattern.test(idNumber);
-                    errorMessage = 'Invalid License format';
+                case 'License':
+                    // Letter followed by 9 digits
+                    const licensePattern = /^[A-Z]\d{9}$/i;
+                    valid = licensePattern.test(idNumber);
+                    errorMessage = 'Invalid License format. Must be a letter followed by 9 digits';
                     break;
                 default:
-                    isValid = true;
+                    errorMessage = 'Please select an ID type';
+                    break;
             }
 
-            if (isValid) {
+            if (valid) {
                 errorSpan.textContent = '';
                 errorSpan.style.display = 'none';
+                isIdValid = true;
             } else {
                 errorSpan.textContent = errorMessage;
                 errorSpan.style.display = 'block';
+                isIdValid = false;
             }
 
-            return isValid;
+            return valid;
         }
 
         // Make validateId available globally for inline event handlers
@@ -495,19 +560,15 @@
             updateBtn.style.opacity = '0.6';
             updateBtn.style.cursor = 'not-allowed';
 
-            if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
-                msg.innerText = "Please fill in all required fields to check availability.";
+            // Validate ID before checking availability
+            if (!isIdValid) {
+                msg.innerText = 'Please enter a valid Identification Number';
                 msg.style.color = 'red';
                 return;
             }
 
-            // Check document checkboxes - at least one must be checked (NIC, Passport, or Driving License)
-            const docNic = document.getElementById('doc_nic').checked;
-            const docPassport = document.getElementById('doc_passport').checked;
-            const docDrivingLicence = document.getElementById('doc_driving_licence').checked;
-
-            if (!docNic && !docPassport && !docDrivingLicence) {
-                msg.innerText = "Please check at least one document: NIC, Passport, or Driving License";
+            if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
+                msg.innerText = "Please fill in all required fields to check availability.";
                 msg.style.color = 'red';
                 return;
             }
@@ -519,13 +580,8 @@
                 initials: initials,
                 from_date: fromDate,
                 to_date: toDate,
-                session_edit: isEdit 
+                session_edit: isEdit // flag to skip company check in backend
             };
-
-            // This line ensures company_name is NOT included when isEdit is true, matching your original logic
-            if (!isEdit) {
-                body.company_name = document.querySelector('input[name="company_name"]').value || '';
-            }
 
             fetch("{{ route('permit.checkAvailability') }}", {
                 method: "POST",

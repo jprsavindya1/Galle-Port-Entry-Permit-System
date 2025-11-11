@@ -151,7 +151,7 @@
             </fieldset>
             {{-- END DOCUMENTS ATTACHED --}}
 
-            <div class="row mb-3 align-items-end">
+            <div class="row mb-3 align-items-start">
                 <div class="col-md-2">
                     <label for="id_type" class="form-label"><i class="bi bi-card-heading me-1"></i> ID Type</label>
                     {{-- ID Type is fixed to NIC for monthly permits, making it readonly --}}
@@ -162,8 +162,10 @@
                     <input type="text" class="form-control" name="id_number" id="id_number" value="{{ old('id_number') }}" required
                         oninput="this.value = this.value.toUpperCase();"
                         onblur="fetchPersonDetails(); checkDuplicateInCart();">
-                    <span id="id_number_error" class="text-danger small"></span>
-                    <span id="duplicate_error" class="text-danger small d-block"></span>
+                    <div style="min-height: 20px;">
+                        <span id="id_number_error" class="text-danger small d-block"></span>
+                        <span id="duplicate_error" class="text-danger small d-block"></span>
+                    </div>
                 </div>
             </div>
 
@@ -197,7 +199,8 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="company_name" class="form-label"><i class="bi bi-buildings me-1"></i> Company Name</label>
-                    <select name="company_name" id="company_name" class="form-select" onchange="setCompanyAddress()" required>
+                    <select name="company_name" id="company_name" class="form-select" onchange="setCompanyAddress()" required
+                        @if(session('monthly_permit_cart') && count(session('monthly_permit_cart')) > 0) disabled style="background-color: #e9ecef; cursor: not-allowed;" @endif>
                         <option value="">-- Select Company --</option>
                         @foreach($companies as $company)
                             <option value="{{ $company->name }}" data-address="{{ $company->address }}"
@@ -206,6 +209,9 @@
                             </option>
                         @endforeach
                     </select>
+                    @if(session('monthly_permit_cart') && count(session('monthly_permit_cart')) > 0)
+                        <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i>Company is locked for this session</small>
+                    @endif
                 </div>
                 <div class="col-md-6">
                     <label for="designation" class="form-label"><i class="bi bi-briefcase me-1"></i> Designation</label>
@@ -378,6 +384,8 @@
     <script>
         // Store checked form data to detect changes
         let checkedFormData = null;
+        // Store ID validation state globally
+        let isIdValid = false;
 
         // Function to check for duplicate NIC in session cart
         window.checkDuplicateInCart = function() {
@@ -514,25 +522,49 @@
                 let regex, message = "";
 
                 if (type === "NIC") {
-                    // Old (9 digits + V/X) OR New (12 digits)
+                    // Old (9 digits + V/X) for cards before 2016 OR New (12 digits) for cards after 2016
                     regex = /^(?:\d{9}[VXvx]|\d{12})$/;
-                    message = "Enter a valid NIC number (123456789V or 123456789123).";
+                    message = "Enter a valid NIC number (9 digits + V for old format or 12 digits for new format).";
                 } 
                 // Note: For Monthly Permit, ID type is locked to NIC, so other validations are generally not needed.
 
                 if (!regex.test(value) && value !== "") {
                     errorSpan.textContent = message;
                     idNumber.classList.add("is-invalid");
+                    isIdValid = false;
                     return false;
                 } else {
                     errorSpan.textContent = "";
                     idNumber.classList.remove("is-invalid");
+                    isIdValid = (value !== "");
                     return true;
                 }
             }
 
             // Run validation on typing
             idNumber.addEventListener("input", validateId);
+        });
+
+        // --- Form Submission Validation ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form[action="{{ route('permit.monthly.addMonthlyToSession') }}"]');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    // Validate ID number before form submission
+                    if (!isIdValid) {
+                        e.preventDefault();
+                        alert('Please enter a valid NIC number before submitting.');
+                        document.getElementById('id_number').focus();
+                        return false;
+                    }
+                    
+                    // Enable company dropdown if disabled (for cart session)
+                    const companyDropdown = document.getElementById('company_name');
+                    if (companyDropdown && companyDropdown.disabled) {
+                        companyDropdown.disabled = false;
+                    }
+                });
+            }
         });
 
         // --- Date Auto-Fill Logic (Monthly is 30 days) ---
@@ -612,6 +644,13 @@
 
             if (!docNic || !docPoliceReport) {
                 msg.innerText = "Please check both required documents: NIC and Police Report";
+                msg.style.color = 'red';
+                return;
+            }
+
+            // Validate ID number before checking availability
+            if (!isIdValid) {
+                msg.innerText = "Please enter a valid NIC number before checking availability";
                 msg.style.color = 'red';
                 return;
             }

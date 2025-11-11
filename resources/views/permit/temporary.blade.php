@@ -162,10 +162,11 @@
             </fieldset>
             {{-- END DOCUMENTS ATTACHED --}}
             
-            <div class="row mb-3 align-items-end">
+            <div class="row mb-3 align-items-start">
                 <div class="col-md-4">
                     <label for="id_type" class="form-label"><i class="bi bi-card-heading me-1"></i> Identification Type</label>
-                    <select name="id_type" id="id_type" onchange="updateIdValidation(); setMaxToDate()" class="form-select" required>
+                    <select name="id_type" id="id_type" onchange="updateIdValidation(); setMaxToDate()" class="form-select" required disabled style="background-color: #e9ecef; cursor: not-allowed;">
+                        <option value="">-- Select Document First --</option>
                         <option value="NIC" {{ old('id_type', $permit->id_type ?? '') == 'NIC' ? 'selected' : '' }}>NIC</option>
                         <option value="Passport" {{ old('id_type', $permit->id_type ?? '') == 'Passport' ? 'selected' : '' }}>Passport</option>
                         <option value="Driving License" {{ old('id_type', $permit->id_type ?? '') == 'Driving License' ? 'selected' : '' }}>Driving License</option>
@@ -178,8 +179,10 @@
                             value="{{ old('id_number') }}" class="form-control" required
                             oninput="this.value = this.value.toUpperCase();"
                             onblur="fetchPersonDetails(); checkDuplicateInCart();">
-                    <span id="id_number_error" class="text-danger small"></span>
-                    <span id="duplicate_error" class="text-danger small d-block"></span>
+                    <div style="min-height: 20px;">
+                        <span id="id_number_error" class="text-danger small d-block"></span>
+                        <span id="duplicate_error" class="text-danger small d-block"></span>
+                    </div>
                 </div>
             </div>
 
@@ -212,7 +215,8 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="company_name" class="form-label"><i class="bi bi-buildings me-1"></i> Company Name</label>
-                    <select name="company_name" id="company_name" class="form-select" onchange="setCompanyAddress()" required>
+                    <select name="company_name" id="company_name" class="form-select" onchange="setCompanyAddress()" required 
+                        @if(session('temporary_permit_cart') && count(session('temporary_permit_cart')) > 0) disabled style="background-color: #e9ecef; cursor: not-allowed;" @endif>
                         <option value="">-- Select Company --</option>
                         @foreach($companies as $company)
                             <option value="{{ $company->name }}" data-address="{{ $company->address }}"
@@ -221,6 +225,9 @@
                             </option>
                         @endforeach
                     </select>
+                    @if(session('temporary_permit_cart') && count(session('temporary_permit_cart')) > 0)
+                        <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i>Company is locked for this session</small>
+                    @endif
                 </div>
                 <div class="col-md-6">
                     <label for="designation" class="form-label"><i class="bi bi-briefcase me-1"></i> Designation</label>
@@ -378,13 +385,41 @@
     <script>
         // Store checked form data to detect changes
         let checkedFormData = null;
+        // Store ID validation state globally
+        let isIdValid = false;
 
         // Function to sync ID type when document checkbox is checked
         window.syncIdType = function(idType) {
             const checkbox = event.target;
             const idTypeDropdown = document.getElementById('id_type');
+            const idNumberInput = document.getElementById('id_number');
+            const idNumberError = document.getElementById('id_number_error');
+            const duplicateError = document.getElementById('duplicate_error');
+            const availabilityMsg = document.getElementById('availability-msg');
+            const addBtn = document.getElementById('addToListBtn');
             
             if (checkbox.checked) {
+                // Check if user is changing document type after entering ID number
+                const previousIdType = idTypeDropdown.value;
+                const hasIdNumber = idNumberInput.value.trim() !== '';
+                
+                if (hasIdNumber && previousIdType !== '' && previousIdType !== idType) {
+                    // User is changing document type - clear ID number and related fields
+                    idNumberInput.value = '';
+                    idNumberError.textContent = '';
+                    duplicateError.textContent = '';
+                    availabilityMsg.innerText = '';
+                    isIdValid = false;
+                    
+                    // Disable add button and reset checked form data
+                    addBtn.disabled = true;
+                    addBtn.style.backgroundColor = '#9e9e9e';
+                    addBtn.style.borderColor = '#9e9e9e';
+                    addBtn.style.opacity = '0.65';
+                    addBtn.style.cursor = 'not-allowed';
+                    checkedFormData = null;
+                }
+                
                 // Uncheck other document checkboxes
                 document.getElementById('doc_nic').checked = false;
                 document.getElementById('doc_passport').checked = false;
@@ -396,7 +431,7 @@
                 // Update the identification type dropdown
                 idTypeDropdown.value = idType;
                 
-                // Lock the identification type dropdown
+                // Enable and lock the identification type dropdown
                 idTypeDropdown.disabled = true;
                 idTypeDropdown.style.backgroundColor = '#e9ecef';
                 idTypeDropdown.style.cursor = 'not-allowed';
@@ -409,10 +444,26 @@
                 const anyChecked = document.querySelector('.doc-checkbox:checked');
                 
                 if (!anyChecked) {
-                    // Unlock the dropdown if no documents are checked
-                    idTypeDropdown.disabled = false;
-                    idTypeDropdown.style.backgroundColor = '#f8fafc';
-                    idTypeDropdown.style.cursor = '';
+                    // Reset to disabled state with placeholder if no documents are checked
+                    idTypeDropdown.value = '';
+                    idTypeDropdown.disabled = true;
+                    idTypeDropdown.style.backgroundColor = '#e9ecef';
+                    idTypeDropdown.style.cursor = 'not-allowed';
+                    
+                    // Clear ID number and all related fields
+                    idNumberInput.value = '';
+                    idNumberError.textContent = '';
+                    duplicateError.textContent = '';
+                    availabilityMsg.innerText = '';
+                    isIdValid = false;
+                    
+                    // Disable add button and reset checked form data
+                    addBtn.disabled = true;
+                    addBtn.style.backgroundColor = '#9e9e9e';
+                    addBtn.style.borderColor = '#9e9e9e';
+                    addBtn.style.opacity = '0.65';
+                    addBtn.style.cursor = 'not-allowed';
+                    checkedFormData = null;
                 }
             }
         }
@@ -422,9 +473,24 @@
             const form = document.querySelector('form[action="{{ route('permit.addToSession') }}"]');
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    // Validate ID number before form submission
+                    if (!isIdValid) {
+                        e.preventDefault();
+                        alert('Please enter a valid Identification Number before submitting.');
+                        document.getElementById('id_number').focus();
+                        return false;
+                    }
+                    
+                    // Always enable the ID type dropdown before submission to ensure value is sent
                     const idTypeDropdown = document.getElementById('id_type');
                     if (idTypeDropdown && idTypeDropdown.disabled) {
                         idTypeDropdown.disabled = false;
+                    }
+                    
+                    // Enable company dropdown if disabled (for cart session)
+                    const companyDropdown = document.getElementById('company_name');
+                    if (companyDropdown && companyDropdown.disabled) {
+                        companyDropdown.disabled = false;
                     }
                 });
             }
@@ -527,26 +593,28 @@
                 let regex, message = "";
 
                 if (type === "NIC") {
-                    // Old (9 digits + V/X) OR New (12 digits)
+                    // Old (9 digits + V/X) for cards before 2016 OR New (12 digits) for cards after 2016
                     regex = /^(?:\d{9}[VXvx]|\d{12})$/;
-                    message = "Enter a valid NIC number (123456789V or 123456789123).";
+                    message = "Enter a valid NIC number (9 digits + V for old format or 12 digits for new format).";
                 } else if (type === "Passport") {
-                    // 1 or 2 letters + 6–7 digits
-                    regex = /^[A-Z]{1,2}\d{6,7}$/i;
-                    message = "Enter a valid Passport Number (N1234567 or PP1234567).";
+                    // Starts with P, OL, or D followed by numbers
+                    regex = /^(?:P|OL|D)\d+$/i;
+                    message = "Enter a valid Passport Number (starts with P, OL, or D followed by numbers, e.g., P1234567).";
                 } else if (type === "Driving License") {
-                    // NIC (old/new) OR 8 digits
-                    regex = /^(?:\d{7,8}|[A-Z]\d{7}|\d{9}[VXvx]|\d{12})$/;
-                    message = "Enter a valid Driving License Number (12345678 or A1234567).";
+                    // 10-digit code: first character is a letter followed by 9 digits
+                    regex = /^[A-Z]\d{9}$/i;
+                    message = "Enter a valid Driving License Number (1 letter followed by 9 digits, e.g., A123456789).";
                 }
 
                 if (!regex.test(value) && value !== "") {
                     errorSpan.textContent = message;
                     idNumber.classList.add("is-invalid");
+                    isIdValid = false;
                     return false;
                 } else {
                     errorSpan.textContent = "";
                     idNumber.classList.remove("is-invalid");
+                    isIdValid = (value !== "");
                     return true;
                 }
             }
@@ -627,6 +695,13 @@
 
             if (!docNic && !docPassport && !docDrivingLicence) {
                 msg.innerText = "Please check at least one document: NIC, Passport, or Driving License";
+                msg.style.color = 'red';
+                return;
+            }
+
+            // Validate ID number before checking availability
+            if (!isIdValid) {
+                msg.innerText = "Please enter a valid Identification Number before checking availability";
                 msg.style.color = 'red';
                 return;
             }
@@ -754,6 +829,21 @@
 
         // jQuery Select2 initialization and related logic
         $(document).ready(function() {
+            // Check if there's a pre-selected ID type (from old input or editing)
+            const idTypeDropdown = document.getElementById('id_type');
+            const idTypeValue = idTypeDropdown.value;
+            
+            if (idTypeValue && idTypeValue !== '') {
+                // Find and check the corresponding document checkbox
+                if (idTypeValue === 'NIC') {
+                    document.getElementById('doc_nic').checked = true;
+                } else if (idTypeValue === 'Passport') {
+                    document.getElementById('doc_passport').checked = true;
+                } else if (idTypeValue === 'Driving License') {
+                    document.getElementById('doc_driving_licence').checked = true;
+                }
+            }
+            
             // Initialize Company Name Select2
             $('#company_name').select2({
                 placeholder: "-- Select Company --",

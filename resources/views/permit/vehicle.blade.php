@@ -203,7 +203,8 @@
             
             <div class="mb-3">
                 <label for="company_name" class="form-label"><i class="bi bi-buildings me-1"></i> Company Name</label>
-                <select name="company_name" id="company_name" class="form-select" required>
+                <select name="company_name" id="company_name" class="form-select" required
+                    @if(session('vehicle_permit_cart') && count(session('vehicle_permit_cart')) > 0) disabled style="background-color: #e9ecef; cursor: not-allowed;" @endif>
                     <option value="">-- Select Company --</option>
                     @foreach($companies as $company)
                         <option value="{{ $company->name }}" data-address="{{ $company->address }}"
@@ -212,6 +213,9 @@
                         </option>
                     @endforeach
                 </select>
+                @if(session('vehicle_permit_cart') && count(session('vehicle_permit_cart')) > 0)
+                    <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i>Company is locked for this session</small>
+                @endif
             </div>
             
             <div class="mb-4">
@@ -629,6 +633,17 @@
             }
             if (idTypeInput) {
                 idTypeInput.addEventListener('change', setMaxToDate);
+            }
+            
+            // Enable company dropdown before form submission
+            const form = document.querySelector('form[action="{{ route('permit.vehicle.addToSession') }}"]');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const companyDropdown = document.getElementById('company_name');
+                    if (companyDropdown && companyDropdown.disabled) {
+                        companyDropdown.disabled = false;
+                    }
+                });
             }
         });
 
