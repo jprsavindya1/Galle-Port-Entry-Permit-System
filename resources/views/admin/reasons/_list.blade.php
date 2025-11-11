@@ -86,11 +86,13 @@
                             <td>{{ $loop->iteration + ($reasons->currentPage() - 1) * $reasons->perPage() }}</td>
                             <td>{{ ucfirst($reason->name) }}</td>
                             <td class="text-center">
-                                <a href="{{ route('admin.reasons.edit', $reason) }}" class="company-action-btn edit btn btn-sm ajax-link"><i class="bi bi-pencil-square me-1"></i> Edit</a>
-                                <form action="{{ route('admin.reasons.destroy', $reason) }}" method="POST" class="d-inline ajax-delete" data-reload-url="{{ route('admin.reasons.index') }}">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="company-action-btn delete btn btn-sm"><i class="bi bi-trash me-1"></i> Delete</button>
-                                </form>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{{ route('admin.reasons.edit', $reason) }}" class="company-action-btn edit btn btn-sm ajax-link"><i class="bi bi-pencil-square me-1"></i> Edit</a>
+                                    <form action="{{ route('admin.reasons.destroy', $reason) }}" method="POST" class="ajax-delete" data-reload-url="{{ route('admin.reasons.index') }}">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="company-action-btn delete btn btn-sm"><i class="bi bi-trash me-1"></i> Delete</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
