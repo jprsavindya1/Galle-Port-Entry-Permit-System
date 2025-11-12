@@ -335,7 +335,7 @@
         </div>
 
         <div class="d-flex justify-content-between no-print">
-            <a href="{{ route('permit.print', $payment->submission_id) }}" target="_blank" class="btn btn-primary btn-custom">
+            <a href="{{ route('permit.print', $payment->submission_id) }}" target="_blank" id="batchPrintBtn" class="btn btn-primary btn-custom" style="pointer-events: none; opacity: 0.5; cursor: not-allowed;">
                 <i class="bi bi-printer-fill me-1"></i> Batch Print Permits
             </a>
 
@@ -351,4 +351,20 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const printInvoiceBtn = document.querySelector('button[onclick="window.print()"]');
+        const batchPrintBtn = document.getElementById('batchPrintBtn');
+        
+        if (printInvoiceBtn && batchPrintBtn) {
+            printInvoiceBtn.addEventListener('click', function() {
+                // Enable batch print button after print invoice is clicked
+                batchPrintBtn.style.pointerEvents = 'auto';
+                batchPrintBtn.style.opacity = '1';
+                batchPrintBtn.style.cursor = 'pointer';
+            });
+        }
+    });
+</script>
 @endsection

@@ -314,7 +314,7 @@
 
         <form action="{{ route('permit.vehicle.submitAllVehicle') }}" method="POST" class="mt-4 text-center">
             @csrf
-            <button type="submit" class="btn btn-success"><i class="bi bi-send-fill me-1"></i> Submit All</button>
+            <button type="submit" class="btn btn-success btn-lg" style="font-size: 1.25rem; padding: 0.75rem 2rem;"><i class="bi bi-send-fill me-2"></i> Submit</button>
         </form>
     </div>
     @endif
