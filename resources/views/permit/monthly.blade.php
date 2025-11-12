@@ -58,6 +58,19 @@
         border-radius: 0.5rem;
         font-weight: 500;
     }
+    main .btn-secondary {
+        background-color: #90a4ae;
+        border-color: #90a4ae;
+        color: #fff;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s, box-shadow 0.2s;
+    }
+    main .btn-secondary:hover {
+        background-color: #78909c;
+        border-color: #78909c;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
     .user-dashboard-table { /* Styling for the list table */
         background: #f5faff;
         border-radius: 0.75rem;
@@ -84,6 +97,14 @@
     }
     .user-action-btn.edit { color: #ff9800; }
     .user-action-btn.delete { color: #f44336; }
+    
+    /* Hide dropdown arrow for disabled select elements */
+    select:disabled {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: none !important;
+    }
     
     /* Select2 Styling Overrides */
     .select2-container--default .select2-selection--single {
@@ -152,12 +173,12 @@
             {{-- END DOCUMENTS ATTACHED --}}
 
             <div class="row mb-3 align-items-start">
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label for="id_type" class="form-label"><i class="bi bi-card-heading me-1"></i> ID Type</label>
                     {{-- ID Type is fixed to NIC for monthly permits, making it readonly --}}
-                    <input type="text" class="form-control" name="id_type" id="id_type" value="NIC" readonly>
+                    <input type="text" class="form-control" name="id_type" id="id_type" value="NIC" readonly style="background-color: #f8fafc; color: #1976d2; font-weight: 500;">
                 </div>
-                <div class="col-md-10">
+                <div class="col-md-9">
                     <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
                     <input type="text" class="form-control" name="id_number" id="id_number" value="{{ old('id_number') }}" required
                         oninput="this.value = this.value.toUpperCase();"
@@ -239,6 +260,7 @@
            
             <div class="mb-4">
                 <button type="button" onclick="checkMonthlyAvailability()" class="btn btn-info me-2"><i class="bi bi-check-circle-fill me-1"></i> Check Availability</button>
+                <button type="button" onclick="clearForm()" class="btn btn-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i> Clear Form</button>
                 <p id="availability-msg" class="fw-bold d-block mt-2" style="font-size: 0.95rem; line-height: 1.5;"></p>
             </div>
             {{-- Police Report Dates - Required for Monthly Permits --}}
@@ -763,6 +785,94 @@
                     }
                 }
             });
+        }
+
+        // Clear Form function - preserves company data and cart state
+        window.clearForm = function() {
+            // Check if there are any entries in the cart
+            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            const hasCartEntries = cartRows.length > 0;
+            
+            // Store company-related data before clearing (only if cart has entries)
+            let companyName = '';
+            let companyAddress = '';
+            let designation = '';
+            
+            if (hasCartEntries) {
+                companyName = document.getElementById('company_name').value;
+                companyAddress = document.getElementById('company_address').value;
+                designation = document.getElementById('designation').value;
+            }
+            
+            // Clear all form fields
+            document.getElementById('id_number').value = '';
+            document.getElementById('full_name').value = '';
+            document.getElementById('initials').value = '';
+            document.getElementById('from_date').value = '';
+            document.getElementById('to_date').value = '';
+            document.getElementById('residence_address').value = '';
+            document.getElementById('reason').value = '';
+            document.getElementById('police_report_from_date').value = '';
+            document.getElementById('police_report_to_date').value = '';
+            
+            // Clear company fields if no cart entries
+            if (!hasCartEntries) {
+                document.getElementById('company_name').value = '';
+                $('#company_name').val(null).trigger('change'); // Clear Select2
+                document.getElementById('company_address').value = '';
+                document.getElementById('designation').value = '';
+                $('#designation').val(null).trigger('change'); // Clear Select2
+            }
+            
+            // Clear error messages and availability message
+            document.getElementById('id_number_error').textContent = '';
+            document.getElementById('duplicate_error').textContent = '';
+            document.getElementById('availability-msg').textContent = '';
+            
+            // Reset document checkboxes
+            document.getElementById('doc_nic').checked = false;
+            document.getElementById('doc_police_report').checked = false;
+            
+            // ID type is always NIC for monthly, but reset it
+            document.getElementById('id_type').value = 'NIC';
+            
+            // Reset pass type and issue type radio buttons
+            const passTypeRadios = document.querySelectorAll('input[name="pass_type"]');
+            passTypeRadios.forEach(radio => radio.checked = false);
+            
+            const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
+            issueTypeRadios.forEach(radio => radio.checked = false);
+            
+            // Restore company-related data only if cart has entries
+            if (hasCartEntries) {
+                document.getElementById('company_name').value = companyName;
+                $('#company_name').trigger('change.select2'); // Update Select2 display
+                document.getElementById('company_address').value = companyAddress;
+                document.getElementById('designation').value = designation;
+                $('#designation').trigger('change.select2'); // Update Select2 display
+            }
+            
+            // Reset validation states
+            isIdValid = false;
+            checkedFormData = null;
+            
+            // Disable the "Add to List" button
+            const addBtn = document.getElementById('addToListBtn');
+            addBtn.disabled = true;
+            addBtn.style.backgroundColor = '#9e9e9e';
+            addBtn.style.borderColor = '#9e9e9e';
+            addBtn.style.opacity = '0.65';
+            addBtn.style.cursor = 'not-allowed';
+            
+            // Show success message
+            const msg = document.getElementById('availability-msg');
+            msg.innerText = 'Form cleared successfully.';
+            msg.style.color = '#2196F3';
+            
+            // Clear the message after 3 seconds
+            setTimeout(() => {
+                msg.innerText = '';
+            }, 3000);
         }
 
         // SweetAlert2 for cart delete confirmation

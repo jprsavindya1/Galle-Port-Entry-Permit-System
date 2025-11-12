@@ -58,6 +58,19 @@
         border-radius: 0.5rem;
         font-weight: 500;
     }
+    main .btn-secondary {
+        background-color: #90a4ae;
+        border-color: #90a4ae;
+        color: #fff;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s, box-shadow 0.2s;
+    }
+    main .btn-secondary:hover {
+        background-color: #78909c;
+        border-color: #78909c;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
     main .table {
         background: #f5faff;
         border-radius: 0.75rem;
@@ -98,6 +111,14 @@
     }
     .user-action-btn.edit { color: #ff9800; }
     .user-action-btn.delete { color: #f44336; }
+    
+    /* Hide dropdown arrow for disabled select elements */
+    select:disabled {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: none !important;
+    }
     
     /* Fieldset Legend Styling */
     legend {
@@ -163,9 +184,9 @@
             {{-- END DOCUMENTS ATTACHED --}}
             
             <div class="row mb-3 align-items-start">
-                <div class="col-md-4">
-                    <label for="id_type" class="form-label"><i class="bi bi-card-heading me-1"></i> Identification Type</label>
-                    <select name="id_type" id="id_type" onchange="updateIdValidation(); setMaxToDate()" class="form-select" required disabled style="background-color: #e9ecef; cursor: not-allowed;">
+                <div class="col-md-3">
+                    <label for="id_type" class="form-label"><i class="bi bi-card-heading me-1"></i> ID Type</label>
+                    <select name="id_type" id="id_type" onchange="updateIdValidation(); setMaxToDate()" class="form-select" required disabled style="background-color: #f8fafc; cursor: not-allowed; color: #1976d2; font-weight: 500;">
                         <option value="">-- Select Document First --</option>
                         <option value="NIC" {{ old('id_type', $permit->id_type ?? '') == 'NIC' ? 'selected' : '' }}>NIC</option>
                         <option value="Passport" {{ old('id_type', $permit->id_type ?? '') == 'Passport' ? 'selected' : '' }}>Passport</option>
@@ -173,8 +194,8 @@
                     </select>
                 </div>
 
-                <div class="col-md-8">
-                    <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> Identification Number</label>
+                <div class="col-md-9">
+                    <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
                     <input type="text" name="id_number" id="id_number" 
                             value="{{ old('id_number') }}" class="form-control" required
                             oninput="this.value = this.value.toUpperCase();"
@@ -254,6 +275,7 @@
 
             <div class="mb-3">
                 <button type="button" onclick="checkAvailability()" class="btn btn-info me-2"><i class="bi bi-check-circle-fill me-1"></i> Check Availability</button>
+                <button type="button" onclick="clearForm()" class="btn btn-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i> Clear Form</button>
                 <p id="availability-msg" class="fw-bold d-block mt-2" style="font-size: 0.95rem; line-height: 1.5;"></p>
             </div>
             
@@ -433,8 +455,10 @@
                 
                 // Enable and lock the identification type dropdown
                 idTypeDropdown.disabled = true;
-                idTypeDropdown.style.backgroundColor = '#e9ecef';
+                idTypeDropdown.style.backgroundColor = '#f8fafc';
                 idTypeDropdown.style.cursor = 'not-allowed';
+                idTypeDropdown.style.color = '#1976d2';
+                idTypeDropdown.style.fontWeight = '500';
                 
                 // Trigger validation and date limit updates
                 updateIdValidation();
@@ -447,8 +471,10 @@
                     // Reset to disabled state with placeholder if no documents are checked
                     idTypeDropdown.value = '';
                     idTypeDropdown.disabled = true;
-                    idTypeDropdown.style.backgroundColor = '#e9ecef';
+                    idTypeDropdown.style.backgroundColor = '#f8fafc';
                     idTypeDropdown.style.cursor = 'not-allowed';
+                    idTypeDropdown.style.color = '';
+                    idTypeDropdown.style.fontWeight = '';
                     
                     // Clear ID number and all related fields
                     idNumberInput.value = '';
@@ -826,6 +852,97 @@
             // Check if the option has a data-address attribute
             const address = selectedOption ? selectedOption.getAttribute('data-address') : null;
             document.getElementById('company_address').value = address || '';
+        }
+
+        // Clear Form function - preserves company data and cart state
+        window.clearForm = function() {
+            // Check if there are any entries in the cart
+            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            const hasCartEntries = cartRows.length > 0;
+            
+            // Store company-related data before clearing (only if cart has entries)
+            let companyName = '';
+            let companyAddress = '';
+            let designation = '';
+            
+            if (hasCartEntries) {
+                companyName = document.getElementById('company_name').value;
+                companyAddress = document.getElementById('company_address').value;
+                designation = document.getElementById('designation').value;
+            }
+            
+            // Clear all form fields
+            document.getElementById('id_number').value = '';
+            document.getElementById('full_name').value = '';
+            document.getElementById('initials').value = '';
+            document.getElementById('from_date').value = '';
+            document.getElementById('to_date').value = '';
+            document.getElementById('residence_address').value = '';
+            document.getElementById('reason').value = '';
+            
+            // Clear company fields if no cart entries
+            if (!hasCartEntries) {
+                document.getElementById('company_name').value = '';
+                $('#company_name').val(null).trigger('change'); // Clear Select2
+                document.getElementById('company_address').value = '';
+                document.getElementById('designation').value = '';
+                $('#designation').val(null).trigger('change'); // Clear Select2
+            }
+            
+            // Clear error messages and availability message
+            document.getElementById('id_number_error').textContent = '';
+            document.getElementById('duplicate_error').textContent = '';
+            document.getElementById('availability-msg').textContent = '';
+            
+            // Reset document checkboxes
+            document.getElementById('doc_nic').checked = false;
+            document.getElementById('doc_passport').checked = false;
+            document.getElementById('doc_driving_licence').checked = false;
+            
+            // Reset ID type dropdown and enable it
+            const idTypeDropdown = document.getElementById('id_type');
+            idTypeDropdown.value = '';
+            idTypeDropdown.disabled = false;
+            idTypeDropdown.style.backgroundColor = '';
+            idTypeDropdown.style.cursor = '';
+            
+            // Reset pass type and issue type radio buttons
+            const passTypeRadios = document.querySelectorAll('input[name="pass_type"]');
+            passTypeRadios.forEach(radio => radio.checked = false);
+            
+            const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
+            issueTypeRadios.forEach(radio => radio.checked = false);
+            
+            // Restore company-related data only if cart has entries
+            if (hasCartEntries) {
+                document.getElementById('company_name').value = companyName;
+                $('#company_name').trigger('change.select2'); // Update Select2 display
+                document.getElementById('company_address').value = companyAddress;
+                document.getElementById('designation').value = designation;
+                $('#designation').trigger('change.select2'); // Update Select2 display
+            }
+            
+            // Reset validation states
+            isIdValid = false;
+            checkedFormData = null;
+            
+            // Disable the "Add to List" button
+            const addBtn = document.getElementById('addToListBtn');
+            addBtn.disabled = true;
+            addBtn.style.backgroundColor = '#9e9e9e';
+            addBtn.style.borderColor = '#9e9e9e';
+            addBtn.style.opacity = '0.65';
+            addBtn.style.cursor = 'not-allowed';
+            
+            // Show success message
+            const msg = document.getElementById('availability-msg');
+            msg.innerText = 'Form cleared successfully.';
+            msg.style.color = '#2196F3';
+            
+            // Clear the message after 3 seconds
+            setTimeout(() => {
+                msg.innerText = '';
+            }, 3000);
         }
 
         // jQuery Select2 initialization and related logic

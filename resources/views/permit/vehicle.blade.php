@@ -58,6 +58,19 @@
         border-radius: 0.5rem;
         font-weight: 500;
     }
+    main .btn-secondary {
+        background-color: #90a4ae;
+        border-color: #90a4ae;
+        color: #fff;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s, box-shadow 0.2s;
+    }
+    main .btn-secondary:hover {
+        background-color: #78909c;
+        border-color: #78909c;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
     /* Table Styling */
     .user-dashboard-table { 
         background: #f5faff;
@@ -220,6 +233,7 @@
             
             <div class="mb-4">
                 <button type="button" onclick="checkVehicleAvailability()" class="btn btn-info me-2"><i class="bi bi-check-circle-fill me-1"></i> Check Availability</button>
+                <button type="button" onclick="clearForm()" class="btn btn-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i> Clear Form</button>
                 <p id="availability-msg" class="fw-bold d-block mt-2" style="font-size: 0.95rem; line-height: 1.5;"></p>
             </div>
             
@@ -646,6 +660,77 @@
                 });
             }
         });
+
+        // Clear Form function - preserves company data and cart state
+        window.clearForm = function() {
+            // Check if there are any entries in the cart
+            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            const hasCartEntries = cartRows.length > 0;
+            
+            // Store company name before clearing (only if cart has entries)
+            let companyName = '';
+            
+            if (hasCartEntries) {
+                companyName = document.getElementById('company_name').value;
+            }
+            
+            // Clear all form fields
+            document.getElementById('vehicle_number').value = '';
+            document.getElementById('from_date').value = '';
+            document.getElementById('to_date').value = '';
+            document.getElementById('vehicle_type').value = '';
+            document.getElementById('vehicle_make').value = '';
+            document.getElementById('vehicle_model').value = '';
+            document.getElementById('owner_name').value = '';
+            document.getElementById('owner_address').value = '';
+            document.getElementById('reason').value = '';
+            document.getElementById('remarks').value = '';
+            
+            // Clear company field if no cart entries
+            if (!hasCartEntries) {
+                document.getElementById('company_name').value = '';
+                $('#company_name').val(null).trigger('change'); // Clear Select2
+            }
+            
+            // Clear error messages and availability message
+            document.getElementById('duplicate_error').textContent = '';
+            document.getElementById('availability-msg').textContent = '';
+            
+            // Reset document checkboxes
+            document.getElementById('doc_revenue_licence').checked = false;
+            document.getElementById('doc_insurance').checked = false;
+            
+            // Reset issue type radio buttons
+            const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
+            issueTypeRadios.forEach(radio => radio.checked = false);
+            
+            // Restore company name only if cart has entries
+            if (hasCartEntries) {
+                document.getElementById('company_name').value = companyName;
+                $('#company_name').trigger('change.select2'); // Update Select2 display
+            }
+            
+            // Reset validation states
+            checkedFormData = null;
+            
+            // Disable the "Add to List" button
+            const addBtn = document.getElementById('addToListBtn');
+            addBtn.disabled = true;
+            addBtn.style.backgroundColor = '#9e9e9e';
+            addBtn.style.borderColor = '#9e9e9e';
+            addBtn.style.opacity = '0.65';
+            addBtn.style.cursor = 'not-allowed';
+            
+            // Show success message
+            const msg = document.getElementById('availability-msg');
+            msg.innerText = 'Form cleared successfully.';
+            msg.style.color = '#2196F3';
+            
+            // Clear the message after 3 seconds
+            setTimeout(() => {
+                msg.innerText = '';
+            }, 3000);
+        }
 
         // SweetAlert2 for cart delete confirmation
         document.addEventListener('DOMContentLoaded', function() {
