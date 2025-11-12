@@ -306,7 +306,8 @@ public function checkVehicleAvailability(Request $request)
         return response()->json(['available' => false, 'message' => "Blacklisted: $reason"]);
     }
 
-    $conflict = VehiclePermit::where('vehicle_number', $data['vehicle_number'])
+    $conflict = VehiclePermit::where('status', 'active')
+        ->where('vehicle_number', $data['vehicle_number'])
         ->where(function ($query) use ($data) {
             $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
                   ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
@@ -315,10 +316,15 @@ public function checkVehicleAvailability(Request $request)
                         ->where('to_date', '>=', $data['to_date']);
                   });
         })
-        ->exists();
+        ->first();
 
     if ($conflict) {
-        return response()->json(['available' => false, 'message' => 'Vehicle permit NOT available for these dates.']);
+        $fromDate = \Carbon\Carbon::parse($conflict->from_date)->format('d M Y');
+        $toDate = \Carbon\Carbon::parse($conflict->to_date)->format('d M Y');
+        return response()->json([
+            'available' => false, 
+            'message' => "This vehicle already has an ACTIVE VEHICLE PERMIT (ID: {$conflict->permit_id}) valid from {$fromDate} to {$toDate}. Please choose different dates."
+        ]);
     }
 
     return response()->json(['available' => true, 'message' => 'Success!']);

@@ -254,7 +254,7 @@
 
             <div class="mb-3">
                 <button type="button" onclick="checkAvailability()" class="btn btn-info me-2"><i class="bi bi-check-circle-fill me-1"></i> Check Availability</button>
-                <p id="availability-msg" class="fw-bold d-inline-block"></p>
+                <p id="availability-msg" class="fw-bold d-block mt-2" style="font-size: 0.95rem; line-height: 1.5;"></p>
             </div>
             
             {{-- PASS TYPE AND ISSUE TYPE - ALIGNMENT IMPROVEMENT APPLIED --}}
@@ -719,7 +719,8 @@
                     initials: initials,
                     from_date: fromDate,
                     to_date: toDate,
-                    company_name: companyName
+                    company_name: companyName,
+                    permit_type: 'temporary'  // Specify permit type for proper conflict checking
                 })
             })
             .then(res => res.json())

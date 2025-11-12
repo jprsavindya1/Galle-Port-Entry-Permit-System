@@ -532,40 +532,98 @@ public function checkAvailability(Request $request)
             ]);
         }
 
-        // Determine which model to check based on permit_type
+        // Determine which permit type is being requested
         $permitType = $data['permit_type'] ?? 'temporary';
-        $modelClass = $permitType === 'monthly' ? MonthlyPermit::class : TemporaryPermit::class;
 
-        // Check for conflicts only with active permits
-        $conflictQuery = $modelClass::where('status', 'active')
-            ->where(function ($query) use ($data) {
-                $query->where(function ($q) use ($data) {
-                    $q->where('full_name', $data['full_name'])
-                      ->where('initials', $data['initials']);
+        // FOR TEMPORARY PERMITS: Check monthly permits FIRST (monthly blocks temporary)
+        if ($permitType === 'temporary') {
+            $monthlyConflict = MonthlyPermit::where('status', 'active')
+                ->where(function ($query) use ($data) {
+                    $query->where(function ($q) use ($data) {
+                        $q->where('full_name', $data['full_name'])
+                          ->where('initials', $data['initials']);
+                    })
+                    ->orWhere('id_number', $data['id_number']);
                 })
-                ->orWhere('id_number', $data['id_number']);
-            })
-            ->where(function ($query) use ($data) {
-                $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
-                      ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
-                      ->orWhere(function ($q) use ($data) {
-                          $q->where('from_date', '<=', $data['from_date'])
-                            ->where('to_date', '>=', $data['to_date']);
-                      });
-            });
+                ->where(function ($query) use ($data) {
+                    // Check for ANY overlap
+                    $query->where('from_date', '<=', $data['to_date'])
+                          ->where('to_date', '>=', $data['from_date']);
+                })
+                ->first();
 
-        // Exclude the current permit if editing
-        if (!empty($data['current_permit_id'])) {
-            $conflictQuery->where('id', '!=', $data['current_permit_id']);
+            if ($monthlyConflict) {
+                $fromDate = \Carbon\Carbon::parse($monthlyConflict->from_date)->format('d M Y');
+                $toDate = \Carbon\Carbon::parse($monthlyConflict->to_date)->format('d M Y');
+                return response()->json([
+                    'available' => false,
+                    'message' => "This person already has an ACTIVE MONTHLY PERMIT (ID: {$monthlyConflict->permit_id}) valid from {$fromDate} to {$toDate}. Temporary permit cannot be issued during this period."
+                ]);
+            }
+
+            // Then check for other temporary permit conflicts
+            $tempConflict = TemporaryPermit::where('status', 'active')
+                ->where(function ($query) use ($data) {
+                    $query->where(function ($q) use ($data) {
+                        $q->where('full_name', $data['full_name'])
+                          ->where('initials', $data['initials']);
+                    })
+                    ->orWhere('id_number', $data['id_number']);
+                })
+                ->where(function ($query) use ($data) {
+                    // Check for ANY overlap
+                    $query->where('from_date', '<=', $data['to_date'])
+                          ->where('to_date', '>=', $data['from_date']);
+                });
+
+            // Exclude current permit if editing
+            if (!empty($data['current_permit_id'])) {
+                $tempConflict->where('id', '!=', $data['current_permit_id']);
+            }
+
+            $tempConflict = $tempConflict->first();
+
+            if ($tempConflict) {
+                $fromDate = \Carbon\Carbon::parse($tempConflict->from_date)->format('d M Y');
+                $toDate = \Carbon\Carbon::parse($tempConflict->to_date)->format('d M Y');
+                return response()->json([
+                    'available' => false,
+                    'message' => "This person already has an ACTIVE TEMPORARY PERMIT (ID: {$tempConflict->permit_id}) valid from {$fromDate} to {$toDate}. Please choose different dates."
+                ]);
+            }
         }
 
-        $conflict = $conflictQuery->exists();
+        // FOR MONTHLY PERMITS: Only check against other monthly permits (monthly can override temporary)
+        if ($permitType === 'monthly') {
+            $monthlyConflict = MonthlyPermit::where('status', 'active')
+                ->where(function ($query) use ($data) {
+                    $query->where(function ($q) use ($data) {
+                        $q->where('full_name', $data['full_name'])
+                          ->where('initials', $data['initials']);
+                    })
+                    ->orWhere('id_number', $data['id_number']);
+                })
+                ->where(function ($query) use ($data) {
+                    // Check for ANY overlap
+                    $query->where('from_date', '<=', $data['to_date'])
+                          ->where('to_date', '>=', $data['from_date']);
+                });
 
-        if ($conflict) {
-            return response()->json([
-                'available' => false, 
-                'message' => 'Permit NOT available for this period or person.'
-            ]);
+            // Exclude current permit if editing
+            if (!empty($data['current_permit_id'])) {
+                $monthlyConflict->where('id', '!=', $data['current_permit_id']);
+            }
+
+            $monthlyConflict = $monthlyConflict->first();
+
+            if ($monthlyConflict) {
+                $fromDate = \Carbon\Carbon::parse($monthlyConflict->from_date)->format('d M Y');
+                $toDate = \Carbon\Carbon::parse($monthlyConflict->to_date)->format('d M Y');
+                return response()->json([
+                    'available' => false,
+                    'message' => "This person already has an ACTIVE MONTHLY PERMIT (ID: {$monthlyConflict->permit_id}) valid from {$fromDate} to {$toDate}. Please choose different dates or cancel the existing permit first."
+                ]);
+            }
         }
 
         return response()->json([

@@ -220,7 +220,7 @@
             
             <div class="mb-4">
                 <button type="button" onclick="checkVehicleAvailability()" class="btn btn-info me-2"><i class="bi bi-check-circle-fill me-1"></i> Check Availability</button>
-                <p id="availability-msg" class="fw-bold d-inline-block"></p>
+                <p id="availability-msg" class="fw-bold d-block mt-2" style="font-size: 0.95rem; line-height: 1.5;"></p>
             </div>
             
             <div class="mb-3">
