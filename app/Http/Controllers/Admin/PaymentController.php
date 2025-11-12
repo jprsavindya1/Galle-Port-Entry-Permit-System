@@ -169,6 +169,14 @@ foreach ($cart as $entry) {
     $entry['vat'] = $vat;
     $entry['total'] = $total;
     $entry['status'] = 'active'; // Set status to active when permit is created
+    
+    // Ensure document checkboxes default to 0 if not present
+    $entry['doc_nic'] = $entry['doc_nic'] ?? 0;
+    $entry['doc_passport'] = $entry['doc_passport'] ?? 0;
+    $entry['doc_driving_licence'] = $entry['doc_driving_licence'] ?? 0;
+    $entry['doc_police_report'] = $entry['doc_police_report'] ?? 0;
+    $entry['doc_revenue_licence'] = $entry['doc_revenue_licence'] ?? 0;
+    $entry['doc_insurance'] = $entry['doc_insurance'] ?? 0;
     // ======================================
 
     // Save to the appropriate table based on permit type

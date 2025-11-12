@@ -308,20 +308,6 @@
                 </select>
             </div>
 
-            <fieldset class="mb-4">
-                <legend class="col-form-label pt-0"><i class="bi bi-file-earmark-lock me-1"></i> Police Report Details</legend>
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="police_issue_date" class="form-label">Issue Date</label>
-                        <input type="date" class="form-control" name="police_issue_date" value="{{ old('police_issue_date') }}" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="police_expire_date" class="form-label">Expiry Date</label>
-                        <input type="date" class="form-control" name="police_expire_date" value="{{ old('police_expire_date') }}" required>
-                    </div>
-                </div>
-            </fieldset>
-
             <button type="submit" id="addToListBtn" class="btn btn-primary" disabled style="background-color: #9e9e9e !important; border-color: #9e9e9e !important; opacity: 0.65; cursor: not-allowed;">
                 <i class="bi bi-plus-circle me-1"></i> Add to Monthly Permit List
             </button>
