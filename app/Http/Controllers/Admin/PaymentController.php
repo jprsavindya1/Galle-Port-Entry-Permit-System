@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Permit;
+use App\Models\TemporaryPermit;
+use App\Models\MonthlyPermit;
+use App\Models\VehiclePermit;
 use App\Models\Payment;
 use App\Models\PaymentSetting;
 use App\Models\Vehicle;
@@ -165,8 +168,23 @@ foreach ($cart as $entry) {
     $entry['ssl'] = $ssl;
     $entry['vat'] = $vat;
     $entry['total'] = $total;
+    $entry['status'] = 'active'; // Set status to active when permit is created
     // ======================================
 
+    // Save to the appropriate table based on permit type
+    switch ($entry['type']) {
+        case 'TP':
+            TemporaryPermit::create($entry);
+            break;
+        case 'MP':
+            MonthlyPermit::create($entry);
+            break;
+        case 'VP':
+            VehiclePermit::create($entry);
+            break;
+    }
+    
+    // Also save to old permits table for backward compatibility
     Permit::create($entry);
 }
 
@@ -274,15 +292,44 @@ foreach ($cart as $entry) {
         $prefix = $type;
         $yearMonth = now()->format('ym');
 
-        $latest = Permit::where('permit_id', 'like', $prefix . $yearMonth . '%')
+        // Check both the new separate table AND the old permits table to avoid duplicates
+        switch ($type) {
+            case 'TP':
+                $latestNew = TemporaryPermit::where('permit_id', 'like', $prefix . $yearMonth . '%')
+                    ->orderBy('permit_id', 'desc')
+                    ->first();
+                break;
+            case 'MP':
+                $latestNew = MonthlyPermit::where('permit_id', 'like', $prefix . $yearMonth . '%')
+                    ->orderBy('permit_id', 'desc')
+                    ->first();
+                break;
+            case 'VP':
+                $latestNew = VehiclePermit::where('permit_id', 'like', $prefix . $yearMonth . '%')
+                    ->orderBy('permit_id', 'desc')
+                    ->first();
+                break;
+            default:
+                $latestNew = null;
+                break;
+        }
+
+        // Also check the old permits table
+        $latestOld = Permit::where('permit_id', 'like', $prefix . $yearMonth . '%')
             ->orderBy('permit_id', 'desc')
             ->first();
 
+        // Get the highest number from both tables
         $nextNumber = 1;
-        if ($latest) {
-            $lastId = $latest->permit_id;
-            $lastCounter = (int)substr($lastId, -4);
-            $nextNumber = $lastCounter + 1;
+        
+        if ($latestNew) {
+            $lastCounter = (int)substr($latestNew->permit_id, -4);
+            $nextNumber = max($nextNumber, $lastCounter + 1);
+        }
+        
+        if ($latestOld) {
+            $lastCounter = (int)substr($latestOld->permit_id, -4);
+            $nextNumber = max($nextNumber, $lastCounter + 1);
         }
 
         return $prefix . $yearMonth . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
@@ -333,7 +380,25 @@ foreach ($cart as $entry) {
     public function invoice($submission_id)
     {
         $payment = Payment::where('submission_id', $submission_id)->firstOrFail();
-        $permits = Permit::where('submission_id', $submission_id)->get();
+        
+        // Fetch permits from all three tables and merge them
+        $temporaryPermits = TemporaryPermit::where('submission_id', $submission_id)->get();
+        $monthlyPermits = MonthlyPermit::where('submission_id', $submission_id)->get();
+        $vehiclePermits = VehiclePermit::where('submission_id', $submission_id)->get();
+        
+        // Add type attribute to each permit for identification
+        $temporaryPermits->each(function($permit) {
+            $permit->type = 'TP';
+        });
+        $monthlyPermits->each(function($permit) {
+            $permit->type = 'MP';
+        });
+        $vehiclePermits->each(function($permit) {
+            $permit->type = 'VP';
+        });
+        
+        // Merge all permits into one collection
+        $permits = $temporaryPermits->concat($monthlyPermits)->concat($vehiclePermits);
 
         return view('payment.invoice', compact('payment', 'permits', 'submission_id'));
     }

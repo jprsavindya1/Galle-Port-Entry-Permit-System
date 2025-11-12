@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Permit;
+use App\Models\TemporaryPermit;
+use App\Models\MonthlyPermit;
+use App\Models\VehiclePermit;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -14,68 +16,72 @@ class DashboardController extends Controller
     $month = $request->get('month', date('m'));
     $today = Carbon::today();
 
-    // --- Daily Revenue ---
-    $dailyRevenue = Permit::whereDate('created_at', $today)
-        ->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
+    // --- Daily Revenue (from all three tables) ---
+    $dailyRevenue = 
+        TemporaryPermit::whereDate('created_at', $today)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')) +
+        MonthlyPermit::whereDate('created_at', $today)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')) +
+        VehiclePermit::whereDate('created_at', $today)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
 
     // --- Daily Permits by Type ---
-    $dailyTypesData = Permit::select('type', \DB::raw('COUNT(*) as total'))
-        ->whereDate('created_at', $today)
-        ->groupBy('type')
-        ->get()
-        ->keyBy('type');
-
     $dailyPermits = [
-        'TP' => $dailyTypesData->has('TP') ? $dailyTypesData['TP']->total : 0,
-        'MP' => $dailyTypesData->has('MP') ? $dailyTypesData['MP']->total : 0,
-        'VP' => $dailyTypesData->has('VP') ? $dailyTypesData['VP']->total : 0,
+        'TP' => TemporaryPermit::whereDate('created_at', $today)->count(),
+        'MP' => MonthlyPermit::whereDate('created_at', $today)->count(),
+        'VP' => VehiclePermit::whereDate('created_at', $today)->count(),
     ];
 
     $dailyPermitsAll = array_sum($dailyPermits);
 
     // --- Total Permits by Type (Monthly) ---
-    $typesData = Permit::select('type', \DB::raw('COUNT(*) as total'))
-        ->whereYear('created_at', $year)
-        ->whereMonth('created_at', $month)
-        ->groupBy('type')
-        ->get()
-        ->keyBy('type');
-
     $totalPermits = [
-        'TP' => $typesData->has('TP') ? $typesData['TP']->total : 0,
-        'MP' => $typesData->has('MP') ? $typesData['MP']->total : 0,
-        'VP' => $typesData->has('VP') ? $typesData['VP']->total : 0,
+        'TP' => TemporaryPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
+        'MP' => MonthlyPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
+        'VP' => VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
     ];
 
     $totalPermitsAll = array_sum($totalPermits);
 
     // --- Total Monthly Revenue ---
-    $totalRevenue = Permit::whereYear('created_at', $year)
-        ->whereMonth('created_at', $month)
-        ->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
+    $totalRevenue = 
+        TemporaryPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')) +
+        MonthlyPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')) +
+        VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
 
-    // --- Permits by Company ---
-    $companiesData = Permit::select('company_name', \DB::raw('COUNT(*) as total'))
-        ->whereYear('created_at', $year)
-        ->whereMonth('created_at', $month)
-        ->groupBy('company_name')
-        ->orderBy('total', 'desc')
-        ->get();
+    // --- Permits by Company (combining all three tables) ---
+    $tempCompanies = TemporaryPermit::select('company_name', \DB::raw('COUNT(*) as total'))
+        ->whereYear('created_at', $year)->whereMonth('created_at', $month)
+        ->groupBy('company_name')->get();
+    
+    $monthlyCompanies = MonthlyPermit::select('company_name', \DB::raw('COUNT(*) as total'))
+        ->whereYear('created_at', $year)->whereMonth('created_at', $month)
+        ->groupBy('company_name')->get();
+    
+    $vehicleCompanies = VehiclePermit::select('company_name', \DB::raw('COUNT(*) as total'))
+        ->whereYear('created_at', $year)->whereMonth('created_at', $month)
+        ->groupBy('company_name')->get();
+    
+    // Merge and sum by company name
+    $companiesData = collect();
+    foreach ([$tempCompanies, $monthlyCompanies, $vehicleCompanies] as $collection) {
+        foreach ($collection as $item) {
+            $existing = $companiesData->firstWhere('company_name', $item->company_name);
+            if ($existing) {
+                $existing->total += $item->total;
+            } else {
+                $companiesData->push((object)['company_name' => $item->company_name, 'total' => $item->total]);
+            }
+        }
+    }
+    $companiesData = $companiesData->sortByDesc('total')->values();
 
     $companies = $companiesData->pluck('company_name')->toArray();
     $permitCounts = $companiesData->pluck('total')->toArray();
 
     // --- Permit Type Revenue ---
-    $permitTypesData = Permit::select('type', \DB::raw('SUM(`rate` + `vat` + IFNULL(`ssl`,0)) as revenue'))
-        ->whereYear('created_at', $year)
-        ->whereMonth('created_at', $month)
-        ->groupBy('type')
-        ->get();
-
-    $allTypes = ['TP', 'MP', 'VP'];
-    $permitRevenue = [];
-    foreach ($allTypes as $type) $permitRevenue[$type] = 0;
-    foreach ($permitTypesData as $data) $permitRevenue[$data->type] = (float) $data->revenue;
+    $permitRevenue = [
+        TemporaryPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')),
+        MonthlyPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')),
+        VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'))
+    ];
 
     // --- Months array for dropdown ---
     $months = [
@@ -93,8 +99,8 @@ class DashboardController extends Controller
         'dailyRevenue' => $dailyRevenue,
         'companies' => $companies,
         'permitCounts' => $permitCounts,
-        'permitTypes' => array_keys($permitRevenue),
-        'permitRevenue' => array_values($permitRevenue),
+        'permitTypes' => ['TP', 'MP', 'VP'],
+        'permitRevenue' => $permitRevenue,
         'months' => $months,
         'selectedMonth' => (int)$month
     ]);
@@ -106,67 +112,67 @@ class DashboardController extends Controller
     $month = $request->get('month', date('m'));
     $year = date('Y');
 
-    // Total Revenue
-    $totalRevenue = Permit::whereYear('created_at', $year)
-        ->whereMonth('created_at', $month)
-        ->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
+    // Total Revenue from all three tables
+    $totalRevenue = 
+        TemporaryPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')) +
+        MonthlyPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')) +
+        VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
 
-    // Total Permits
-    $typesData = Permit::select('type', \DB::raw('COUNT(*) as total'))
-        ->whereYear('created_at', $year)
-        ->whereMonth('created_at', $month)
-        ->groupBy('type')
-        ->get()
-        ->keyBy('type');
-
+    // Total Permits by Type
     $totalPermits = [
-        'TP' => $typesData->has('TP') ? $typesData['TP']->total : 0,
-        'MP' => $typesData->has('MP') ? $typesData['MP']->total : 0,
-        'VP' => $typesData->has('VP') ? $typesData['VP']->total : 0,
+        'TP' => TemporaryPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
+        'MP' => MonthlyPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
+        'VP' => VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
     ];
 
-    // Permits by Company
-    $companiesData = Permit::select('company_name', \DB::raw('COUNT(*) as total'))
-        ->whereYear('created_at', $year)
-        ->whereMonth('created_at', $month)
-        ->groupBy('company_name')
-        ->orderBy('total', 'desc')
-        ->get();
+    // Permits by Company (combining all three tables)
+    $tempCompanies = TemporaryPermit::select('company_name', \DB::raw('COUNT(*) as total'))
+        ->whereYear('created_at', $year)->whereMonth('created_at', $month)
+        ->groupBy('company_name')->get();
+    
+    $monthlyCompanies = MonthlyPermit::select('company_name', \DB::raw('COUNT(*) as total'))
+        ->whereYear('created_at', $year)->whereMonth('created_at', $month)
+        ->groupBy('company_name')->get();
+    
+    $vehicleCompanies = VehiclePermit::select('company_name', \DB::raw('COUNT(*) as total'))
+        ->whereYear('created_at', $year)->whereMonth('created_at', $month)
+        ->groupBy('company_name')->get();
+    
+    // Merge and sum by company name
+    $companiesData = collect();
+    foreach ([$tempCompanies, $monthlyCompanies, $vehicleCompanies] as $collection) {
+        foreach ($collection as $item) {
+            $existing = $companiesData->firstWhere('company_name', $item->company_name);
+            if ($existing) {
+                $existing->total += $item->total;
+            } else {
+                $companiesData->push((object)['company_name' => $item->company_name, 'total' => $item->total]);
+            }
+        }
+    }
+    $companiesData = $companiesData->sortByDesc('total')->values();
 
     $companies = $companiesData->pluck('company_name');
     $permitCounts = $companiesData->pluck('total');
 
     // Permit Type Revenue
-    $permitTypesData = Permit::select('type', \DB::raw('SUM(`rate` + `vat` + IFNULL(`ssl`,0)) as revenue'))
-        ->whereYear('created_at', $year)
-        ->whereMonth('created_at', $month)
-        ->groupBy('type')
-        ->get();
+    $permitRevenue = [
+        TemporaryPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')),
+        MonthlyPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')),
+        VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'))
+    ];
 
-    $allTypes = ['TP','MP','VP'];
-    $permitRevenue = [];
-    foreach($allTypes as $type){
-        $permitRevenue[$type] = 0;
-    }
-    foreach($permitTypesData as $data){
-        $permitRevenue[$data->type] = (float) $data->revenue;
-    }
-    $todayRevenue = Permit::whereYear('created_at', $year)
-        ->whereMonth('created_at', $month)
-        ->whereDate('created_at', Carbon::today())
-        ->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
+    // Today's revenue
+    $todayRevenue = 
+        TemporaryPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->whereDate('created_at', Carbon::today())->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')) +
+        MonthlyPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->whereDate('created_at', Carbon::today())->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)')) +
+        VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->whereDate('created_at', Carbon::today())->sum(\DB::raw('`rate` + `vat` + IFNULL(`ssl`,0)'));
 
     // Daily Permits (always today, regardless of month filter)
-    $dailyTypesData = Permit::select('type', \DB::raw('COUNT(*) as total'))
-        ->whereDate('created_at', Carbon::today())
-        ->groupBy('type')
-        ->get()
-        ->keyBy('type');
-
     $dailyPermits = [
-        'TP' => $dailyTypesData->has('TP') ? $dailyTypesData['TP']->total : 0,
-        'MP' => $dailyTypesData->has('MP') ? $dailyTypesData['MP']->total : 0,
-        'VP' => $dailyTypesData->has('VP') ? $dailyTypesData['VP']->total : 0,
+        'TP' => TemporaryPermit::whereDate('created_at', Carbon::today())->count(),
+        'MP' => MonthlyPermit::whereDate('created_at', Carbon::today())->count(),
+        'VP' => VehiclePermit::whereDate('created_at', Carbon::today())->count(),
     ];
 
     return response()->json([
@@ -177,7 +183,7 @@ class DashboardController extends Controller
         'dailyPermitsAll' => array_sum($dailyPermits),
         'companies' => $companies,
         'permitCounts' => $permitCounts,
-        'permitRevenue' => array_values($permitRevenue),
+        'permitRevenue' => $permitRevenue,
         'dailyRevenue' => $todayRevenue
     ]);
 }

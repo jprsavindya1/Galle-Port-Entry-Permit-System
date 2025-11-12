@@ -5,29 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MonthlyPermit extends Model
+class VehiclePermit extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
         'permit_id',
-        'id_type',
-        'id_number',
+        'vehicle_number',
+        'vehicle_type',
         'from_date',
         'to_date',
-        'full_name',
-        'initials',
-        'designation',
+        'owner_name',
+        'owner_address',
         'company_name',
-        'company_address',
-        'residence_address',
-        'pass_type',
         'issue_type',
         'reason',
-        'police_issue_date',
-        'police_expire_date',
-        'doc_nic',
-        'doc_police_report',
+        'revenue_license_number',
+        'insurance_number',
+        'remarks',
+        'doc_revenue_licence',
+        'doc_insurance',
         'rate',
         'ssl',
         'vat',
@@ -40,10 +37,8 @@ class MonthlyPermit extends Model
     protected $casts = [
         'from_date' => 'date',
         'to_date' => 'date',
-        'police_issue_date' => 'date',
-        'police_expire_date' => 'date',
-        'doc_nic' => 'boolean',
-        'doc_police_report' => 'boolean',
+        'doc_revenue_licence' => 'boolean',
+        'doc_insurance' => 'boolean',
         'rate' => 'decimal:2',
         'ssl' => 'decimal:2',
         'vat' => 'decimal:2',

@@ -182,16 +182,16 @@ Route::prefix('permit/vehicle')->controller(VehiclePermitController::class)->gro
 // ------------------------------
 Route::get('/permits/submitted', [PermitController::class, 'submittedList'])->name('permits.submitted');
 Route::get('/permits/submitted/{submissionId}', [PermitController::class, 'viewSubmissionGroup'])->name('permit.submission.view');
-Route::post('permits/{permit}/cancel', [PermitController::class, 'cancel'])->name('permits.cancel');
-Route::post('permits/{permit}/activate', [PermitController::class, 'activate'])->name('permits.activate');
+Route::post('permits/{permitType}/{id}/cancel', [PermitController::class, 'cancel'])->name('permits.cancel');
+Route::post('permits/{permitType}/{id}/activate', [PermitController::class, 'activate'])->name('permits.activate');
 
 
 // ------------------------------
 // Edit/Delete Individual Permits (DB Records clerk edits)
 // ------------------------------
-Route::get('/permits/{permit}/edit', [PermitController::class, 'edit'])->name('permits.edit');
-Route::put('/permits/{permit}', [PermitController::class, 'update'])->name('permits.update');
-Route::delete('/permits/{permit}', [PermitController::class, 'destroy'])->name('permits.destroy');
+Route::get('/permits/{permitType}/{id}/edit', [PermitController::class, 'edit'])->name('permits.edit');
+Route::put('/permits/{permitType}/{id}', [PermitController::class, 'update'])->name('permits.update');
+Route::delete('/permits/{permitType}/{id}', [PermitController::class, 'destroy'])->name('permits.destroy');
 
 
 // ------------------------------
@@ -220,8 +220,8 @@ Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(
 Route::get('/permit/print/batch/{submission_id}', [PrintController::class, 'show'])
     ->name('permit.print');
 
-// Single print (by permit ID)
-Route::get('/permit/print/single/{id}', [PrintController::class, 'showSingle'])
+// Single print (by permit ID with type)
+Route::get('/permit/print/single/{permitType}/{id}', [PrintController::class, 'showSingle'])
     ->name('permit.print.single');
 
     // reports routes

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Permit; 
+use App\Models\TemporaryPermit; // Changed from Permit
 use App\Models\MonthlyPermit;  
 use App\Models\Company;
 use Illuminate\Support\Str;
@@ -261,7 +261,7 @@ public function removeEntry($index)
     $datePrefix = now()->format('Ymd');
     $type = 'TP';
 
-    $latest = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
+    $latest = TemporaryPermit::where('submission_id', 'like', $datePrefix . $type . '%')
         ->orderBy('submission_id', 'desc')
         ->first();
 
@@ -311,8 +311,7 @@ public function removeEntry($index)
     }
 
     // Conflict check for TEMP permits
-    $conflict = Permit::where('type', 'TP')
-        ->where(function ($query) use ($data) {
+    $conflict = TemporaryPermit::where(function ($query) use ($data) {
             $query->where(function ($q) use ($data) {
                 $q->where('full_name', $data['full_name'])
                   ->where('initials', $data['initials']);

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MonthlyPermit extends Model
+class TemporaryPermit extends Model
 {
     use SoftDeletes;
 
@@ -24,10 +24,9 @@ class MonthlyPermit extends Model
         'pass_type',
         'issue_type',
         'reason',
-        'police_issue_date',
-        'police_expire_date',
         'doc_nic',
-        'doc_police_report',
+        'doc_passport',
+        'doc_driving_licence',
         'rate',
         'ssl',
         'vat',
@@ -40,10 +39,9 @@ class MonthlyPermit extends Model
     protected $casts = [
         'from_date' => 'date',
         'to_date' => 'date',
-        'police_issue_date' => 'date',
-        'police_expire_date' => 'date',
         'doc_nic' => 'boolean',
-        'doc_police_report' => 'boolean',
+        'doc_passport' => 'boolean',
+        'doc_driving_licence' => 'boolean',
         'rate' => 'decimal:2',
         'ssl' => 'decimal:2',
         'vat' => 'decimal:2',

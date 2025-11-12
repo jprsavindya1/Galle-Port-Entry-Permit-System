@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Permit;
-use App\Models\MonthlyPermit;  
+use App\Models\MonthlyPermit; // Use MonthlyPermit instead of generic Permit
 use Illuminate\Support\Str;
 use App\Models\Company;
 use App\Models\Designation;
@@ -205,7 +204,7 @@ public function removeEntry($index)
     $datePrefix = now()->format('Ymd');
     $type = 'MP';
 
-    $latestPermit = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
+    $latestPermit = MonthlyPermit::where('submission_id', 'like', $datePrefix . $type . '%')
         ->orderBy('submission_id', 'desc')
         ->first();
 
@@ -271,8 +270,7 @@ public function removeEntry($index)
     }
 
     // Only check against MONTHLY permits
-    $conflict = Permit::where('type', 'MP')
-    ->where('status', 'active')
+    $conflict = MonthlyPermit::where('status', 'active')
         ->where(function ($query) use ($data) {
             $query->where(function ($q) use ($data) {
                 $q->where('full_name', $data['full_name'])

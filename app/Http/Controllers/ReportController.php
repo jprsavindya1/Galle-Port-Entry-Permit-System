@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Permit;
+use App\Models\TemporaryPermit;
+use App\Models\MonthlyPermit;
+use App\Models\VehiclePermit;
 use Pdf;
 use App\Models\Payment;
 use Carbon\Carbon;
@@ -20,29 +22,63 @@ class ReportController extends Controller
 
         // Only fetch permits if search text or type is provided
         if ($query || $type) {
-            $permitsQuery = Permit::withTrashed(); // include cancelled permits (soft deleted)
+            // Query all three tables
+            $tempPermits = collect();
+            $monthlyPermits = collect();
+            $vehiclePermits = collect();
 
-            if ($query) {
-                $permitsQuery->where(function($q) use ($query) {
-                    $q->where('id_number', 'like', "%$query%")
-                      ->orWhere('full_name', 'like', "%$query%")
-                      ->orWhere('company_name', 'like', "%$query%")
-                      ->orWhere('owner_name', 'like', "%$query%")
-                      ->orWhere('vehicle_number', 'like', "%$query%");
+            // Build queries based on type filter
+            if (!$type || $type === 'TP') {
+                $tempQuery = TemporaryPermit::withTrashed()->with('payment');
+                if ($query) {
+                    $tempQuery->where(function($q) use ($query) {
+                        $q->where('id_number', 'like', "%$query%")
+                          ->orWhere('full_name', 'like', "%$query%")
+                          ->orWhere('company_name', 'like', "%$query%");
+                    });
+                }
+                $tempPermits = $tempQuery->get()->map(function($p) {
+                    $p->type = 'TP';
+                    $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
+                    return $p;
                 });
             }
 
-            if ($type) {
-                $permitsQuery->where('type', $type);
+            if (!$type || $type === 'MP') {
+                $monthlyQuery = MonthlyPermit::withTrashed()->with('payment');
+                if ($query) {
+                    $monthlyQuery->where(function($q) use ($query) {
+                        $q->where('id_number', 'like', "%$query%")
+                          ->orWhere('full_name', 'like', "%$query%")
+                          ->orWhere('company_name', 'like', "%$query%");
+                    });
+                }
+                $monthlyPermits = $monthlyQuery->get()->map(function($p) {
+                    $p->type = 'MP';
+                    $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
+                    return $p;
+                });
             }
 
-            $permits = $permitsQuery->with('payment')->orderBy('from_date', 'desc')->get();
+            if (!$type || $type === 'VP') {
+                $vehicleQuery = VehiclePermit::withTrashed()->with('payment');
+                if ($query) {
+                    $vehicleQuery->where(function($q) use ($query) {
+                        $q->where('owner_name', 'like', "%$query%")
+                          ->orWhere('vehicle_number', 'like', "%$query%")
+                          ->orWhere('company_name', 'like', "%$query%");
+                    });
+                }
+                $vehiclePermits = $vehicleQuery->get()->map(function($p) {
+                    $p->type = 'VP';
+                    $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
+                    return $p;
+                });
+            }
 
-            // Update status for display
-            $permits->transform(function($permit) {
-                $permit->status = $permit->trashed() || $permit->status === 'cancelled' ? 'Cancelled' : 'Active';
-                return $permit;
-            });
+            // Merge all permits and sort by from_date
+            $permits = $tempPermits->concat($monthlyPermits)->concat($vehiclePermits)
+                ->sortByDesc('from_date')->values();
         }
 
         return view('admin.reports.user_report', compact('permits', 'query', 'type'));
@@ -55,29 +91,61 @@ class ReportController extends Controller
         $query = $request->query('query');
         $type  = $request->query('type');
 
-        $permitsQuery = Permit::withTrashed()->with('payment');
+        // Query all three tables
+        $tempPermits = collect();
+        $monthlyPermits = collect();
+        $vehiclePermits = collect();
 
-        if ($query) {
-            $permitsQuery->where(function($q) use ($query) {
-                $q->where('id_number', 'like', "%$query%")
-                  ->orWhere('full_name', 'like', "%$query%")
-                  ->orWhere('company_name', 'like', "%$query%")
-                  ->orWhere('owner_name', 'like', "%$query%")
-                  ->orWhere('vehicle_number', 'like', "%$query%");
+        if (!$type || $type === 'TP') {
+            $tempQuery = TemporaryPermit::withTrashed()->with('payment');
+            if ($query) {
+                $tempQuery->where(function($q) use ($query) {
+                    $q->where('id_number', 'like', "%$query%")
+                      ->orWhere('full_name', 'like', "%$query%")
+                      ->orWhere('company_name', 'like', "%$query%");
+                });
+            }
+            $tempPermits = $tempQuery->get()->map(function($p) {
+                $p->type = 'TP';
+                $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
+                return $p;
             });
         }
 
-        if ($type) {
-            $permitsQuery->where('type', $type);
+        if (!$type || $type === 'MP') {
+            $monthlyQuery = MonthlyPermit::withTrashed()->with('payment');
+            if ($query) {
+                $monthlyQuery->where(function($q) use ($query) {
+                    $q->where('id_number', 'like', "%$query%")
+                      ->orWhere('full_name', 'like', "%$query%")
+                      ->orWhere('company_name', 'like', "%$query%");
+                });
+            }
+            $monthlyPermits = $monthlyQuery->get()->map(function($p) {
+                $p->type = 'MP';
+                $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
+                return $p;
+            });
         }
 
-        $permits = $permitsQuery->orderBy('from_date', 'desc')->get();
+        if (!$type || $type === 'VP') {
+            $vehicleQuery = VehiclePermit::withTrashed()->with('payment');
+            if ($query) {
+                $vehicleQuery->where(function($q) use ($query) {
+                    $q->where('owner_name', 'like', "%$query%")
+                      ->orWhere('vehicle_number', 'like', "%$query%")
+                      ->orWhere('company_name', 'like', "%$query%");
+                });
+            }
+            $vehiclePermits = $vehicleQuery->get()->map(function($p) {
+                $p->type = 'VP';
+                $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
+                return $p;
+            });
+        }
 
-        // Update status for display
-        $permits->transform(function($permit) {
-            $permit->status = $permit->trashed() || $permit->status === 'cancelled' ? 'Cancelled' : 'Active';
-            return $permit;
-        });
+        $permits = $tempPermits->concat($monthlyPermits)->concat($vehiclePermits)
+            ->sortByDesc('from_date')->values();
 
         return Pdf::loadView('admin.reports.user_report_pdf', compact('permits', 'query', 'type'))
                   ->setPaper('a4', 'landscape')
@@ -91,29 +159,61 @@ class ReportController extends Controller
         $query = $request->query('query');
         $type  = $request->query('type');
 
-        $permitsQuery = Permit::withTrashed()->with('payment');
+        // Query all three tables
+        $tempPermits = collect();
+        $monthlyPermits = collect();
+        $vehiclePermits = collect();
 
-        if ($query) {
-            $permitsQuery->where(function($q) use ($query) {
-                $q->where('id_number', 'like', "%$query%")
-                  ->orWhere('full_name', 'like', "%$query%")
-                  ->orWhere('company_name', 'like', "%$query%")
-                  ->orWhere('owner_name', 'like', "%$query%")
-                  ->orWhere('vehicle_number', 'like', "%$query%");
+        if (!$type || $type === 'TP') {
+            $tempQuery = TemporaryPermit::withTrashed()->with('payment');
+            if ($query) {
+                $tempQuery->where(function($q) use ($query) {
+                    $q->where('id_number', 'like', "%$query%")
+                      ->orWhere('full_name', 'like', "%$query%")
+                      ->orWhere('company_name', 'like', "%$query%");
+                });
+            }
+            $tempPermits = $tempQuery->get()->map(function($p) {
+                $p->type = 'TP';
+                $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
+                return $p;
             });
         }
 
-        if ($type) {
-            $permitsQuery->where('type', $type);
+        if (!$type || $type === 'MP') {
+            $monthlyQuery = MonthlyPermit::withTrashed()->with('payment');
+            if ($query) {
+                $monthlyQuery->where(function($q) use ($query) {
+                    $q->where('id_number', 'like', "%$query%")
+                      ->orWhere('full_name', 'like', "%$query%")
+                      ->orWhere('company_name', 'like', "%$query%");
+                });
+            }
+            $monthlyPermits = $monthlyQuery->get()->map(function($p) {
+                $p->type = 'MP';
+                $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
+                return $p;
+            });
         }
 
-        $permits = $permitsQuery->orderBy('from_date', 'desc')->get();
+        if (!$type || $type === 'VP') {
+            $vehicleQuery = VehiclePermit::withTrashed()->with('payment');
+            if ($query) {
+                $vehicleQuery->where(function($q) use ($query) {
+                    $q->where('owner_name', 'like', "%$query%")
+                      ->orWhere('vehicle_number', 'like', "%$query%")
+                      ->orWhere('company_name', 'like', "%$query%");
+                });
+            }
+            $vehiclePermits = $vehicleQuery->get()->map(function($p) {
+                $p->type = 'VP';
+                $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
+                return $p;
+            });
+        }
 
-        // Update status for display
-        $permits->transform(function($permit) {
-            $permit->status = $permit->trashed() || $permit->status === 'cancelled' ? 'Cancelled' : 'Active';
-            return $permit;
-        });
+        $permits = $tempPermits->concat($monthlyPermits)->concat($vehiclePermits)
+            ->sortByDesc('from_date')->values();
 
         $fileName = 'user_report.csv';
         $headers = [
@@ -143,7 +243,7 @@ class ReportController extends Controller
                         $permit->from_date,
                         $permit->to_date,
                         $permit->issue_type,
-                        $permit->reason,
+                        $permit->reason ?? '-',
                         $permit->status,
                         $permit->submission_id,
                         $permit->payment->invoice_id ?? '-',
@@ -158,7 +258,7 @@ class ReportController extends Controller
                         $permit->from_date,
                         $permit->to_date,
                         $permit->issue_type,
-                        $permit->reason,
+                        $permit->reason ?? '-',
                         $permit->status,
                         $permit->submission_id,
                         $permit->payment->invoice_id ?? '-',

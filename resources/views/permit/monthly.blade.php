@@ -236,6 +236,18 @@
                 <textarea class="form-control" name="residence_address" rows="2">{{ old('residence_address') }}</textarea>
             </div>
 
+            {{-- Police Report Dates - Required for Monthly Permits --}}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="police_issue_date" class="form-label"><i class="bi bi-calendar-check me-1"></i> Police Report Issue Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="police_issue_date" name="police_issue_date" value="{{ old('police_issue_date') }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="police_expire_date" class="form-label"><i class="bi bi-calendar-x me-1"></i> Police Report Expire Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="police_expire_date" name="police_expire_date" value="{{ old('police_expire_date') }}" required>
+                </div>
+            </div>
+
             <div class="mb-4">
                 <button type="button" onclick="checkMonthlyAvailability()" class="btn btn-info me-2"><i class="bi bi-check-circle-fill me-1"></i> Check Availability</button>
                 <p id="availability-msg" class="fw-bold d-inline-block"></p>

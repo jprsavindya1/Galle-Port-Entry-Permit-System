@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Permit; 
+use App\Models\VehiclePermit; // Changed from Permit
 use App\Models\MonthlyPermit;  
 use Illuminate\Support\Str;
 use App\Models\Vehicle; 
@@ -306,8 +306,7 @@ public function checkVehicleAvailability(Request $request)
         return response()->json(['available' => false, 'message' => "Blacklisted: $reason"]);
     }
 
-    $conflict = Permit::where('type', 'VP')
-        ->where('vehicle_number', $data['vehicle_number'])
+    $conflict = VehiclePermit::where('vehicle_number', $data['vehicle_number'])
         ->where(function ($query) use ($data) {
             $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
                   ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
@@ -341,8 +340,7 @@ public function fetchVehicleDetails(Request $request)
         }
 
         // Find the most recent permit with this vehicle number
-        $permit = Permit::where('vehicle_number', $vehicleNumber)
-            ->where('type', 'VP')
+        $permit = VehiclePermit::where('vehicle_number', $vehicleNumber)
             ->orderBy('created_at', 'desc')
             ->first();
 
@@ -385,7 +383,7 @@ public function submitAllVehicle(Request $request)
 
  // Generate submission_id
 
-    $latestPermit = Permit::where('submission_id', 'like', $datePrefix . $type . '%')
+    $latestPermit = VehiclePermit::where('submission_id', 'like', $datePrefix . $type . '%')
         ->orderBy('submission_id', 'desc')
         ->first();
 

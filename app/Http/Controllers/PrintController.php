@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Permit;
+use App\Models\TemporaryPermit;
 use App\Models\MonthlyPermit;  
+use App\Models\VehiclePermit;
 use App\Models\Payment;
 class PrintController extends Controller
 {
@@ -13,7 +14,14 @@ class PrintController extends Controller
      */
     public function show($submission_id)
     {
-        $permits = Permit::where('submission_id', $submission_id)->get();
+        // Query all three tables for this submission_id
+        $tempPermits = TemporaryPermit::where('submission_id', $submission_id)->get();
+        $monthlyPermits = MonthlyPermit::where('submission_id', $submission_id)->get();
+        $vehiclePermits = VehiclePermit::where('submission_id', $submission_id)->get();
+
+        // Merge all permits
+        $permits = $tempPermits->concat($monthlyPermits)->concat($vehiclePermits);
+
         $payment = Payment::where('submission_id', $submission_id)->first();
 
         if ($permits->isEmpty()) {
@@ -23,10 +31,24 @@ class PrintController extends Controller
         return view('permit.print', compact('permits', 'payment', 'submission_id'));
 
     }
-    public function showSingle($id)
+    public function showSingle($permitType, $id)
 {
-    $permit = Permit::findOrFail($id);
-     $submission_id = $permit->submission_id; 
+    // Find the permit based on type
+    switch ($permitType) {
+        case 'temporary':
+            $permit = TemporaryPermit::findOrFail($id);
+            break;
+        case 'monthly':
+            $permit = MonthlyPermit::findOrFail($id);
+            break;
+        case 'vehicle':
+            $permit = VehiclePermit::findOrFail($id);
+            break;
+        default:
+            abort(404, 'Invalid permit type');
+    }
+    
+    $submission_id = $permit->submission_id; 
     $payment = Payment::where('submission_id', $permit->submission_id)->first();
 
     return view('permit.print_single', compact('permit', 'payment','submission_id'));

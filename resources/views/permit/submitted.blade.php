@@ -419,7 +419,10 @@
                                                     <div class="modal fade" id="cancelModal{{ $permit->id }}" tabindex="-1" aria-hidden="true">
                                                         <div class="modal-dialog">
                                                             <div class="modal-content">
-                                                                <form action="{{ route('permits.cancel', $permit) }}" method="POST" class="cancel-permit-form">
+                                                                @php
+                                                                    $permitTypeSlug = strtolower(str_replace('P', '', $permit->type)) === 'v' ? 'vehicle' : (strtolower(str_replace('P', '', $permit->type)) === 'm' ? 'monthly' : 'temporary');
+                                                                @endphp
+                                                                <form action="{{ route('permits.cancel', [$permitTypeSlug, $permit->id]) }}" method="POST" class="cancel-permit-form">
                                                                     @csrf
                                                                     <div class="modal-header">
                                                                         <h5 class="modal-title">Cancel Permit</h5>
@@ -452,7 +455,10 @@
                                                         </div>
                                                     </div>
                                                 @else
-                                                    <form action="{{ route('admin.cancelled_permits.activate', ['permit' => $permit->id]) }}" method="POST" class="activate-permit-form">
+                                                    @php
+                                                        $permitTypeSlug = strtolower(str_replace('P', '', $permit->type)) === 'v' ? 'vehicle' : (strtolower(str_replace('P', '', $permit->type)) === 'm' ? 'monthly' : 'temporary');
+                                                    @endphp
+                                                    <form action="{{ route('permits.activate', [$permitTypeSlug, $permit->id]) }}" method="POST" class="activate-permit-form">
                                                         @csrf
                                                         <button type="submit" class="btn btn-sm btn-danger w-100" {{ (!in_array(Auth::user()->role, ['admin','super-admin'])) ? 'disabled' : '' }}>
                                                             Cancelled
@@ -476,7 +482,10 @@
                                                     View Group
                                                 </a>
 
-                                                <a href="{{ route('permit.print.single', $permit->id) }}"
+                                                @php
+                                                    $permitTypeSlug = strtolower(str_replace('P', '', $permit->type)) === 'v' ? 'vehicle' : (strtolower(str_replace('P', '', $permit->type)) === 'm' ? 'monthly' : 'temporary');
+                                                @endphp
+                                                <a href="{{ route('permit.print.single', [$permitTypeSlug, $permit->id]) }}"
                                                    target="_blank"
                                                    class="btn btn-sm {{ $permit->status === 'cancelled' ? 'btn-secondary' : 'btn-primary' }} w-100"
                                                    @if($permit->status === 'cancelled') style="pointer-events: none; opacity: 0.5;" aria-disabled="true" @endif>
@@ -574,6 +583,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if(e.target.classList.contains('cancel-permit-form')){
             e.preventDefault();
             e.stopPropagation();
+            
+            console.log('Cancel form submitted');
 
             if(!['admin','super-admin'].includes(userRole)) {
                 showToast('error', 'Permission Denied', 'Only admins can cancel permits.');
@@ -582,34 +593,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
             let form = e.target;
             let actionUrl = form.getAttribute('action');
-                // Build form data and ensure the final cancel_reason is set.
-                let formData = new FormData(form);
-                const cancelSelect = form.querySelector('select[name="cancel_reason_select"]');
-                const cancelOther = form.querySelector('input[name="cancel_reason_other"]');
-                let finalReason = '';
-                if (cancelSelect) {
-                    finalReason = cancelSelect.value;
-                    if (finalReason === 'Other') {
-                        // require typed reason when Other is selected
-                        if (!cancelOther || !cancelOther.value.trim()) {
-                            showToast('error', 'Reason Required', 'Please enter a reason when "Other" is selected.');
-                            return;
-                        }
-                        finalReason = cancelOther.value.trim();
+            
+            console.log('Cancel URL:', actionUrl);
+            
+            // Build form data and ensure the final cancel_reason is set.
+            let formData = new FormData(form);
+            const cancelSelect = form.querySelector('select[name="cancel_reason_select"]');
+            const cancelOther = form.querySelector('input[name="cancel_reason_other"]');
+            let finalReason = '';
+            if (cancelSelect) {
+                finalReason = cancelSelect.value;
+                if (finalReason === 'Other') {
+                    if (!cancelOther || !cancelOther.value.trim()) {
+                        showToast('error', 'Reason Required', 'Please enter a reason when "Other" is selected.');
+                        return;
                     }
-                } else if (cancelOther && cancelOther.value.trim()) {
                     finalReason = cancelOther.value.trim();
                 }
-                // Ensure backend receives `cancel_reason` field
-                if (finalReason) {
-                    formData.set('cancel_reason', finalReason);
-                }
+            } else if (cancelOther && cancelOther.value.trim()) {
+                finalReason = cancelOther.value.trim();
+            }
+            if (finalReason) {
+                formData.set('cancel_reason', finalReason);
+            }
+
+            // Get CSRF token
+            const csrfToken = form.querySelector('input[name="_token"]').value;
 
             try {
                 const response = await fetch(actionUrl, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                        'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
@@ -617,51 +632,63 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Server error:', errorText);
-                    throw new Error(errorText);
+                    throw new Error('Server error');
                 }
 
                 const data = await response.json();
+                console.log('Cancel response:', data);
+                
                 if (data.status === 'cancelled') {
-                    // hide modal
-                    let modal = bootstrap.Modal.getInstance(form.closest('.modal'));
-                    if (modal) {
-                         modal.hide();
+                    // Get permit type from URL
+                    const permitTypeMatch = actionUrl.match(/permits\/(\w+)\/\d+\/cancel/);
+                    const permitType = permitTypeMatch ? permitTypeMatch[1] : 'temporary';
+
+                    console.log('Updating UI for permit:', data.id);
+
+                    // IMMEDIATELY update the UI (don't wait for modal to close)
+                    const statusCol = document.querySelector(`#status-col-${data.id}`);
+                    if (statusCol) {
+                        statusCol.innerHTML = `
+                            <form action="/permits/${permitType}/${data.id}/activate" method="POST" class="activate-permit-form">
+                                <input type="hidden" name="_token" value="${csrfToken}">
+                                <button type="submit" class="btn btn-sm btn-danger w-100" ${!['admin','super-admin'].includes(userRole) ? 'disabled' : ''}>
+                                    Cancelled
+                                </button>
+                            </form>
+                        `;
+                        console.log('UI updated - Cancelled button created');
+                    }
+
+                    // Disable buttons
+                    const row = document.querySelector(`#permit-row-${data.id}`);
+                    if (row) {
+                        row.querySelectorAll('a.btn').forEach(btn => {
+                            btn.classList.add('btn-secondary');
+                            btn.classList.remove('btn-warning', 'btn-primary');
+                            btn.style.opacity = '0.5';
+                            btn.style.pointerEvents = 'none';
+                        });
+                    }
+
+                    // Clean up modals and backdrops AFTER UI update
+                    const modalEl = form.closest('.modal');
+                    if (modalEl) {
+                        const bsModal = bootstrap.Modal.getInstance(modalEl);
+                        if (bsModal) {
+                            bsModal.hide();
+                        }
                     }
                     
-                    // Remove modal backdrop if it exists
-                    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
-                    document.body.classList.remove('modal-open');
-                    document.body.style.removeProperty('overflow');
-                    document.body.style.removeProperty('padding-right');
+                    // Clean everything after a short delay
+                    setTimeout(() => {
+                        document.querySelectorAll('.modal').forEach(m => m.remove());
+                        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                        document.body.classList.remove('modal-open');
+                        document.body.style.removeProperty('overflow');
+                        document.body.style.removeProperty('padding-right');
+                        console.log('Modals cleaned up');
+                    }, 300);
 
-                    // Replace Active button with Cancelled form
-                    const statusCol = document.querySelector(`#status-col-${data.id}`);
-              
-                    statusCol.innerHTML = `
-                        <form action="/admin/cancelled_permits/${data.id}/activate" method="POST" class="activate-permit-form">
-                            <input type="hidden" name="_token" value="${form.querySelector('input[name=_token]').value}">
-                            <button type="submit" class="btn btn-sm btn-danger w-100" ${!['admin','super-admin'].includes(userRole) ? 'disabled' : ''}>
-                                Cancelled
-                            </button>
-                        </form>
-                    `;
-
-                    // Disable Edit / View / Print buttons
-                    const row = document.querySelector(`#permit-row-${data.id}`);
-                    row.querySelectorAll('a.btn').forEach(btn => {
-                        btn.setAttribute('disabled', 'disabled');
-                        btn.style.pointerEvents = 'none';
-                        btn.style.opacity = 0.5;
-                        btn.classList.remove('btn-warning');
-                        btn.classList.remove('btn-primary');
-                        btn.classList.add('btn-secondary'); // Use secondary for cancelled actions
-                        btn.style.backgroundColor = '';
-                        btn.style.borderColor = '';
-                    });
-                    
-                    // Show success message
                     showToast('error', 'Permit Cancelled', 'The permit has been successfully cancelled.');
                 }
 
@@ -677,6 +704,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if(e.target.classList.contains('activate-permit-form')){
             e.preventDefault();
             e.stopPropagation();
+            
+            console.log('Activate form submitted');
 
             if(!['admin','super-admin'].includes(userRole)) {
                 showToast('error', 'Permission Denied', 'Only admins can activate cancelled permits.');
@@ -685,13 +714,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
             let form = e.target;
             let actionUrl = form.getAttribute('action');
+            
+            console.log('Activate URL:', actionUrl);
+            
+            // Get CSRF token
+            const tokenInput = form.querySelector('input[name="_token"]');
+            if (!tokenInput || !tokenInput.value) {
+                console.error('CSRF token missing!');
+                showToast('error', 'Error', 'Security token missing. Please refresh the page.');
+                return;
+            }
+            const csrfToken = tokenInput.value;
+            console.log('CSRF token found:', csrfToken.substring(0, 10) + '...');
+            
             let formData = new FormData(form);
 
             try {
                 const response = await fetch(actionUrl, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                        'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
@@ -700,70 +742,86 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('Server error:', errorText);
-                    throw new Error(errorText);
+                    console.error('Server responded with error:', response.status, errorText);
+                    throw new Error('Server error');
                 }
 
                 const data = await response.json();
+                console.log('Activate response:', data);
+                
                 if (data.status === 'activated') {
-                    // Replace Cancelled button with Active + Modal
+                    // Get permit type from URL
+                    const permitTypeMatch = actionUrl.match(/permits\/(\w+)\/\d+\/activate/);
+                    const permitType = permitTypeMatch ? permitTypeMatch[1] : 'temporary';
+
+                    console.log('Cleaning up modals...');
+
+                    // Clean up everything first
+                    document.querySelectorAll('.modal').forEach(m => m.remove());
+                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+
+                    console.log('Updating UI for permit:', data.id);
+
+                    // Update status column with fresh modal
                     const statusCol = document.querySelector(`#status-col-${data.id}`);
+                    if (statusCol) {
+                        statusCol.innerHTML = `
+                            <button type="button" class="btn btn-sm btn-success w-100" data-bs-toggle="modal" data-bs-target="#cancelModal${data.id}">
+                                Active
+                            </button>
 
-                    statusCol.innerHTML = `
-                        <button type="button" class="btn btn-sm btn-success w-100" data-bs-toggle="modal" data-bs-target="#cancelModal${data.id}">
-                            Active
-                        </button>
-
-                        <div class="modal fade" id="cancelModal${data.id}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <form action="/permits/${data.id}/cancel" method="POST" class="cancel-permit-form">
-                                        <input type="hidden" name="_token" value="${form.querySelector('input[name=_token]').value}">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Cancel Permit</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <label class="form-label">Reason</label>
-                                            <select name="cancel_reason_select" class="form-select" ${!['admin','super-admin'].includes(userRole) ? 'disabled' : ''}>
-                                                <option value="Expired Date">Expired Date</option>
-                                                <option value="Lost Permit">Lost Permit</option>
-                                                <option value="Security Concern">Security Concern</option>
-                                                <option value="Expired Police Report / Insurance">Expired Police Report / Insurance</option>
-                                                <option value="Fraudulent">Fraudulent</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                            <input type="text" name="cancel_reason_other" class="form-control mt-2" placeholder="If Other, type here" ${!['admin','super-admin'].includes(userRole) ? 'disabled' : ''}>
-                                        </div>
-                                        <div class="modal-footer">
-                                            ${['admin','super-admin'].includes(userRole) ? 
-                                                '<button type="submit" class="btn btn-danger w-100">Confirm Cancel</button>' : 
-                                                '<button type="button" class="btn btn-danger w-100" disabled>Confirm Cancel (Admins Only)</button>'}
-                                        </div>
-                                    </form>
+                            <div class="modal fade" id="cancelModal${data.id}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form action="/permits/${permitType}/${data.id}/cancel" method="POST" class="cancel-permit-form">
+                                            <input type="hidden" name="_token" value="${csrfToken}">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Cancel Permit</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <label class="form-label">Reason</label>
+                                                <select name="cancel_reason_select" class="form-select" ${!['admin','super-admin'].includes(userRole) ? 'disabled' : ''}>
+                                                    <option value="Expired Date">Expired Date</option>
+                                                    <option value="Lost Permit">Lost Permit</option>
+                                                    <option value="Security Concern">Security Concern</option>
+                                                    <option value="Expired Police Report / Insurance">Expired Police Report / Insurance</option>
+                                                    <option value="Fraudulent">Fraudulent</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                                <input type="text" name="cancel_reason_other" class="form-control mt-2" placeholder="If Other, type here" ${!['admin','super-admin'].includes(userRole) ? 'disabled' : ''}>
+                                            </div>
+                                            <div class="modal-footer">
+                                                ${['admin','super-admin'].includes(userRole) ? 
+                                                    '<button type="submit" class="btn btn-danger w-100">Confirm Cancel</button>' : 
+                                                    '<button type="button" class="btn btn-danger w-100" disabled>Confirm Cancel (Admins Only)</button>'}
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                        console.log('UI updated - Active button and modal created');
+                    }
 
-                    // Enable Edit / View / Print buttons (Edit commented out for testing)
+                    // Enable buttons
                     const row = document.querySelector(`#permit-row-${data.id}`);
-                    row.querySelectorAll('a.btn').forEach(btn => {
-                        btn.removeAttribute('disabled');
-                        btn.style.pointerEvents = '';
-                        btn.style.opacity = '';
-                        // Restore original classes
-                        btn.classList.remove('btn-secondary'); 
-                        /* if (btn.textContent.trim() === 'Edit' || btn.textContent.trim() === 'View Group') {
-                            btn.classList.add('btn-warning');
-                        } else */ if (btn.textContent.trim() === 'View Group') {
-                            btn.classList.add('btn-warning');
-                        } else if (btn.textContent.trim() === 'Print') {
-                            btn.classList.add('btn-primary');
-                        }
-                    });
-                    
-                    // Show success message
+                    if (row) {
+                        row.querySelectorAll('a.btn').forEach(btn => {
+                            btn.classList.remove('btn-secondary');
+                            btn.style.opacity = '';
+                            btn.style.pointerEvents = '';
+                            if (btn.textContent.includes('View')) {
+                                btn.classList.add('btn-warning');
+                            } else if (btn.textContent.includes('Print')) {
+                                btn.classList.add('btn-primary');
+                            }
+                        });
+                    }
+
                     showToast('success', 'Permit Activated', 'The permit has been successfully activated.');
                 }
 
@@ -771,16 +829,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.error('Error activating permit:', err);
                 showToast('error', 'Error', 'An error occurred while activating the permit. Please try again.');
             }
-        }
-    });
-    
-    // Initialize modals which were part of the initial static HTML
-    document.querySelectorAll('.modal').forEach(modalElement => {
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            new bootstrap.Modal(modalElement, {
-                backdrop: 'static',
-                keyboard: false
-            });
         }
     });
 

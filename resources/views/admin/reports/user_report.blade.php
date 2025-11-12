@@ -133,8 +133,8 @@
     <!-- Filters -->
     <form method="GET" action="{{ route('reports.user') }}" class="row g-2 mb-3 align-items-end">
         <div class="col-md-5">
-            <label class="form-label visually-hidden" for="query-input">Search NIC / Name / Company</label>
-            <input id="query-input" type="text" name="query" class="form-control" placeholder="Enter NIC / Name / Company" value="{{ request('query') }}">
+            <label class="form-label visually-hidden" for="query-input">Search NIC / Name / Company / Vehicle No</label>
+            <input id="query-input" type="text" name="query" class="form-control" placeholder="Enter NIC / Name / Company / Vehicle No" value="{{ request('query') }}">
         </div>
         <div class="col-md-3">
             <label class="form-label visually-hidden" for="type-select">Permit Type</label>
