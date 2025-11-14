@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use App\Models\Designation;
 use App\Models\Reason;
 use App\Models\PaymentSetting;
+use App\Helpers\IdGeneratorHelper;
 class TemporaryPermitController extends PermitController
 {
     /*
@@ -98,6 +99,8 @@ if (session()->has('temporary_company_name')) {
 
         // Convert pass_type array to comma-separated string for storage
         $validated['pass_type'] = implode(',', $validated['pass_type']);
+
+        // Application number will be generated on submission (no gaps for abandoned carts)
 
         // Add the validated permit entry to session cart
         $cart[] = $validated;
@@ -258,28 +261,19 @@ public function removeEntry($index)
     if (empty($cart)) {
         return redirect()->route('permit.temporary')->with('error', 'No permit entries to submit.');
     }
-// Create unique submission ID to group permits
-    $datePrefix = now()->format('Ymd');
-    $type = 'TP';
 
-    $latest = TemporaryPermit::where('submission_id', 'like', $datePrefix . $type . '%')
-        ->orderBy('submission_id', 'desc')
-        ->first();
+    // Generate unique submission ID using collision-free helper
+    $submissionId = IdGeneratorHelper::generateSubmissionId();
 
-    $nextNumber = 1001;
-    if ($latest) {
-        $lastId = $latest->submission_id;
-        $lastCounter = (int) substr($lastId, -4);
-        $nextNumber = $lastCounter + 1;
-    }
-
-    $submissionId = $datePrefix . $type . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-
-    // Add submission ID, type, and yearly-reset permit ID
+    // Generate application numbers for all permits in batch (collision-free)
+    $applicationNumbers = IdGeneratorHelper::generateMultipleApplicationNumbers(count($cart));
+    
+    // Add submission ID, application number, type, and permit ID to each entry
     foreach ($cart as $index => $entry) {
         $entry['submission_id'] = $submissionId;
-        $entry['type'] = $type;
-        $entry['permit_id'] = $this->generatePermitId($type); // ✅ New yearly-reset permit ID
+        $entry['application_number'] = $applicationNumbers[$index];
+        $entry['type'] = 'TP';
+        $entry['permit_id'] = $this->generatePermitId('TP'); // ✅ New yearly-reset permit ID
         $cart[$index] = $entry;
     }
 

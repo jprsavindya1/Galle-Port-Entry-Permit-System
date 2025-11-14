@@ -12,6 +12,7 @@ use App\Models\Reason;
 use App\Models\Blacklist;
 use App\Models\Company;
 use App\Models\CancelledPermit;
+use App\Helpers\IdGeneratorHelper;
 class PermitController extends Controller
 {
     /*
@@ -25,6 +26,7 @@ class PermitController extends Controller
         \DB::raw("'TP' as type"),
         'temporary_permits.id',
         'temporary_permits.permit_id',
+        'temporary_permits.application_number',
         'temporary_permits.submission_id',
         'temporary_permits.company_name',
         'temporary_permits.from_date',
@@ -61,6 +63,7 @@ class PermitController extends Controller
         \DB::raw("'MP' as type"),
         'monthly_permits.id',
         'monthly_permits.permit_id',
+        'monthly_permits.application_number',
         'monthly_permits.submission_id',
         'monthly_permits.company_name',
         'monthly_permits.from_date',
@@ -95,6 +98,7 @@ class PermitController extends Controller
         \DB::raw("'VP' as type"),
         'vehicle_permits.id',
         'vehicle_permits.permit_id',
+        'vehicle_permits.application_number',
         'vehicle_permits.submission_id',
         'vehicle_permits.company_name',
         'vehicle_permits.from_date',
@@ -133,6 +137,7 @@ class PermitController extends Controller
               ->orWhere('id_number', 'like', "%$search%")
               ->orWhere('full_name', 'like', "%$search%")
               ->orWhere('permit_id', 'like', "%$search%")
+              ->orWhere('application_number', 'like', "%$search%")
               ->orWhere('submission_id', 'like', "%$search%");
         });
         
@@ -141,6 +146,7 @@ class PermitController extends Controller
               ->orWhere('id_number', 'like', "%$search%")
               ->orWhere('full_name', 'like', "%$search%")
               ->orWhere('permit_id', 'like', "%$search%")
+              ->orWhere('application_number', 'like', "%$search%")
               ->orWhere('submission_id', 'like', "%$search%");
         });
         
@@ -149,6 +155,7 @@ class PermitController extends Controller
               ->orWhere('vehicle_number', 'like', "%$search%")
               ->orWhere('owner_name', 'like', "%$search%")
               ->orWhere('permit_id', 'like', "%$search%")
+              ->orWhere('application_number', 'like', "%$search%")
               ->orWhere('submission_id', 'like', "%$search%");
         });
     }
@@ -294,54 +301,21 @@ public function edit($permitType, $permitId)
     }
 
     /*
-     * generate Permit Id
+     * generate Permit Id with collision-free logic
      */
-   protected function generatePermitId(string $type): string
-{
-    $yearPrefix = now()->format('y'); // e.g., '25' for 2025
-
-    // Check both the new separate table AND the old permits table to avoid duplicates
-    switch ($type) {
-        case 'TP':
-            $latestNew = TemporaryPermit::where('permit_id', 'like', $type . $yearPrefix . '%')
-                ->orderBy('permit_id', 'desc')
-                ->first();
-            break;
-        case 'MP':
-            $latestNew = MonthlyPermit::where('permit_id', 'like', $type . $yearPrefix . '%')
-                ->orderBy('permit_id', 'desc')
-                ->first();
-            break;
-        case 'VP':
-            $latestNew = VehiclePermit::where('permit_id', 'like', $type . $yearPrefix . '%')
-                ->orderBy('permit_id', 'desc')
-                ->first();
-            break;
-        default:
-            throw new \Exception("Invalid permit type: $type");
+    protected function generatePermitId(string $type): string
+    {
+        return IdGeneratorHelper::generatePermitId($type);
     }
 
-    // Also check the old permits table
-    $latestOld = \App\Models\Permit::where('permit_id', 'like', $type . $yearPrefix . '%')
-        ->orderBy('permit_id', 'desc')
-        ->first();
-
-    // Get the highest number from both tables
-    $nextNumber = 1;
-    
-    if ($latestNew) {
-        $lastCounter = (int) substr($latestNew->permit_id, -4);
-        $nextNumber = max($nextNumber, $lastCounter + 1);
+    /**
+     * Generate unique application number for cart entries (collision-free)
+     * Format: AP + YYMMDD + count (e.g., AP251112150)
+     */
+    protected function generateApplicationNumber(): string
+    {
+        return IdGeneratorHelper::generateApplicationNumber();
     }
-    
-    if ($latestOld) {
-        $lastCounter = (int) substr($latestOld->permit_id, -4);
-        $nextNumber = max($nextNumber, $lastCounter + 1);
-    }
-
-    $month = now()->format('m');
-    return $type . $yearPrefix . $month . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-}
 
 
 

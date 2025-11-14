@@ -67,6 +67,16 @@
     font-size: 0.9rem;
 }
 
+.badge-free {
+    background: #64b5f6;
+    color: #0c0c0cff;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    display: inline-block;
+    font-size: 0.9rem;
+}
+
 /* ===== Buttons ===== */
 .btn-custom {
     border-radius: 0.5rem;
@@ -164,6 +174,11 @@
     }
 
     .badge-status {
+        font-size: 7pt !important;
+        padding: 1px 3px !important;
+    }
+
+    .badge-free {
         font-size: 7pt !important;
         padding: 1px 3px !important;
     }
@@ -272,7 +287,28 @@
             <p class="mb-1"><strong>Payment Date:</strong> {{ $payment->paid_at->format('Y-m-d H:i') }}</p>
             <p class="mb-1"><strong>Permit Type:</strong> {{ $payment->permit_type }}</p>
             <p class="mb-1"><strong>Entry Count:</strong> {{ $payment->entry_count }}</p>
-            <p><strong>Status:</strong> <span class="badge-status">{{ $payment->status ?? 'Paid' }}</span></p>
+            <p>
+                <strong>Status:</strong> 
+                @php
+                    // Check if any permit is free or all are payment
+                    $hasFree = $permits->contains(function($permit) {
+                        return strtolower($permit->issue_type ?? '') === 'free';
+                    });
+                    $hasPayment = $permits->contains(function($permit) {
+                        return strtolower($permit->issue_type ?? '') === 'payment';
+                    });
+                    
+                    // If all free
+                    if ($hasFree && !$hasPayment) {
+                        $statusBadge = '<span class="badge-free"><i class="bi bi-gift-fill me-1"></i>Free</span>';
+                    } 
+                    // If all payment or mixed
+                    else {
+                        $statusBadge = '<span class="badge-status"><i class="bi bi-credit-card-fill me-1"></i>Paid</span>';
+                    }
+                @endphp
+                {!! $statusBadge !!}
+            </p>
         </div>
 
         <div class="invoice-table-container mb-4">
@@ -280,6 +316,7 @@
                 <table class="table align-middle invoice-table">
                     <thead>
                         <tr>
+                            <th>Application No.</th>
                             <th>Permit ID</th>
                             @if($payment->permit_type === 'VP')
                                 <th style="min-width: 150px;">Owner Name</th>
@@ -296,12 +333,12 @@
                             @if($payment->permit_type !== 'VP')
                                 <th>Pass Type</th>
                             @endif
-                            <th>Issue Type</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($permits as $permit)
                         <tr>
+                            <td><strong>{{ $permit->application_number ?? 'N/A' }}</strong></td>
                             <td>{{ $permit->permit_id }}</td>
                             @if($payment->permit_type === 'VP')
                                 <td style="text-align: left;">{{ $permit->owner_name ?? '-' }}</td>
@@ -318,7 +355,6 @@
                             @if($payment->permit_type !== 'VP')
                                 <td>{{ ucfirst($permit->pass_type ?? '-') }}</td>
                             @endif
-                            <td>{{ ucfirst($permit->issue_type) }}</td>
                         </tr>
                         @endforeach
                     </tbody>

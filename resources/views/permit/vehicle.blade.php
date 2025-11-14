@@ -292,28 +292,36 @@
         
         <div class="table-responsive">
             {{-- Note: The original code used $cart, but the session key is 'vehicle_permit_cart' --}}
-            <table class="table user-dashboard-table align-middle">
+                        <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>Vehicle Type</th>
                         <th>Vehicle Number</th>
-                        <th>Owner</th>
-                        <th>From - To</th>
-                        <th>Issue Type</th>
+                        <th>Owner Name</th>
+                        <th>Owner Address</th>
+                        <th>Reason</th>
+                        <th>Revenue License</th>
+                        <th>From Date</th>
+                        <th>To Date</th>
                         <th class="text-center">Edit</th>
                         <th class="text-center">Remove</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(session('vehicle_permit_cart') as $index => $entry)
+                    @foreach(session('vehicle_permit_cart') as $index => $permit)
                         <tr>
-                            <td>{{ $entry['vehicle_type'] }}</td>
-                            <td>{{ $entry['vehicle_number'] }}</td>
-                            <td>{{ $entry['owner_name'] }}</td>
-                            <td>{{ $entry['from_date'] }} to {{ $entry['to_date'] }}</td>
-                            <td>{{ ucfirst($entry['issue_type']) }}</td>
-                            <td class="text-center"><a href="{{ route('permit.vehicle.editVehicleSessionEntry', $index) }}" class="user-action-btn edit"><i class="bi bi-pencil-square"></i> Edit</a></td>
-                            <td class="text-center">
+                            <td>{{ $permit['vehicle_type'] }}</td>
+                            <td>{{ $permit['vehicle_number'] }}</td>
+                            <td>{{ $permit['owner_name'] }}</td>
+                            <td>{{ $permit['owner_address'] }}</td>
+                            <td>{{ $permit['reason'] }}</td>
+                            <td>{{ $permit['revenue_license_number'] }}</td>
+                            <td>{{ \Carbon\Carbon::parse($permit['from_date'])->format('d M Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($permit['to_date'])->format('d M Y') }}</td>
+                            <td>
+                                <a href="{{ route('permit.vehicle.editVehicleSessionEntry', $index) }}" class="user-action-btn edit"><i class="bi bi-pencil-square"></i> Edit</a>
+                            </td>
+                            <td>
                                 <form method="POST" action="{{ route('permit.vehicle.removeVehicleSessionEntry', $index) }}" style="display:inline;" class="delete-cart-form">
                                     @csrf
                                     @method('DELETE')

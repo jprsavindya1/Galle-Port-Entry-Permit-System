@@ -11,6 +11,7 @@ use App\Models\VehiclePermit;
 use App\Models\Payment;
 use App\Models\PaymentSetting;
 use App\Models\Vehicle;
+use App\Helpers\IdGeneratorHelper;
 
 class PaymentController extends Controller
 {
@@ -244,19 +245,8 @@ foreach ($cart as $entry) {
             }
         }
 
-        $yearMonth = now()->format('Ym');
-        $prefix = 'INV-' . $yearMonth . '-';
-
-        // Get latest invoice
-        $latestInvoice = Payment::where('invoice_id', 'like', $prefix . '%')
-            ->orderBy('invoice_id', 'desc')
-            ->first();
-
-        $nextNumber = ($latestInvoice && preg_match('/-(\d+)$/', $latestInvoice->invoice_id, $matches))
-            ? intval($matches[1]) + 1
-            : 1;
-
-        $invoiceId = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        // Generate collision-free invoice ID
+        $invoiceId = IdGeneratorHelper::generateInvoiceId();
 
         // Total amount
       $amountTotal = $rateTotal + $sslTotal + $vatTotal;
@@ -353,18 +343,8 @@ foreach ($cart as $entry) {
             return redirect()->route('permit.temporary')->with('error', 'Session expired or invalid.');
         }
 
-        $yearMonth = now()->format('Ym');
-        $prefix = 'INV-' . $yearMonth . '-';
-
-        $latestInvoice = Payment::where('invoice_id', 'like', $prefix . '%')
-            ->orderBy('invoice_id', 'desc')
-            ->first();
-
-        $nextNumber = ($latestInvoice && preg_match('/-(\d+)$/', $latestInvoice->invoice_id, $matches))
-            ? intval($matches[1]) + 1
-            : 1;
-
-        $invoiceId = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        // Generate collision-free invoice ID
+        $invoiceId = IdGeneratorHelper::generateInvoiceId();
 
         Payment::create([
             'submission_id' => $submissionId,

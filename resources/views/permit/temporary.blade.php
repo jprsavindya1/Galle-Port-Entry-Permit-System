@@ -347,7 +347,7 @@
         </div>
         
         <div class="table-responsive">
-            <table class="table user-dashboard-table align-middle">
+                        <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>ID Type</th>
@@ -355,10 +355,9 @@
                         <th>From Date</th>
                         <th>To Date</th>
                         <th>Full Name</th>
-                        <th>Initials</th>
-                        <th>Pass Type</th>
-                        <th>Issue Type</th>
+                        <th>Address</th>
                         <th>Reason</th>
+                        <th>Contact</th>
                         <th class="text-center">Edit</th>
                         <th class="text-center">Remove</th>
                     </tr>
@@ -368,15 +367,16 @@
                         <tr>
                             <td>{{ $permit['id_type'] }}</td>
                             <td>{{ $permit['id_number'] }}</td>
-                            <td>{{ $permit['from_date'] }}</td>
-                            <td>{{ $permit['to_date'] }}</td>
+                            <td>{{ \Carbon\Carbon::parse($permit['from_date'])->format('d M Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($permit['to_date'])->format('d M Y') }}</td>
                             <td>{{ $permit['full_name'] }}</td>
-                            <td>{{ $permit['initials'] }}</td>
-                            <td><span class="user-role-badge">{{ $permit['pass_type'] }}</span></td>
-                            <td>{{ $permit['issue_type'] }}</td>
+                            <td>{{ $permit['residence_address'] ?? 'N/A' }}</td>
                             <td>{{ $permit['reason'] }}</td>
-                            <td class="text-center"><a href="{{ route('permit.editSessionEntry', $index) }}" class="user-action-btn edit"><i class="bi bi-pencil-square"></i> Edit</a></td>
-                            <td class="text-center">
+                            <td>{{ $permit['initials'] }}</td>
+                            <td>
+                                <a href="{{ route('permit.editSessionEntry', $index) }}" class="user-action-btn edit"><i class="bi bi-pencil-square"></i> Edit</a>
+                            </td>
+                            <td>
                                 <form method="POST" action="{{ route('permit.removeSessionEntry', $index) }}" style="display:inline;" class="delete-cart-form">
                                     @csrf
                                     @method('DELETE')

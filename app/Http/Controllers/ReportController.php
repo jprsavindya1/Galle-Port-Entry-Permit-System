@@ -34,7 +34,8 @@ class ReportController extends Controller
                     $tempQuery->where(function($q) use ($query) {
                         $q->where('id_number', 'like', "%$query%")
                           ->orWhere('full_name', 'like', "%$query%")
-                          ->orWhere('company_name', 'like', "%$query%");
+                          ->orWhere('company_name', 'like', "%$query%")
+                          ->orWhere('application_number', 'like', "%$query%");
                     });
                 }
                 $tempPermits = $tempQuery->get()->map(function($p) {
@@ -50,7 +51,8 @@ class ReportController extends Controller
                     $monthlyQuery->where(function($q) use ($query) {
                         $q->where('id_number', 'like', "%$query%")
                           ->orWhere('full_name', 'like', "%$query%")
-                          ->orWhere('company_name', 'like', "%$query%");
+                          ->orWhere('company_name', 'like', "%$query%")
+                          ->orWhere('application_number', 'like', "%$query%");
                     });
                 }
                 $monthlyPermits = $monthlyQuery->get()->map(function($p) {
@@ -66,7 +68,8 @@ class ReportController extends Controller
                     $vehicleQuery->where(function($q) use ($query) {
                         $q->where('owner_name', 'like', "%$query%")
                           ->orWhere('vehicle_number', 'like', "%$query%")
-                          ->orWhere('company_name', 'like', "%$query%");
+                          ->orWhere('company_name', 'like', "%$query%")
+                          ->orWhere('application_number', 'like', "%$query%");
                     });
                 }
                 $vehiclePermits = $vehicleQuery->get()->map(function($p) {
@@ -102,7 +105,8 @@ class ReportController extends Controller
                 $tempQuery->where(function($q) use ($query) {
                     $q->where('id_number', 'like', "%$query%")
                       ->orWhere('full_name', 'like', "%$query%")
-                      ->orWhere('company_name', 'like', "%$query%");
+                      ->orWhere('company_name', 'like', "%$query%")
+                      ->orWhere('application_number', 'like', "%$query%");
                 });
             }
             $tempPermits = $tempQuery->get()->map(function($p) {
@@ -118,7 +122,8 @@ class ReportController extends Controller
                 $monthlyQuery->where(function($q) use ($query) {
                     $q->where('id_number', 'like', "%$query%")
                       ->orWhere('full_name', 'like', "%$query%")
-                      ->orWhere('company_name', 'like', "%$query%");
+                      ->orWhere('company_name', 'like', "%$query%")
+                      ->orWhere('application_number', 'like', "%$query%");
                 });
             }
             $monthlyPermits = $monthlyQuery->get()->map(function($p) {
@@ -134,7 +139,8 @@ class ReportController extends Controller
                 $vehicleQuery->where(function($q) use ($query) {
                     $q->where('owner_name', 'like', "%$query%")
                       ->orWhere('vehicle_number', 'like', "%$query%")
-                      ->orWhere('company_name', 'like', "%$query%");
+                      ->orWhere('company_name', 'like', "%$query%")
+                      ->orWhere('application_number', 'like', "%$query%");
                 });
             }
             $vehiclePermits = $vehicleQuery->get()->map(function($p) {
@@ -170,7 +176,8 @@ class ReportController extends Controller
                 $tempQuery->where(function($q) use ($query) {
                     $q->where('id_number', 'like', "%$query%")
                       ->orWhere('full_name', 'like', "%$query%")
-                      ->orWhere('company_name', 'like', "%$query%");
+                      ->orWhere('company_name', 'like', "%$query%")
+                      ->orWhere('application_number', 'like', "%$query%");
                 });
             }
             $tempPermits = $tempQuery->get()->map(function($p) {
@@ -186,7 +193,8 @@ class ReportController extends Controller
                 $monthlyQuery->where(function($q) use ($query) {
                     $q->where('id_number', 'like', "%$query%")
                       ->orWhere('full_name', 'like', "%$query%")
-                      ->orWhere('company_name', 'like', "%$query%");
+                      ->orWhere('company_name', 'like', "%$query%")
+                      ->orWhere('application_number', 'like', "%$query%");
                 });
             }
             $monthlyPermits = $monthlyQuery->get()->map(function($p) {
@@ -202,7 +210,8 @@ class ReportController extends Controller
                 $vehicleQuery->where(function($q) use ($query) {
                     $q->where('owner_name', 'like', "%$query%")
                       ->orWhere('vehicle_number', 'like', "%$query%")
-                      ->orWhere('company_name', 'like', "%$query%");
+                      ->orWhere('company_name', 'like', "%$query%")
+                      ->orWhere('application_number', 'like', "%$query%");
                 });
             }
             $vehiclePermits = $vehicleQuery->get()->map(function($p) {

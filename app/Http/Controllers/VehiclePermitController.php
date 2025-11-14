@@ -12,6 +12,7 @@ use App\Models\Designation;
 use App\Models\Reason;
 use App\Models\Payment;
 use App\Models\PaymentSetting;
+use App\Helpers\IdGeneratorHelper;
 class VehiclePermitController extends PermitController
 {
    ////////////////////////////////////vehicle////////////////////////////
@@ -96,6 +97,8 @@ public function addVehicleToSession(Request $request)
     if (isset($validated['pass_type']) && is_array($validated['pass_type'])) {
         $validated['pass_type'] = implode(',', $validated['pass_type']);
     }
+
+    // Application number will be generated on submission (no gaps for abandoned carts)
 
     $cart[] = $validated;
     session(['vehicle_permit_cart' => $cart]);
@@ -384,40 +387,18 @@ public function submitAllVehicle(Request $request)
         return redirect()->route('permit.vehicle')->with('error', 'No vehicle permits to submit.');
     }
 
-    $datePrefix = now()->format('Ymd');
-    $type = 'VP';
+    // Generate unique submission ID using collision-free helper
+    $submissionId = IdGeneratorHelper::generateSubmissionId();
 
- // Generate submission_id
-
-    $latestPermit = VehiclePermit::where('submission_id', 'like', $datePrefix . $type . '%')
-        ->orderBy('submission_id', 'desc')
-        ->first();
-
-    $latestPayment = Payment::where('submission_id', 'like', $datePrefix . $type . '%')
-        ->orderBy('submission_id', 'desc')
-        ->first();
-
-// Determine the highest counter used
-    $lastCounter = 0;
-    if ($latestPermit) {
-        $lastCounter = (int) substr($latestPermit->submission_id, -4);
-    }
-    if ($latestPayment) {
-        $paymentCounter = (int) substr($latestPayment->submission_id, -4);
-        if ($paymentCounter > $lastCounter) {
-            $lastCounter = $paymentCounter;
-        }
-    }
-
-    $nextNumber = $lastCounter + 1;
-    $submissionId = $datePrefix . $type . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-
-    // Add submission ID and permit type to each entry
-
+    // Generate application numbers for all permits in batch (collision-free)
+    $applicationNumbers = IdGeneratorHelper::generateMultipleApplicationNumbers(count($cart));
+    
+    // Add submission ID, application number, and permit type to each entry
     foreach ($cart as $index => $entry) {
         $entry['submission_id'] = $submissionId;
-        $entry['type'] = $type;
-        $entry['permit_id'] = $this->generatePermitId($type); // ✅ New yearly-reset permit ID
+        $entry['application_number'] = $applicationNumbers[$index];
+        $entry['type'] = 'VP';
+        $entry['permit_id'] = $this->generatePermitId('VP'); // ✅ New yearly-reset permit ID
         $cart[$index] = $entry;
     }
 

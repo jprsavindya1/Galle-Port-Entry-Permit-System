@@ -133,8 +133,8 @@
     <!-- Filters -->
     <form method="GET" action="{{ route('reports.user') }}" class="row g-2 mb-3 align-items-end">
         <div class="col-md-5">
-            <label class="form-label visually-hidden" for="query-input">Search NIC / Name / Company / Vehicle No</label>
-            <input id="query-input" type="text" name="query" class="form-control" placeholder="Enter NIC / Name / Company / Vehicle No" value="{{ request('query') }}">
+            <label class="form-label visually-hidden" for="query-input">Search NIC / Name / Company / Vehicle No / App No</label>
+            <input id="query-input" type="text" name="query" class="form-control" placeholder="Enter NIC / Name / Company / Vehicle No / App No" value="{{ request('query') }}">
         </div>
         <div class="col-md-3">
             <label class="form-label visually-hidden" for="type-select">Permit Type</label>
@@ -193,6 +193,7 @@
                     <table class="table table-bordered table-striped align-middle">
                         <thead>
                             <tr>
+                                <th>Application No.</th>
                                 <th>Permit ID</th>
                                 @if($type === 'VP')
                                     <th>Owner Name</th>
@@ -215,6 +216,7 @@
                         <tbody>
                             @foreach($permitsByType as $permit)
                                 <tr>
+                                    <td><strong>{{ $permit->application_number ?? 'N/A' }}</strong></td>
                                     <td>{{ $permit->permit_id }}</td>
                                     @if($type === 'VP')
                                         <td>{{ $permit->owner_name }}</td>

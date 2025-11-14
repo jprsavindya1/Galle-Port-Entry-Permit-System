@@ -11,6 +11,7 @@ class VehiclePermit extends Model
 
     protected $fillable = [
         'permit_id',
+        'application_number',
         'vehicle_number',
         'vehicle_type',
         'from_date',

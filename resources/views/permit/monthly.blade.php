@@ -343,17 +343,17 @@
         </div>
         
         <div class="table-responsive">
-            <table class="table user-dashboard-table align-middle">
+                        <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>ID Type</th>
                         <th>ID Number</th>
-                        <th>From Date</th>
-                        <th>To Date</th>
                         <th>Full Name</th>
                         <th>Initials</th>
                         <th>Pass Type</th>
                         <th>Issue Type</th>
+                        <th>From Date</th>
+                        <th>To Date</th>
                         <th>Reason</th>
                         <th class="text-center">Edit</th>
                         <th class="text-center">Remove</th>
@@ -364,15 +364,17 @@
                         <tr>
                             <td>{{ $permit['id_type'] }}</td>
                             <td>{{ $permit['id_number'] }}</td>
-                            <td>{{ $permit['from_date'] }}</td>
-                            <td>{{ $permit['to_date'] }}</td>
                             <td>{{ $permit['full_name'] }}</td>
                             <td>{{ $permit['initials'] }}</td>
                             <td>{{ $permit['pass_type'] }}</td>
-                            <td>{{ $permit['issue_type'] }}</td>
+                            <td>{{ ucfirst($permit['issue_type']) }}</td>
+                            <td>{{ \Carbon\Carbon::parse($permit['from_date'])->format('d M Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($permit['to_date'])->format('d M Y') }}</td>
                             <td>{{ $permit['reason'] }}</td>
-                            <td class="text-center"><a href="{{ route('permit.monthly.editMonthlySessionEntry', $index) }}" class="user-action-btn edit"><i class="bi bi-pencil-square"></i> Edit</a></td>
-                            <td class="text-center">
+                            <td>
+                                <a href="{{ route('permit.monthly.editMonthlySessionEntry', $index) }}" class="user-action-btn edit"><i class="bi bi-pencil-square"></i> Edit</a>
+                            </td>
+                            <td>
                                 <form method="POST" action="{{ route('permit.monthly.removeMonthlySessionEntry', $index) }}" style="display:inline;" class="delete-cart-form">
                                     @csrf
                                     @method('DELETE')

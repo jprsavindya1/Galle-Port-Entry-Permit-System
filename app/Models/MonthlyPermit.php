@@ -11,6 +11,7 @@ class MonthlyPermit extends Model
 
     protected $fillable = [
         'permit_id',
+        'application_number',
         'id_type',
         'id_number',
         'from_date',
