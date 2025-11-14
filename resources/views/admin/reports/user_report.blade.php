@@ -100,15 +100,27 @@
     }
     
     /* Specific column width controls */
-    main .table tbody td:nth-child(1) { max-width: 90px; } /* Permit ID */
-    main .table tbody td:nth-child(4) { max-width: 120px; } /* Company */
-    main .table tbody td:nth-child(5), 
-    main .table tbody td:nth-child(6) { max-width: 85px; } /* Dates */
-    main .table tbody td:nth-child(8) { max-width: 100px; } /* Reason */
-    main .table tbody td:nth-child(9) { max-width: 65px; white-space: nowrap; } /* Docs */
-    main .table tbody td:nth-child(10) { max-width: 75px; } /* Status */
-    main .table tbody td:nth-child(11),
-    main .table tbody td:nth-child(12) { max-width: 110px; } /* Submission/Invoice ID */
+    main .table tbody td:nth-child(1) { max-width: 90px; } /* Application No */
+    main .table tbody td:nth-child(2) { max-width: 90px; } /* Permit ID */
+    main .table tbody td:nth-child(5) { max-width: 120px; } /* Company */
+    main .table tbody td:nth-child(6), 
+    main .table tbody td:nth-child(7) { max-width: 85px; } /* Dates */
+    main .table tbody td:nth-child(8) { max-width: 80px; } /* Issue Type */
+    main .table tbody td:nth-child(9) { 
+        max-width: 120px; 
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    } /* Reason */
+    main .table tbody td:nth-child(10) { 
+        max-width: 50px; 
+        text-align: center;
+        padding-left: 0.2rem;
+        padding-right: 0.2rem;
+    } /* Docs */
+    main .table tbody td:nth-child(11) { max-width: 85px; } /* Status */
+    main .table tbody td:nth-child(12),
+    main .table tbody td:nth-child(13) { max-width: 110px; } /* Submission/Invoice ID */
 
     /* Ensure table-responsive container handles overflow gracefully */
     main .table-responsive {
@@ -229,7 +241,9 @@
                                     <td>{{ $permit->from_date }}</td>
                                     <td>{{ $permit->to_date }}</td>
                                     <td>{{ ucfirst($permit->issue_type) }}</td>
-                                    <td title="{{ $permit->reason }}">{{ Str::limit($permit->reason, 15) }}</td>
+                                    <td title="{{ $permit->reason }}" style="cursor: help;">
+                                        {{ Str::limit($permit->reason, 20) }}
+                                    </td>
                                     <td>
                                         @php
                                             $submittedDocs = [];
