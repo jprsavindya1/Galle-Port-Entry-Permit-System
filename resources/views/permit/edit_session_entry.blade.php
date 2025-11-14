@@ -103,6 +103,13 @@
         height: 100%;
         top: 1px;
     }
+    /* Hide dropdown arrow for disabled select elements */
+    select:disabled {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: none !important;
+    }
 </style>
 
 <div class="container py-4">
