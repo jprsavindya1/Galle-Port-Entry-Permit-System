@@ -199,14 +199,13 @@ foreach ($cart as $entry) {
 
 
         // Calculate totals
-        $entryCount = 0;
+        $entryCount = count($cart); // Count all entries (both free and payment)
         $rateTotal = 0;
         $sslTotal = 0;
         $vatTotal = 0;
 
         foreach ($cart as $entry) {
             if ($entry['issue_type'] !== 'free') {
-                $entryCount++;
                 $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays($entry['to_date']) + 1;
 
                if ($permitType === 'VP') {

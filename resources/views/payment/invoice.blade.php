@@ -300,7 +300,7 @@
                     
                     // If all free
                     if ($hasFree && !$hasPayment) {
-                        $statusBadge = '<span class="badge-free"><i class="bi bi-gift-fill me-1"></i>Free</span>';
+                        $statusBadge = '<span class="badge-free"><i class="bi bi-check-circle-fill me-1"></i>Free</span>';
                     } 
                     // If all payment or mixed
                     else {
