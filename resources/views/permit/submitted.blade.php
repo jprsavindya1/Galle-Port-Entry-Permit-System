@@ -348,13 +348,53 @@
 </div>
         @if($permits->count())
             @php 
+                // Group by submission_id first
                 $grouped = $permits->groupBy('submission_id');
+                
+                // Then organize by permit type
+                $groupedByType = [
+                    'TP' => [],
+                    'MP' => [],
+                    'VP' => []
+                ];
+                
+                foreach($grouped as $submissionId => $group) {
+                    $type = $group->first()->type;
+                    if(isset($groupedByType[$type])) {
+                        $groupedByType[$type][$submissionId] = $group;
+                    }
+                }
+                
                 // Pre-load all users to avoid N+1 queries
                 $userIds = $permits->pluck('printed_by')->filter()->unique();
                 $users = \App\Models\User::whereIn('id', $userIds)->pluck('name', 'id');
+                
+                // Define type labels
+                $typeLabels = [
+                    'TP' => 'Temporary Permits',
+                    'MP' => 'Monthly Permits',
+                    'VP' => 'Vehicle Permits'
+                ];
             @endphp
 
-            @foreach($grouped as $submissionId => $group)
+            @foreach($groupedByType as $permitType => $submissions)
+                @if(count($submissions) > 0)
+                    <!-- Section Header for Permit Type -->
+                    <div class="permit-dashboard-card mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0" style="font-size: 1.75rem; font-weight: 700; color: #1e3a8a; text-transform: uppercase; letter-spacing: 1.5px;">
+                                {{ $typeLabels[$permitType] }}
+                            </h3>
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="color: #1976d2; font-weight: 600; font-size: 1rem;">Total Submissions:</span>
+                                <span class="badge" style="background: linear-gradient(135deg, #1e3a8a 0%, #1976d2 100%); font-size: 1.1rem; padding: 0.5rem 1rem; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);">
+                                    {{ count($submissions) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @foreach($submissions as $submissionId => $group)
                 <div class="card mb-4 permit-submission-table">
                     <div class="card-header card-header-submission">
                         <strong>Submission ID:</strong> {{ $submissionId }}
@@ -558,6 +598,8 @@
                     </div>
                 </div>
             @endforeach
+        @endif
+    @endforeach
 
             <div class="d-flex justify-content-center">
                 {{ $permits->withQueryString()->links() }}

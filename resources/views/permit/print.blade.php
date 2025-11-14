@@ -83,18 +83,25 @@
             background-color: #2563eb;
         }
         #btnBackInvoice {
-            background-color: #8b5cf6;
+            background-color: #0ea5e9;
             color: white;
         }
         #btnBackInvoice:hover {
-            background-color: #7c3aed;
+            background-color: #0284c7;
         }
         #btnBack {
-            background-color: #6b7280;
+            background-color: #06b6d4;
             color: white;
         }
         #btnBack:hover {
-            background-color: #4b5563;
+            background-color: #0891b2;
+        }
+        #btnHome {
+            background-color: #1e40af;
+            color: white;
+        }
+        #btnHome:hover {
+            background-color: #1e3a8a;
         }
     </style>
 </head>
@@ -179,15 +186,18 @@
 <!-- Print Controls -->
 <div id="printControls">
     <button id="btnPrintAgain">Print Again</button>
-    <button id="btnBackInvoice">Back to Invoice Page</button>
+    <button id="btnBackInvoice">Back to Invoice</button>
 
     @if($payment->permit_type === 'TP')
-        <button id="btnBack">Back to Temporary Permit Form</button>
+        <button id="btnBack">Back to Temporary Permit</button>
     @elseif($payment->permit_type === 'MP')
-        <button id="btnBack">Back to Monthly Permit Form</button>
+        <button id="btnBack">Back to Monthly Permit</button>
+    @elseif($payment->permit_type === 'VP')
+        <button id="btnBack">Back to Vehicle Permit</button>
     @else
         <button id="btnBack">Back</button>
     @endif
+    <button id="btnHome">Home</button>
 </div>
 
 <script>
@@ -209,6 +219,10 @@
 
     document.getElementById('btnBackInvoice').addEventListener('click', function() {
         window.location.href = "{{ route('payment.invoice', ['submission_id' => $submission_id]) }}";
+    });
+
+    document.getElementById('btnHome').addEventListener('click', function() {
+        window.location.href = "{{ route('dashboard') }}";
     });
 </script>
 </body>
