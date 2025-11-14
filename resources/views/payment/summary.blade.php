@@ -133,7 +133,7 @@
         @endphp
 
         {{-- ================= TEMPORARY & MONTHLY PERMITS (TP/MP) ================= --}}
-        @if ($firstType !== 'VP')
+        @if ($firstType !== 'VH')
             <div class="table-responsive">
                 <table class="table user-dashboard-table align-middle">
                     <thead>
@@ -212,8 +212,8 @@
             </div>
         @endif
 
-        {{-- ================= VEHICLE PERMITS (VP) ================= --}}
-        @if ($firstType === 'VP')
+        {{-- ================= VEHICLE PERMITS (VH) ================= --}}
+        @if ($firstType === 'VH')
             <div class="table-responsive">
                 <table class="table user-dashboard-table align-middle">
                     <thead>
@@ -305,7 +305,7 @@
                 switch($firstType ?? 'TP') {
                     case 'TP': $backRoute = route('permit.temporary'); break;
                     case 'MP': $backRoute = route('permit.monthly'); break;
-                    case 'VP': $backRoute = route('permit.vehicle'); break;
+                    case 'VH': $backRoute = route('permit.vehicle'); break;
                     default: $backRoute = url()->previous();
                 }
             @endphp

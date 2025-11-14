@@ -36,7 +36,7 @@ class PaymentController extends Controller
         foreach ($cart as $item) {
             $days = \Carbon\Carbon::parse($item['from_date'])->diffInDays($item['to_date']) + 1;
 
-            if ($item['type'] === 'VP') {
+            if ($item['type'] === 'VH') {
                 // Vehicle permit: rate comes from vehicles table
                 $vehicle = Vehicle::where('name', $item['vehicle_type'])->first();
                 $vehicleRate = $vehicle ? $vehicle->rate : 0;
@@ -141,7 +141,7 @@ foreach ($cart as $entry) {
     // ===== Calculate per-permit totals =====
     $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays(\Carbon\Carbon::parse($entry['to_date'])) + 1;
 
-    if ($entry['type'] === 'VP') {
+    if ($entry['type'] === 'VH') {
         $vehicle = Vehicle::where('name', $entry['vehicle_type'])->first();
         $rate = ($vehicle ? $vehicle->rate : 0) * $days;
     } else {
@@ -188,7 +188,7 @@ foreach ($cart as $entry) {
         case 'MP':
             MonthlyPermit::create($entry);
             break;
-        case 'VP':
+        case 'VH':
             VehiclePermit::create($entry);
             break;
     }
@@ -208,7 +208,7 @@ foreach ($cart as $entry) {
             if ($entry['issue_type'] !== 'free') {
                 $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays($entry['to_date']) + 1;
 
-               if ($permitType === 'VP') {
+               if ($permitType === 'VH') {
                     // Vehicle rate
                     $vehicle = Vehicle::where('name', $entry['vehicle_type'])->first();
                     $baseRate = ($vehicle ? $vehicle->rate : 0) * $days;
@@ -301,7 +301,7 @@ foreach ($cart as $entry) {
                     ->orderBy('permit_id', 'desc')
                     ->first();
                 break;
-            case 'VP':
+            case 'VH':
                 $latestNew = VehiclePermit::where('permit_id', 'like', $prefix . $yearMonth . '%')
                     ->orderBy('permit_id', 'desc')
                     ->first();
@@ -381,7 +381,7 @@ foreach ($cart as $entry) {
             $permit->type = 'MP';
         });
         $vehiclePermits->each(function($permit) {
-            $permit->type = 'VP';
+            $permit->type = 'VH';
         });
         
         // Merge all permits into one collection

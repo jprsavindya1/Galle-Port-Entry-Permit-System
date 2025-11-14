@@ -22,7 +22,7 @@
         @endphp
 
         <p><strong>ID Number:</strong> {{ $uniqueUsers === 1 ? $firstPermit->id_number : 'Multiple Users' }}</p>
-        <p><strong>Full Name / Owner:</strong> {{ $uniqueUsers === 1 ? ($firstPermit->type === 'VP' ? $firstPermit->owner_name : $firstPermit->full_name) : 'Multiple Users' }}</p>
+        <p><strong>Full Name / Owner:</strong> {{ $uniqueUsers === 1 ? ($firstPermit->type === 'VH' ? $firstPermit->owner_name : $firstPermit->full_name) : 'Multiple Users' }}</p>
     @elseif($query)
         <p><strong>Search Query:</strong> {{ $query }}</p>
     @endif
@@ -40,7 +40,7 @@
                 <thead>
                     <tr>
                         <th>Permit ID</th>
-                        @if($type === 'VP')
+                        @if($type === 'VH')
                             <th>Owner Name</th>
                             <th>Vehicle Number</th>
                         @else
@@ -61,7 +61,7 @@
                     @foreach($permitsByType as $permit)
                         <tr>
                             <td>{{ $permit->permit_id }}</td>
-                            @if($type === 'VP')
+                            @if($type === 'VH')
                                 <td>{{ $permit->owner_name }}</td>
                                 <td>{{ $permit->vehicle_number }}</td>
                             @else

@@ -81,7 +81,7 @@ class IdGeneratorHelper
      * Generate unique permit ID with database lock to prevent collisions
      * Format: TYPE + YY + MM + count (e.g., TP2511001)
      * 
-     * @param string $type TP, MP, or VP
+     * @param string $type TP, MP, or VH
      * @return string
      */
     public static function generatePermitId(string $type): string
@@ -98,7 +98,7 @@ class IdGeneratorHelper
             case 'MP':
                 $model = MonthlyPermit::class;
                 break;
-            case 'VP':
+            case 'VH':
                 $model = VehiclePermit::class;
                 break;
             default:

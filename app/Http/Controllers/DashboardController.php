@@ -26,7 +26,7 @@ class DashboardController extends Controller
     $dailyPermits = [
         'TP' => TemporaryPermit::whereDate('created_at', $today)->count(),
         'MP' => MonthlyPermit::whereDate('created_at', $today)->count(),
-        'VP' => VehiclePermit::whereDate('created_at', $today)->count(),
+        'VH' => VehiclePermit::whereDate('created_at', $today)->count(),
     ];
 
     $dailyPermitsAll = array_sum($dailyPermits);
@@ -35,7 +35,7 @@ class DashboardController extends Controller
     $totalPermits = [
         'TP' => TemporaryPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
         'MP' => MonthlyPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
-        'VP' => VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
+        'VH' => VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
     ];
 
     $totalPermitsAll = array_sum($totalPermits);
@@ -99,7 +99,7 @@ class DashboardController extends Controller
         'dailyRevenue' => $dailyRevenue,
         'companies' => $companies,
         'permitCounts' => $permitCounts,
-        'permitTypes' => ['TP', 'MP', 'VP'],
+        'permitTypes' => ['TP', 'MP', 'VH'],
         'permitRevenue' => $permitRevenue,
         'months' => $months,
         'selectedMonth' => (int)$month
@@ -122,7 +122,7 @@ class DashboardController extends Controller
     $totalPermits = [
         'TP' => TemporaryPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
         'MP' => MonthlyPermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
-        'VP' => VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
+        'VH' => VehiclePermit::whereYear('created_at', $year)->whereMonth('created_at', $month)->count(),
     ];
 
     // Permits by Company (combining all three tables)
@@ -172,7 +172,7 @@ class DashboardController extends Controller
     $dailyPermits = [
         'TP' => TemporaryPermit::whereDate('created_at', Carbon::today())->count(),
         'MP' => MonthlyPermit::whereDate('created_at', Carbon::today())->count(),
-        'VP' => VehiclePermit::whereDate('created_at', Carbon::today())->count(),
+        'VH' => VehiclePermit::whereDate('created_at', Carbon::today())->count(),
     ];
 
     return response()->json([

@@ -114,11 +114,11 @@
     <div class="col-md-4 mb-2">
         <div class="summary-card h-100">
             <h5>Daily Permits ({{ now()->format('Y-m-d') }})</h5>
-            <h3>{{ ($dailyPermits['TP'] ?? 0) + ($dailyPermits['MP'] ?? 0) + ($dailyPermits['VP'] ?? 0) }}</h3>
+            <h3>{{ ($dailyPermits['TP'] ?? 0) + ($dailyPermits['MP'] ?? 0) + ($dailyPermits['VH'] ?? 0) }}</h3>
             <div class="summary-breakdown">
                 <div>TP<br>{{ $dailyPermits['TP'] ?? 0 }}</div>
                 <div>MP<br>{{ $dailyPermits['MP'] ?? 0 }}</div>
-                <div>VP<br>{{ $dailyPermits['VP'] ?? 0 }}</div>
+                <div>VH<br>{{ $dailyPermits['VH'] ?? 0 }}</div>
             </div>
         </div>
     </div>
@@ -286,7 +286,7 @@
     // Initial Data from Controller
     const companies = @json($companies ?? []);
     const permitCounts = @json($permitCounts ?? []);
-    const permitTypes = ['TP','MP','VP'];
+    const permitTypes = ['TP','MP','VH'];
     const permitRevenue = @json($permitRevenue ?? [0,0,0]);
 
     let companyChart, permitChart;
@@ -373,10 +373,10 @@
         const breakdown = $('.summary-breakdown div');
         breakdown.eq(0).html('TP<br>' + res.dailyPermits.TP);
         breakdown.eq(1).html('MP<br>' + res.dailyPermits.MP);
-        breakdown.eq(2).html('VP<br>' + res.dailyPermits.VP);
+        breakdown.eq(2).html('VH<br>' + res.dailyPermits.VH);
 
         // Update Charts
-        renderCharts(res.companies, res.permitCounts, ['TP','MP','VP'], res.permitRevenue);
+        renderCharts(res.companies, res.permitCounts, ['TP','MP','VH'], res.permitRevenue);
     });
 });
 

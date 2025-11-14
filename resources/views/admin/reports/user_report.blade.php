@@ -142,7 +142,7 @@
                 <option value="">All Types</option>
                 <option value="TP" {{ request('type')=='TP'?'selected':'' }}>TP</option>
                 <option value="MP" {{ request('type')=='MP'?'selected':'' }}>MP</option>
-                <option value="VP" {{ request('type')=='VP'?'selected':'' }}>VP</option>
+                <option value="VH" {{ request('type')=='VH'?'selected':'' }}>VH</option>
             </select>
         </div>
         <div class="col-md-2">
@@ -195,7 +195,7 @@
                             <tr>
                                 <th>Application No.</th>
                                 <th>Permit ID</th>
-                                @if($type === 'VP')
+                                @if($type === 'VH')
                                     <th>Owner Name</th>
                                     <th>Vehicle Number</th>
                                 @else
@@ -218,7 +218,7 @@
                                 <tr>
                                     <td><strong>{{ $permit->application_number ?? 'N/A' }}</strong></td>
                                     <td>{{ $permit->permit_id }}</td>
-                                    @if($type === 'VP')
+                                    @if($type === 'VH')
                                         <td>{{ $permit->owner_name }}</td>
                                         <td>{{ $permit->vehicle_number }}</td>
                                     @else
@@ -242,7 +242,7 @@
                                             } elseif ($type === 'MP') {
                                                 if ($permit->doc_nic) { $submittedDocs[] = 'NIC'; $hasAnyDoc = true; }
                                                 if ($permit->doc_police_report) { $submittedDocs[] = 'Police Report'; $hasAnyDoc = true; }
-                                            } elseif ($type === 'VP') {
+                                            } elseif ($type === 'VH') {
                                                 if ($permit->doc_revenue_licence) { $submittedDocs[] = 'Revenue Licence'; $hasAnyDoc = true; }
                                                 if ($permit->doc_insurance) { $submittedDocs[] = 'Insurance'; $hasAnyDoc = true; }
                                             }

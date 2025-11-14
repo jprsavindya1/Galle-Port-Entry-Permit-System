@@ -124,7 +124,7 @@ public function paymentVehicleSummary()
     $vatRate = $settings->vat ?? 18;    // VAT % (e.g., 18)
 
     foreach ($cart as $item) {
-        $item['type'] = 'VP';
+        $item['type'] = 'VH';
 
         $vehicle = Vehicle::find($item['vehicle_type']);
         if (!$vehicle) continue;
@@ -397,8 +397,8 @@ public function submitAllVehicle(Request $request)
     foreach ($cart as $index => $entry) {
         $entry['submission_id'] = $submissionId;
         $entry['application_number'] = $applicationNumbers[$index];
-        $entry['type'] = 'VP';
-        $entry['permit_id'] = $this->generatePermitId('VP'); // ✅ New yearly-reset permit ID
+        $entry['type'] = 'VH';
+        $entry['permit_id'] = $this->generatePermitId('VH'); // ✅ New yearly-reset permit ID
         $cart[$index] = $entry;
     }
 

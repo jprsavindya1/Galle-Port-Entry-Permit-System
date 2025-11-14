@@ -399,8 +399,8 @@
             payload.company_name = companyName;
         }
 
-        if (permitType === 'VP') {
-            // This part is preserved from the original JS, assuming the VP form has this input
+        if (permitType === 'VH') {
+            // This part is preserved from the original JS, assuming the VH form has this input
             const vehicleNumberInput = document.querySelector('input[name="vehicle_number"]');
             if (vehicleNumberInput) {
                 payload.vehicle_number = vehicleNumberInput.value;

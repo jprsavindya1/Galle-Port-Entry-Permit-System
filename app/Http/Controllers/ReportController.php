@@ -62,7 +62,7 @@ class ReportController extends Controller
                 });
             }
 
-            if (!$type || $type === 'VP') {
+            if (!$type || $type === 'VH') {
                 $vehicleQuery = VehiclePermit::withTrashed()->with('payment');
                 if ($query) {
                     $vehicleQuery->where(function($q) use ($query) {
@@ -73,7 +73,7 @@ class ReportController extends Controller
                     });
                 }
                 $vehiclePermits = $vehicleQuery->get()->map(function($p) {
-                    $p->type = 'VP';
+                    $p->type = 'VH';
                     $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
                     return $p;
                 });
@@ -204,7 +204,7 @@ class ReportController extends Controller
             });
         }
 
-        if (!$type || $type === 'VP') {
+        if (!$type || $type === 'VH') {
             $vehicleQuery = VehiclePermit::withTrashed()->with('payment');
             if ($query) {
                 $vehicleQuery->where(function($q) use ($query) {
@@ -215,7 +215,7 @@ class ReportController extends Controller
                 });
             }
             $vehiclePermits = $vehicleQuery->get()->map(function($p) {
-                $p->type = 'VP';
+                $p->type = 'VH';
                 $p->status = $p->trashed() || $p->status === 'cancelled' ? 'Cancelled' : 'Active';
                 return $p;
             });
@@ -242,7 +242,7 @@ class ReportController extends Controller
             ]);
 
             foreach ($permits as $permit) {
-                if ($permit->type === 'VP') {
+                if ($permit->type === 'VH') {
                     fputcsv($file, [
                         $permit->permit_id,
                         $permit->type,

@@ -442,7 +442,7 @@
                         <tr>
                             <th>Application No.</th>
                             <th>Permit ID</th>
-                            @if($payment->permit_type === 'VP')
+                            @if($payment->permit_type === 'VH')
                                 <th style="min-width: 150px;">Owner Name</th>
                                 <th style="min-width: 100px;">Vehicle Number</th>
                                 <th style="min-width: 120px;">Revenue License</th>
@@ -454,7 +454,7 @@
                             <th style="min-width: 150px;">Company</th>
                             <th>From</th>
                             <th>To</th>
-                            @if($payment->permit_type !== 'VP')
+                            @if($payment->permit_type !== 'VH')
                                 <th>Pass Type</th>
                             @endif
                             <th style="min-width: 130px;">Print Status</th>
@@ -470,7 +470,7 @@
                         <tr>
                             <td><strong>{{ $permit->application_number ?? 'N/A' }}</strong></td>
                             <td>{{ $permit->permit_id }}</td>
-                            @if($payment->permit_type === 'VP')
+                            @if($payment->permit_type === 'VH')
                                 <td style="text-align: left;">{{ $permit->owner_name ?? '-' }}</td>
                                 <td>{{ $permit->vehicle_number ?? '-' }}</td>
                                 <td>{{ $permit->revenue_license_number ?? '-' }}</td>
@@ -482,7 +482,7 @@
                             <td style="text-align: left;">{{ $permit->company_name ?? '-' }}</td>
                             <td>{{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</td>
                             <td>{{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}</td>
-                            @if($payment->permit_type !== 'VP')
+                            @if($payment->permit_type !== 'VH')
                                 <td>{{ ucfirst($permit->pass_type ?? '-') }}</td>
                             @endif
                             <td>
@@ -542,7 +542,7 @@
                 <a href="{{ route('permit.temporary') }}" class="btn btn-secondary btn-custom"><i class="bi bi-arrow-left-circle"></i> Back to Temporary Permit</a>
             @elseif($payment->permit_type === 'MP')
                 <a href="{{ route('permit.monthly') }}" class="btn btn-secondary btn-custom"><i class="bi bi-arrow-left-circle"></i> Back to Monthly Permit</a>
-            @elseif($payment->permit_type === 'VP')
+            @elseif($payment->permit_type === 'VH')
                 <a href="{{ route('permit.vehicle') }}" class="btn btn-secondary btn-custom"><i class="bi bi-arrow-left-circle"></i> Back to Vehicle Permit</a>
             @else
                 <a href="{{ url()->previous() }}" class="btn btn-secondary btn-custom"><i class="bi bi-arrow-left-circle"></i> Back</a>

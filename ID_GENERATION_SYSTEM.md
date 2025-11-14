@@ -23,10 +23,10 @@ This system implements **collision-free ID generation** for a multi-user environ
 
 ### 3. **Permit ID**
 - **Format:** `TYPE + YY + MM + ####`
-- **Example:** `TP251101`, `MP251102`, `VP251103`
+- **Example:** `TP251101`, `MP251102`, `VH251103`
 - **Purpose:** Unique permit identifier (visible on permit)
 - **Resets:** Monthly (based on year + month)
-- **Types:** TP (Temporary), MP (Monthly), VP (Vehicle)
+- **Types:** TP (Temporary), MP (Monthly), VH (Vehicle)
 - **Length:** 10 characters (2 type + 2 year + 2 month + 4 counter)
 
 ### 4. **Invoice ID**
@@ -92,7 +92,7 @@ Location: `app/Helpers/IdGeneratorHelper.php`
    - Checks specific permit table based on type
    - Finds highest counter for current year+month
    - Increments atomically
-   - Returns: `TP251101####` or `MP251101####` or `VP251101####`
+   - Returns: `TP251101####` or `MP251101####` or `VH251101####`
 
 4. **`generateInvoiceId()`**
    - Checks payment table
@@ -118,7 +118,7 @@ $submissionId = IdGeneratorHelper::generateSubmissionId();
 
 // Generate individual permit IDs for each entry
 foreach ($cart as $entry) {
-    $entry['permit_id'] = $this->generatePermitId('TP'); // or 'MP' or 'VP'
+    $entry['permit_id'] = $this->generatePermitId('TP'); // or 'MP' or 'VH'
     $entry['submission_id'] = $submissionId;
 }
 ```

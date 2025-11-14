@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('invoice_id')->nullable();
 
             // Core permit info
-            $table->string('type'); // TP, MP, VP
+            $table->string('type'); // TP, MP, VH
             $table->string('id_type')->nullable();
             $table->string('id_number')->nullable();
             $table->string('full_name')->nullable();

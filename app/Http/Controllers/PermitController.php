@@ -103,7 +103,7 @@ class PermitController extends Controller
     
     // Vehicle permits - adjust columns to match
     $vehicleQuery = VehiclePermit::select([
-        \DB::raw("'VP' as type"),
+        \DB::raw("'VH' as type"),
         'vehicle_permits.id',
         'vehicle_permits.permit_id',
         'vehicle_permits.application_number',
@@ -389,7 +389,7 @@ public function cancel(Request $request, $permitType, $permitId)
             break;
         case 'vehicle':
             $permit = VehiclePermit::findOrFail($permitId);
-            $type = 'VP';
+            $type = 'VH';
             break;
         default:
             abort(404, 'Invalid permit type');

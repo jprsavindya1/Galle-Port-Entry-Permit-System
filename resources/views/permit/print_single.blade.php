@@ -88,7 +88,7 @@
     switch ($permit->type) {
         case 'MP':
             $title_en = "Monthly Permit"; $title_si = "මාසික බලපත්‍රය"; $person_label = "Person පුද්ගල"; break;
-        case 'VP':
+        case 'VH':
             $title_en = "Temporary Permit"; $title_si = "තාවකාලික බලපත්‍රය"; $person_label = "Vehicle රථවාහන"; break;
         default:
             $title_en = "Temporary Permit"; $title_si = "තාවකාලික බලපත්‍රය"; $person_label = "Person පුද්ගල"; break;
@@ -101,7 +101,7 @@
     <div class="field permit-title">{{ $title_si }}</div>
     <div class="field permit-number">{{ $permit->permit_id }}</div>
 
-    @if($permit->type === 'VP')
+    @if($permit->type === 'VH')
         <div class="field name">Owner: {{ $permit->owner_name }}</div>
         <!--<div class="field designation">Address: {{ $permit->owner_address }}</div>-->
         <div class="field company_name">{{ $permit->company_name }}</div>
@@ -136,7 +136,7 @@
         <button id="btnBack">Back to Temporary Permit</button>
     @elseif($payment->permit_type === 'MP')
         <button id="btnBack">Back to Monthly Permit</button>
-    @elseif($payment->permit_type === 'VP')
+    @elseif($payment->permit_type === 'VH')
         <button id="btnBack">Back to Vehicle Permit</button>
     @else
         <button id="btnBack">Back</button>

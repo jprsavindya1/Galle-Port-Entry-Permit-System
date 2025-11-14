@@ -110,7 +110,7 @@
                 <option value="">All Types</option>
                 <option value="TP" {{ request('type')=='TP'?'selected':'' }}>TP</option>
                 <option value="MP" {{ request('type')=='MP'?'selected':'' }}>MP</option>
-                <option value="VP" {{ request('type')=='VP'?'selected':'' }}>VP</option>
+                <option value="VH" {{ request('type')=='VH'?'selected':'' }}>VH</option>
             </select>
         </div>
         <div class="col-6 col-md-3">

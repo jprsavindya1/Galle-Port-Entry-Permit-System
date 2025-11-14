@@ -355,7 +355,7 @@
                 $groupedByType = [
                     'TP' => [],
                     'MP' => [],
-                    'VP' => []
+                    'VH' => []
                 ];
                 
                 foreach($grouped as $submissionId => $group) {
@@ -373,7 +373,7 @@
                 $typeLabels = [
                     'TP' => 'Temporary Permits',
                     'MP' => 'Monthly Permits',
-                    'VP' => 'Vehicle Permits'
+                    'VH' => 'Vehicle Permits'
                 ];
             @endphp
 
@@ -405,7 +405,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Application No.</th>
-                                        @if($group->first()->type === 'VP')
+                                        @if($group->first()->type === 'VH')
                                             <th>Vehicle Number</th>
                                             <th>Owner's Name</th>
                                             <th>Revenue License No.</th>
@@ -447,7 +447,7 @@
                                     @foreach($group as $permit)
                                         <tr id="permit-row-{{ $permit->id }}">
                                             <td><strong>{{ $permit->application_number ?? 'N/A' }}</strong></td>
-                                            @if($permit->type === 'VP')
+                                            @if($permit->type === 'VH')
                                                 <td>{{ $permit->vehicle_number }}</td>
                                                 <td>{{ $permit->owner_name }}</td>
                                                 <td>{{ $permit->revenue_license_number }}</td>

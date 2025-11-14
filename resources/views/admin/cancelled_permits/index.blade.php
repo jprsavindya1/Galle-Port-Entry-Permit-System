@@ -66,7 +66,7 @@
                         <td>{{ $permit->permit_id }}</td>
                         <td>{{ $permit->invoice_id }}</td>
                         <td>
-                            @if(isset($permit->type) && $permit->type === 'VP')
+                            @if(isset($permit->type) && $permit->type === 'VH')
                                 {{ $permit->owner_name ?? ($permit->full_name ?? '-') }}
                             @else
                                 {{ $permit->full_name ?? ($permit->owner_name ?? '-') }}

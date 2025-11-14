@@ -8,7 +8,7 @@
 |-------|---------|------------|-----------|
 | `temporary_permits` | NIC/Passport/Driving License permits (15-30 days) | `id_type`, `id_number`, `full_name`, `initials` | TP |
 | `monthly_permits` | NIC-only permits (30 days) | `id_type`, `id_number`, `full_name`, `police_report_*` | MP |
-| `vehicle_permits` | Vehicle entry permits | `vehicle_number`, `vehicle_type`, `owner_name` | VP |
+| `vehicle_permits` | Vehicle entry permits | `vehicle_number`, `vehicle_type`, `owner_name` | VH |
 
 ---
 
@@ -62,7 +62,7 @@ use App\Models\VehiclePermit;
 
 // Create
 VehiclePermit::create([
-    'permit_id' => 'VP25110001',
+    'permit_id' => 'VH25110001',
     'vehicle_number' => 'ABC-1234',
     'vehicle_type' => 'Car',
     'owner_name' => 'JANE DOE',
@@ -147,12 +147,12 @@ route('permits.cancel', ['monthly', $permit->id])
                 Temporary
             @elseif($permit->type === 'MP' || $permit instanceof \App\Models\MonthlyPermit)
                 Monthly
-            @elseif($permit->type === 'VP' || $permit instanceof \App\Models\VehiclePermit)
+            @elseif($permit->type === 'VH' || $permit instanceof \App\Models\VehiclePermit)
                 Vehicle
             @endif
         </td>
         <td>
-            @if($permit->type === 'VP' || $permit instanceof \App\Models\VehiclePermit)
+            @if($permit->type === 'VH' || $permit instanceof \App\Models\VehiclePermit)
                 {{ $permit->owner_name }}
             @else
                 {{ $permit->full_name }}
@@ -285,7 +285,7 @@ protected function generatePermitId($type) {
     $modelClass = match($type) {
         'TP' => TemporaryPermit::class,
         'MP' => MonthlyPermit::class,
-        'VP' => VehiclePermit::class,
+        'VH' => VehiclePermit::class,
     };
     
     $latest = $modelClass::where('permit_id', 'like', $type . now()->format('y') . '%')
@@ -313,8 +313,8 @@ function getPermitTypeFromCode($code) {
     return match($code) {
         'TP' => 'temporary',
         'MP' => 'monthly',
-        'VP' => 'vehicle',
-        default => 'temporary'
+        'VH' => 'vehicle',
+        default => 'unknown'
     };
 }
 ```

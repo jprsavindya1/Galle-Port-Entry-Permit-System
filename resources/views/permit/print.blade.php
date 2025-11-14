@@ -117,7 +117,7 @@
             $person_label = "Person පුද්ගල";
             break;
 
-        case 'VP':
+        case 'VH':
             $title_en = "Temporary Permit";
             $title_si = "තාවකාලික බලපත්‍රය";
             $person_label = "Vehicle රථවාහන";
@@ -137,7 +137,7 @@
     <div class="field permit-title">{{ $title_si }}</div>
     <div class="field permit-number">{{ $permit->permit_id }}</div>
 
-    @if($permit->type === 'VP')
+    @if($permit->type === 'VH')
     <!-- Vehicle Permit Layout -->
     <div class="field name">{{ $permit->owner_name }}</div>
     <!--<div class="field designation">Address: {{ $permit->owner_address }}</div>-->
