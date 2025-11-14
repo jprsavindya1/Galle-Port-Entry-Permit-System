@@ -53,6 +53,10 @@ class PermitController extends Controller
         \DB::raw('NULL as insurance_number'),
         \DB::raw('NULL as police_issue_date'),
         \DB::raw('NULL as police_expire_date'),
+        // Print tracking
+        'temporary_permits.is_printed',
+        'temporary_permits.printed_at',
+        'temporary_permits.printed_by',
     ];
     
     $temporaryQuery = TemporaryPermit::select($selectColumns)
@@ -90,6 +94,10 @@ class PermitController extends Controller
         \DB::raw('NULL as insurance_number'),
         'monthly_permits.police_issue_date',
         'monthly_permits.police_expire_date',
+        // Print tracking
+        'monthly_permits.is_printed',
+        'monthly_permits.printed_at',
+        'monthly_permits.printed_by',
     ])
     ->whereDoesntHave('cancelledPermitTrashed');
     
@@ -125,6 +133,10 @@ class PermitController extends Controller
         'vehicle_permits.insurance_number',
         \DB::raw('NULL as police_issue_date'),
         \DB::raw('NULL as police_expire_date'),
+        // Print tracking
+        'vehicle_permits.is_printed',
+        'vehicle_permits.printed_at',
+        'vehicle_permits.printed_by',
     ])
     ->whereDoesntHave('cancelledPermitTrashed');
 

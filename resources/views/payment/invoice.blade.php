@@ -77,6 +77,72 @@
     font-size: 0.9rem;
 }
 
+/* Print Status Badges */
+.print-status-badge {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.4rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+.print-status-printed {
+    background: #c8e6c9;
+    color: #2e7d32;
+    border: 1px solid #81c784;
+}
+.print-status-not-printed {
+    background: #e0e0e0;
+    color: #616161;
+    border: 1px solid #bdbdbd;
+}
+.print-info-text {
+    font-size: 0.7rem;
+    color: #666;
+    line-height: 1.3;
+    margin-top: 0.2rem;
+}
+
+.batch-print-status {
+    background: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
+    border: 2px solid #81c784;
+    border-radius: 0.75rem;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.batch-print-status.all-printed {
+    background: linear-gradient(135deg, #c8e6c9 0%, #e8f5e9 100%);
+}
+
+.batch-print-status.not-printed {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
+    border-color: #ffb74d;
+}
+
+.batch-print-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.batch-print-icon.printed {
+    background: #4caf50;
+    color: white;
+}
+
+.batch-print-icon.not-printed {
+    background: #ff9800;
+    color: white;
+}
+
 /* ===== Buttons ===== */
 .btn-custom {
     border-radius: 0.5rem;
@@ -190,6 +256,12 @@
         border-collapse: collapse !important;
         font-size: 4pt !important; /* Extra extra small font for 80mm paper */
         margin: 2mm 0 !important;
+    }
+
+    /* Hide print status column when printing */
+    .invoice-table th:last-child,
+    .invoice-table td:last-child {
+        display: none !important;
     }
 
     .invoice-table, .invoice-table tbody, .invoice-table tbody tr {
@@ -311,6 +383,58 @@
             </p>
         </div>
 
+        @php
+            // Check if all permits are printed
+            $allPrinted = $permits->every(fn($permit) => $permit->is_printed);
+            $somePrinted = $permits->contains(fn($permit) => $permit->is_printed);
+            $printedCount = $permits->filter(fn($permit) => $permit->is_printed)->count();
+            $totalCount = $permits->count();
+        @endphp
+
+        @if($allPrinted)
+            <div class="batch-print-status all-printed no-print">
+                <div class="batch-print-icon printed">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1" style="color: #2e7d32; font-weight: 600;">
+                        <i class="bi bi-printer-fill me-1"></i> All Permits Printed
+                    </h6>
+                    <p class="mb-0" style="font-size: 0.9rem; color: #666;">
+                        All {{ $totalCount }} permit(s) in this batch have been printed successfully.
+                    </p>
+                </div>
+            </div>
+        @elseif($somePrinted)
+            <div class="batch-print-status not-printed no-print">
+                <div class="batch-print-icon not-printed">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1" style="color: #e65100; font-weight: 600;">
+                        <i class="bi bi-printer me-1"></i> Partially Printed
+                    </h6>
+                    <p class="mb-0" style="font-size: 0.9rem; color: #666;">
+                        {{ $printedCount }} of {{ $totalCount }} permit(s) have been printed. Please print remaining permits.
+                    </p>
+                </div>
+            </div>
+        @else
+            <div class="batch-print-status not-printed no-print">
+                <div class="batch-print-icon not-printed">
+                    <i class="bi bi-printer"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1" style="color: #e65100; font-weight: 600;">
+                        <i class="bi bi-printer me-1"></i> Not Printed Yet
+                    </h6>
+                    <p class="mb-0" style="font-size: 0.9rem; color: #666;">
+                        None of the {{ $totalCount }} permit(s) in this batch have been printed. Use the "Batch Print Permits" button below.
+                    </p>
+                </div>
+            </div>
+        @endif
+
         <div class="invoice-table-container mb-4">
             <div class="table-responsive">
                 <table class="table align-middle invoice-table">
@@ -333,9 +457,15 @@
                             @if($payment->permit_type !== 'VP')
                                 <th>Pass Type</th>
                             @endif
+                            <th style="min-width: 130px;">Print Status</th>
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                            // Pre-load all users to avoid N+1 queries
+                            $userIds = $permits->pluck('printed_by')->filter()->unique();
+                            $users = \App\Models\User::whereIn('id', $userIds)->pluck('name', 'id');
+                        @endphp
                         @foreach($permits as $permit)
                         <tr>
                             <td><strong>{{ $permit->application_number ?? 'N/A' }}</strong></td>
@@ -355,6 +485,29 @@
                             @if($payment->permit_type !== 'VP')
                                 <td>{{ ucfirst($permit->pass_type ?? '-') }}</td>
                             @endif
+                            <td>
+                                @if($permit->is_printed)
+                                    <div class="text-center">
+                                        <span class="print-status-badge print-status-printed">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Printed
+                                        </span>
+                                        <div class="print-info-text">
+                                            {{ \Carbon\Carbon::parse($permit->printed_at)->format('M d, H:i') }}
+                                        </div>
+                                        @if($permit->printed_by)
+                                            <div class="print-info-text">
+                                                By: {{ $users[$permit->printed_by] ?? 'Unknown' }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="text-center">
+                                        <span class="print-status-badge print-status-not-printed">
+                                            <i class="bi bi-x-circle me-1"></i> Not Printed
+                                        </span>
+                                    </div>
+                                @endif
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -371,8 +524,18 @@
         </div>
 
         <div class="d-flex justify-content-between no-print">
-            <a href="{{ route('permit.print', $payment->submission_id) }}" target="_blank" id="batchPrintBtn" class="btn btn-primary btn-custom" style="pointer-events: none; opacity: 0.5; cursor: not-allowed;">
-                <i class="bi bi-printer-fill me-1"></i> Batch Print Permits
+            <a href="{{ route('permit.print', $payment->submission_id) }}" 
+               target="_blank" 
+               id="batchPrintBtn" 
+               class="btn btn-primary btn-custom">
+                <i class="bi bi-printer-fill me-1"></i> 
+                @if($allPrinted)
+                    Reprint All Permits
+                @elseif($somePrinted)
+                    Print Remaining Permits
+                @else
+                    Batch Print Permits
+                @endif
             </a>
 
             @if($payment->permit_type === 'TP')
@@ -390,15 +553,21 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const printInvoiceBtn = document.querySelector('button[onclick="window.print()"]');
         const batchPrintBtn = document.getElementById('batchPrintBtn');
         
-        if (printInvoiceBtn && batchPrintBtn) {
-            printInvoiceBtn.addEventListener('click', function() {
-                // Enable batch print button after print invoice is clicked
-                batchPrintBtn.style.pointerEvents = 'auto';
-                batchPrintBtn.style.opacity = '1';
-                batchPrintBtn.style.cursor = 'pointer';
+        // Add click tracking for batch print
+        if (batchPrintBtn) {
+            batchPrintBtn.addEventListener('click', function(e) {
+                // Show a loading indicator
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Opening Print View...';
+                this.disabled = true;
+                
+                // Re-enable after a delay
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                }, 2000);
             });
         }
     });

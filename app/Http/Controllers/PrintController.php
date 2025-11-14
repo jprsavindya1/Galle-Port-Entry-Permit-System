@@ -28,6 +28,34 @@ class PrintController extends Controller
             abort(404, 'No permits found for this submission.');
         }
 
+        // Mark all permits as printed
+        $userId = auth()->id();
+        $now = now();
+        
+        foreach ($tempPermits as $permit) {
+            $permit->update([
+                'is_printed' => true,
+                'printed_at' => $now,
+                'printed_by' => $userId,
+            ]);
+        }
+        
+        foreach ($monthlyPermits as $permit) {
+            $permit->update([
+                'is_printed' => true,
+                'printed_at' => $now,
+                'printed_by' => $userId,
+            ]);
+        }
+        
+        foreach ($vehiclePermits as $permit) {
+            $permit->update([
+                'is_printed' => true,
+                'printed_at' => $now,
+                'printed_by' => $userId,
+            ]);
+        }
+
         return view('permit.print', compact('permits', 'payment', 'submission_id'));
 
     }
@@ -47,6 +75,13 @@ class PrintController extends Controller
         default:
             abort(404, 'Invalid permit type');
     }
+    
+    // Mark permit as printed
+    $permit->update([
+        'is_printed' => true,
+        'printed_at' => now(),
+        'printed_by' => auth()->id(),
+    ]);
     
     $submission_id = $permit->submission_id; 
     $payment = Payment::where('submission_id', $permit->submission_id)->first();

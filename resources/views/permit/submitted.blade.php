@@ -111,6 +111,32 @@
         background: #ffcdd2;
         color: #b71c1c;
     }
+    
+    /* Print Status Badges */
+    .print-status-badge {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+    .print-status-printed {
+        background: #c8e6c9;
+        color: #2e7d32;
+        border: 1px solid #81c784;
+    }
+    .print-status-not-printed {
+        background: #e0e0e0;
+        color: #616161;
+        border: 1px solid #bdbdbd;
+    }
+    .print-info-text {
+        font-size: 0.75rem;
+        color: #666;
+        line-height: 1.4;
+    }
+    
     * ADJUST THIS VALUE: This pixel height should be visually inspected 
    in your browser to match the exact height of the filter/search section.
    ~120px to 140px is a common range for single-line form inputs with labels.
@@ -321,7 +347,12 @@
     </div>
 </div>
         @if($permits->count())
-            @php $grouped = $permits->groupBy('submission_id'); @endphp
+            @php 
+                $grouped = $permits->groupBy('submission_id');
+                // Pre-load all users to avoid N+1 queries
+                $userIds = $permits->pluck('printed_by')->filter()->unique();
+                $users = \App\Models\User::whereIn('id', $userIds)->pluck('name', 'id');
+            @endphp
 
             @foreach($grouped as $submissionId => $group)
                 <div class="card mb-4 permit-submission-table">
@@ -368,6 +399,7 @@
                                         <th class="sticky-col status-col" style="width:120px;">Status</th>
                                         {{-- <th class="sticky-col actions-col" style="width:120px;">Actions</th> --}}
                                         <th class="sticky-col view-col" style="width:120px;">View</th>
+                                        <th style="width:150px;">Print Status</th>
                                     </tr>
                                 </thead>
 
@@ -493,6 +525,30 @@
                                                    @if($permit->status === 'cancelled') style="pointer-events: none; opacity: 0.5;" aria-disabled="true" @endif>
                                                     Print
                                                 </a>
+                                            </td>
+
+                                            <td>
+                                                @if($permit->is_printed)
+                                                    <div class="text-center">
+                                                        <span class="print-status-badge print-status-printed">
+                                                            <i class="bi bi-printer-fill me-1"></i> Printed
+                                                        </span>
+                                                        <div class="print-info-text">
+                                                            <i class="bi bi-clock me-1"></i>{{ \Carbon\Carbon::parse($permit->printed_at)->format('Y-m-d H:i') }}
+                                                        </div>
+                                                        @if($permit->printed_by)
+                                                            <div class="print-info-text">
+                                                                <i class="bi bi-person-fill me-1"></i>{{ $users[$permit->printed_by] ?? 'Unknown' }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @else
+                                                    <div class="text-center">
+                                                        <span class="print-status-badge print-status-not-printed">
+                                                            <i class="bi bi-printer me-1"></i> Not Printed
+                                                        </span>
+                                                    </div>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

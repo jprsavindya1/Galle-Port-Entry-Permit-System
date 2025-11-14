@@ -35,6 +35,9 @@ class TemporaryPermit extends Model
         'submission_id',
         'status',
         'cancel_reason',
+        'is_printed',
+        'printed_at',
+        'printed_by',
     ];
 
     protected $casts = [
@@ -47,6 +50,8 @@ class TemporaryPermit extends Model
         'ssl' => 'decimal:2',
         'vat' => 'decimal:2',
         'total' => 'decimal:2',
+        'is_printed' => 'boolean',
+        'printed_at' => 'datetime',
     ];
 
     public function payment()
@@ -68,5 +73,10 @@ class TemporaryPermit extends Model
     {
         return $this->hasOne(\App\Models\CancelledPermit::class, 'permit_id', 'permit_id')
                     ->onlyTrashed();
+    }
+
+    public function printedBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'printed_by');
     }
 }
