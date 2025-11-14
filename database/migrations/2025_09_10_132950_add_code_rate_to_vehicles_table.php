@@ -21,4 +21,18 @@ return new class extends Migration
     });
 }
 
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('vehicles', function (Blueprint $table) {
+            if (Schema::hasColumn('vehicles', 'rate')) {
+                $table->dropColumn('rate');
+            }
+            if (Schema::hasColumn('vehicles', 'code')) {
+                $table->dropColumn('code');
+            }
+        });
+    }
 };
