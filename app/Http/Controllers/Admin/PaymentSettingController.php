@@ -26,6 +26,7 @@ class PaymentSettingController extends Controller
 {
     $validated = $request->validate([
         'rate' => 'required|numeric|min:0',
+        'monthly_rate' => 'required|numeric|min:0',
         'ssl' => 'required|numeric|min:0',
         'vat' => 'required|numeric|min:0',
     ]);

@@ -7,8 +7,9 @@ class PaymentSetting extends Model
 {
     // Fillable fields 
     protected $fillable = [
-        'rate',  // Base rate for temporary and monthly permits
-        'ssl',   // SSL percentage
-        'vat',   // VAT percentage
+        'rate',         // Base rate for temporary permits (per day)
+        'monthly_rate', // Fixed rate for monthly permits (30 days)
+        'ssl',          // SSL percentage
+        'vat',          // VAT percentage
     ];
 }

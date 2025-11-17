@@ -126,13 +126,14 @@ if (session()->has('monthly_company_name')) {
         $settings = PaymentSetting::first();
 
         $baseRate = $settings->rate ?? 100;
+        $monthlyRate = $settings->monthly_rate ?? 3000; // Fixed rate for monthly permits
         $sslRate = $settings->ssl ?? 2.5;   // SSL % (e.g., 2.5)
         $vatRate = $settings->vat ?? 18;    // VAT % (e.g., 18)
 
         foreach ($cart as $item) {
             $days = \Carbon\Carbon::parse($item['from_date'])->diffInDays($item['to_date']) + 1;
 
-            $tRate = $baseRate * $days;
+            $tRate = $monthlyRate; // Use fixed monthly rate (no days multiplication)
 
             if ($item['issue_type'] === 'free') {
                 $tRate = 0;

@@ -26,6 +26,7 @@ class PaymentController extends Controller
 
         $settings = PaymentSetting::first();
         $baseRateSetting = $settings->rate ?? 0;
+        $monthlyRateSetting = $settings->monthly_rate ?? 0;
         $sslRate = $settings->ssl ?? 0;
         $vatRate = $settings->vat ?? 0;
         
@@ -73,7 +74,13 @@ class PaymentController extends Controller
 
             } else {
                 // Temporary / Monthly permits: rate from settings
-                $tRate = $baseRateSetting * $days;
+                // Monthly permits use fixed rate, Temporary uses rate * days
+                if ($item['type'] === 'MP') {
+                    $tRate = $monthlyRateSetting; // Fixed rate for monthly (no days multiplication)
+                } else {
+                    $tRate = $baseRateSetting * $days; // Temporary permits use per-day rate
+                }
+                
                 if ($item['issue_type'] === 'free') {
                     $ssl = 0;
                     $vat = 0;
@@ -123,6 +130,7 @@ class PaymentController extends Controller
         $permitType = $cart[0]['type'] ?? 'unknown';
         $settings = PaymentSetting::first();
         $rateSetting = $settings->rate ?? 0;
+        $monthlyRateSetting = $settings->monthly_rate ?? 0;
         $sslRate = $settings->ssl ?? 0;
         $vatRate = $settings->vat ?? 0;
 
@@ -144,8 +152,10 @@ foreach ($cart as $entry) {
     if ($entry['type'] === 'VH') {
         $vehicle = Vehicle::where('name', $entry['vehicle_type'])->first();
         $rate = ($vehicle ? $vehicle->rate : 0) * $days;
+    } elseif ($entry['type'] === 'MP') {
+        $rate = $monthlyRateSetting; // Fixed rate for monthly (no days multiplication)
     } else {
-        $rate = $rateSetting * $days;
+        $rate = $rateSetting * $days; // Temporary permits use per-day rate
     }
 
     if ($entry['issue_type'] === 'free') {
@@ -225,8 +235,24 @@ foreach ($cart as $entry) {
                     $sslTotal += $ssl;
                     $vatTotal += $vat;
 
+                } elseif ($permitType === 'MP') {
+                    // Monthly permits use fixed rate
+                    $baseRate = $monthlyRateSetting; // Fixed rate (no days multiplication)
+
+                    // Use same formula as summary page for consistency
+                    $sslDivisor = 100 - $sslRate;
+                    $dblNSSL = ($baseRate / $sslDivisor) * $sslRate;
+                    $ssl = round($dblNSSL, 2);
+                    
+                    $dblVAT = (($baseRate + $dblNSSL) / 100) * $vatRate;
+                    $vat = round($dblVAT, 2);
+
+                    $rateTotal += $baseRate;
+                    $sslTotal += $ssl;
+                    $vatTotal += $vat;
+
                 } else {
-                    // TP / MP from settings
+                    // Temporary permits from settings (per-day rate)
                     $baseRate = $rateSetting * $days;
 
                     // Use same formula as summary page for consistency
