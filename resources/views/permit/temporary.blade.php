@@ -163,19 +163,19 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input doc-checkbox" onchange="syncIdType('NIC')">
+                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input doc-checkbox" onchange="syncIdType('NIC')" {{ old('doc_nic') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_nic">NIC</label>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input doc-checkbox" onchange="syncIdType('Passport')">
+                            <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input doc-checkbox" onchange="syncIdType('Passport')" {{ old('doc_passport') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_passport">Passport</label>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input doc-checkbox" onchange="syncIdType('Driving License')">
+                            <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input doc-checkbox" onchange="syncIdType('Driving License')" {{ old('doc_driving_licence') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_driving_licence">Driving Licence</label>
                         </div>
                     </div>
@@ -198,8 +198,8 @@
                     <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
                     <input type="text" name="id_number" id="id_number" 
                             value="{{ old('id_number') }}" class="form-control" required
-                            oninput="this.value = this.value.toUpperCase();"
-                            onblur="fetchPersonDetails(); checkDuplicateInCart();">
+                            oninput="this.value = this.value.toUpperCase(); handleIdNumberChange(); checkDuplicateInCart();"
+                            onblur="fetchPersonDetails();">
                     <div style="min-height: 20px;">
                         <span id="id_number_error" class="text-danger small d-block"></span>
                         <span id="duplicate_error" class="text-danger small d-block"></span>
@@ -411,6 +411,26 @@
         let checkedFormData = null;
         // Store ID validation state globally
         let isIdValid = false;
+        // Store the last fetched ID number to track changes
+        let lastFetchedIdNumber = '';
+
+        // Function to handle ID number change - clear autofilled data when changed
+        window.handleIdNumberChange = function() {
+            const currentIdNumber = document.getElementById('id_number').value.trim();
+            
+            // If ID number has changed from the last fetched one, clear autofilled fields
+            if (lastFetchedIdNumber && currentIdNumber !== lastFetchedIdNumber) {
+                document.getElementById('full_name').value = '';
+                document.getElementById('initials').value = '';
+                document.getElementById('residence_address').value = '';
+                
+                // Clear designation using Select2
+                $('#designation').val(null).trigger('change');
+                
+                // Reset the last fetched ID number
+                lastFetchedIdNumber = '';
+            }
+        }
 
         // Function to sync ID type when document checkbox is checked
         window.syncIdType = function(idType) {
@@ -535,8 +555,8 @@
                 return;
             }
 
-            // Get current cart from the page
-            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            // Get current cart from the page - use table.table selector
+            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
             let isDuplicate = false;
 
             cartRows.forEach(row => {
@@ -595,6 +615,9 @@
                     
                     document.getElementById('residence_address').value = data.data.residence_address || '';
                     
+                    // Store the fetched ID number
+                    lastFetchedIdNumber = idNumber;
+                    
                     console.log('Person details auto-filled successfully');
                 }
             })
@@ -650,6 +673,11 @@
             // Run validation on typing & changing
             idNumber.addEventListener("input", validateId);
             idType.addEventListener("change", validateId);
+            
+            // Run validation on page load if ID number is pre-filled (from old() values)
+            if (idNumber.value.trim() !== "") {
+                validateId();
+            }
         });
 
         // setMaxToDate function
@@ -699,6 +727,14 @@
             addBtn.disabled = true;
             addBtn.style.opacity = '0.6';
             addBtn.style.cursor = 'not-allowed';
+
+            // Check for duplicate error first
+            const duplicateError = document.getElementById('duplicate_error');
+            if (duplicateError && duplicateError.textContent.trim() !== '') {
+                msg.innerText = 'Cannot check availability: This ID Number is already in the cart.';
+                msg.style.color = 'red';
+                return;
+            }
 
             // Check for empty fields and build detailed message
             const missingFields = [];
@@ -859,7 +895,7 @@
         // Clear Form function - preserves company data and cart state
         window.clearForm = function() {
             // Check if there are any entries in the cart
-            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
             const hasCartEntries = cartRows.length > 0;
             
             // Store company-related data before clearing (only if cart has entries)
@@ -953,6 +989,7 @@
             const idTypeDropdown = document.getElementById('id_type');
             const idTypeValue = idTypeDropdown.value;
             
+            // First, sync checkboxes based on ID type if it exists
             if (idTypeValue && idTypeValue !== '') {
                 // Find and check the corresponding document checkbox
                 if (idTypeValue === 'NIC') {
@@ -961,6 +998,38 @@
                     document.getElementById('doc_passport').checked = true;
                 } else if (idTypeValue === 'Driving License') {
                     document.getElementById('doc_driving_licence').checked = true;
+                }
+                
+                // Lock the ID type dropdown if a checkbox is checked
+                idTypeDropdown.disabled = true;
+                idTypeDropdown.style.backgroundColor = '#f8fafc';
+                idTypeDropdown.style.cursor = 'not-allowed';
+                idTypeDropdown.style.color = '#1976d2';
+                idTypeDropdown.style.fontWeight = '500';
+            } else {
+                // If no ID type, check if any document checkbox is pre-checked (from old() values)
+                // and sync the ID type accordingly
+                if (document.getElementById('doc_nic').checked) {
+                    idTypeDropdown.value = 'NIC';
+                    idTypeDropdown.disabled = true;
+                    idTypeDropdown.style.backgroundColor = '#f8fafc';
+                    idTypeDropdown.style.cursor = 'not-allowed';
+                    idTypeDropdown.style.color = '#1976d2';
+                    idTypeDropdown.style.fontWeight = '500';
+                } else if (document.getElementById('doc_passport').checked) {
+                    idTypeDropdown.value = 'Passport';
+                    idTypeDropdown.disabled = true;
+                    idTypeDropdown.style.backgroundColor = '#f8fafc';
+                    idTypeDropdown.style.cursor = 'not-allowed';
+                    idTypeDropdown.style.color = '#1976d2';
+                    idTypeDropdown.style.fontWeight = '500';
+                } else if (document.getElementById('doc_driving_licence').checked) {
+                    idTypeDropdown.value = 'Driving License';
+                    idTypeDropdown.disabled = true;
+                    idTypeDropdown.style.backgroundColor = '#f8fafc';
+                    idTypeDropdown.style.cursor = 'not-allowed';
+                    idTypeDropdown.style.color = '#1976d2';
+                    idTypeDropdown.style.fontWeight = '500';
                 }
             }
             

@@ -150,7 +150,9 @@
                         <label for="vehicle_number" class="form-label"><i class="bi bi-hash me-1"></i> Vehicle Number</label>
                         <input type="text" name="vehicle_number" id="vehicle_number" class="form-control"
                                value="{{ old('vehicle_number', $permit['vehicle_number']) }}" required
-                               oninput="this.value = this.value.toUpperCase();">
+                               oninput="this.value = this.value.toUpperCase(); handleVehicleNumberChange(); checkDuplicateInCart();"
+                               onblur="fetchVehicleDetails();">
+                        <span id="duplicate_error" class="text-danger small"></span>
                     </div>
                 </div>
 
@@ -265,6 +267,120 @@
 <script>
 // Store checked form data to detect changes
 let checkedFormData = null;
+// Store the last fetched vehicle number to track changes
+let lastFetchedVehicleNumber = '';
+
+// Function to handle vehicle number change - clear autofilled data when changed
+window.handleVehicleNumberChange = function() {
+    const currentVehicleNumber = document.getElementById('vehicle_number').value.trim();
+    
+    // If vehicle number has changed from the last fetched one, clear autofilled fields
+    if (lastFetchedVehicleNumber && currentVehicleNumber !== lastFetchedVehicleNumber) {
+        document.getElementById('revenue_license_number').value = '';
+        document.getElementById('insurance_number').value = '';
+        document.getElementById('owner_name').value = '';
+        document.getElementById('owner_address').value = '';
+        
+        // Reset the last fetched vehicle number
+        lastFetchedVehicleNumber = '';
+    }
+}
+
+// Function to fetch vehicle details from database
+window.fetchVehicleDetails = function() {
+    const vehicleNumber = document.getElementById('vehicle_number').value.trim();
+    
+    if (!vehicleNumber) {
+        return;
+    }
+
+    fetch("{{ route('permit.vehicle.fetchVehicleDetails') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({ vehicle_number: vehicleNumber })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.found) {
+            // Auto-fill the fields
+            document.getElementById('revenue_license_number').value = data.data.revenue_license_number || '';
+            document.getElementById('insurance_number').value = data.data.insurance_number || '';
+            document.getElementById('owner_name').value = data.data.owner_name || '';
+            document.getElementById('owner_address').value = data.data.owner_address || '';
+            
+            // Store the fetched vehicle number
+            lastFetchedVehicleNumber = vehicleNumber;
+            
+            console.log('Vehicle details auto-filled successfully');
+        }
+    })
+    .catch(error => {
+        console.error("Failed to fetch vehicle details:", error);
+    });
+}
+
+// Function to check for duplicate vehicle numbers in the cart (excluding current entry)
+window.checkDuplicateInCart = function() {
+    const currentVehicleNumber = document.getElementById('vehicle_number').value.trim();
+    const duplicateError = document.getElementById('duplicate_error');
+    const updateBtn = document.getElementById('updateBtn');
+    
+    if (!currentVehicleNumber) {
+        duplicateError.textContent = '';
+        duplicateError.style.display = 'none';
+        return;
+    }
+    
+    // Get all session vehicle permits from the session
+    const sessionVehiclePermits = @json(session('vehicle_permit_cart', []));
+    const currentEditIndex = {{ $index }};
+    
+    console.log('Checking duplicates...', {
+        currentVehicleNumber,
+        currentEditIndex,
+        sessionVehiclePermits
+    });
+    
+    let isDuplicate = false;
+    
+    // Check each permit in the session
+    sessionVehiclePermits.forEach((permit, index) => {
+        // Skip the current entry being edited
+        if (index === currentEditIndex) {
+            return;
+        }
+        
+        // Compare vehicle numbers (case insensitive)
+        if (permit.vehicle_number && permit.vehicle_number.toUpperCase() === currentVehicleNumber.toUpperCase()) {
+            isDuplicate = true;
+        }
+    });
+    
+    if (isDuplicate) {
+        duplicateError.textContent = '⚠️ This Vehicle Number is already in the cart. Cannot have duplicate entries.';
+        duplicateError.style.display = 'block';
+        duplicateError.style.color = '#dc3545';
+        duplicateError.style.fontWeight = '500';
+        if (updateBtn) {
+            updateBtn.disabled = true;
+            updateBtn.style.opacity = '0.6';
+            updateBtn.style.cursor = 'not-allowed';
+        }
+    } else {
+        duplicateError.textContent = '';
+        duplicateError.style.display = 'none';
+        // Only enable if other validations pass
+        const msgEl = document.getElementById("availability-msg");
+        if (updateBtn && (!msgEl || msgEl.textContent === '' || msgEl.style.color !== 'red')) {
+            updateBtn.disabled = false;
+            updateBtn.style.opacity = '1';
+            updateBtn.style.cursor = 'pointer';
+        }
+    }
+}
 
 /**
  * Function to check the availability of the vehicle permit for the specified dates and vehicle number.
@@ -275,6 +391,10 @@ function checkVehicleAvailability() {
     let from_date = document.querySelector('input[name="from_date"]').value;
     let to_date = document.querySelector('input[name="to_date"]').value;
     let company_name = document.querySelector('input[name="company_name"]').value;
+    let revenue_license_number = document.querySelector('input[name="revenue_license_number"]').value;
+    let insurance_number = document.querySelector('input[name="insurance_number"]').value;
+    let vehicle_type = document.querySelector('select[name="vehicle_type"]').value;
+    let owner_name = document.querySelector('input[name="owner_name"]').value;
     let updateBtn = document.getElementById("updateBtn");
 
     // Disable button while checking
@@ -282,10 +402,61 @@ function checkVehicleAvailability() {
     updateBtn.style.opacity = '0.6';
     updateBtn.style.cursor = 'not-allowed';
 
-    // Check for required fields before making the API call
-    if (!vehicle_number || !from_date || !to_date || !company_name) {
-        let msgEl = document.getElementById("availability-msg");
-        msgEl.textContent = "Please fill in Vehicle Number, Company, From Date, and To Date.";
+    // Comprehensive validation of all required fields
+    let msgEl = document.getElementById("availability-msg");
+    
+    // Check for duplicate error first
+    const duplicateError = document.getElementById('duplicate_error');
+    if (duplicateError && duplicateError.textContent.trim() !== '') {
+        msgEl.textContent = 'Cannot check availability: This Vehicle Number is already in the cart.';
+        msgEl.style.color = 'red';
+        return;
+    }
+    
+    if (!vehicle_number) {
+        msgEl.textContent = "Please enter Vehicle Number.";
+        msgEl.style.color = "red";
+        return;
+    }
+    
+    if (!vehicle_type) {
+        msgEl.textContent = "Please select Vehicle Type.";
+        msgEl.style.color = "red";
+        return;
+    }
+    
+    if (!revenue_license_number) {
+        msgEl.textContent = "Please enter Revenue License Number.";
+        msgEl.style.color = "red";
+        return;
+    }
+    
+    if (!insurance_number) {
+        msgEl.textContent = "Please enter Insurance Number.";
+        msgEl.style.color = "red";
+        return;
+    }
+    
+    if (!owner_name) {
+        msgEl.textContent = "Please enter Owner's Name.";
+        msgEl.style.color = "red";
+        return;
+    }
+    
+    if (!from_date) {
+        msgEl.textContent = "Please enter From Date.";
+        msgEl.style.color = "red";
+        return;
+    }
+    
+    if (!to_date) {
+        msgEl.textContent = "Please enter To Date.";
+        msgEl.style.color = "red";
+        return;
+    }
+    
+    if (!company_name) {
+        msgEl.textContent = "Please enter Company Name.";
         msgEl.style.color = "red";
         return;
     }
@@ -295,7 +466,6 @@ function checkVehicleAvailability() {
     const docInsurance = document.getElementById('doc_insurance').checked;
 
     if (!docRevenueLicence || !docInsurance) {
-        let msgEl = document.getElementById("availability-msg");
         msgEl.textContent = "Please check both required documents: Revenue License and Insurance";
         msgEl.style.color = "red";
         return;
@@ -320,8 +490,12 @@ function checkVehicleAvailability() {
         msgEl.textContent = data.message;
         msgEl.style.color = data.available ? "green" : "red";
         
-        // Enable button only if available
-        if (data.available) {
+        // Check if there's a duplicate error before enabling
+        const duplicateError = document.getElementById('duplicate_error');
+        const hasDuplicateError = duplicateError && duplicateError.textContent.trim() !== '';
+        
+        // Enable button only if available AND no duplicate error
+        if (data.available && !hasDuplicateError) {
             updateBtn.disabled = false;
             updateBtn.style.backgroundColor = '';
             updateBtn.style.borderColor = '';
@@ -339,7 +513,7 @@ function checkVehicleAvailability() {
             // Attach change listeners to form fields
             attachChangeListeners();
         } else {
-            // Keep it grey when not available
+            // Keep it grey when not available or has duplicate
             updateBtn.style.backgroundColor = '#9e9e9e';
             updateBtn.style.borderColor = '#9e9e9e';
             checkedFormData = null;
@@ -403,5 +577,21 @@ function attachChangeListeners() {
         }
     });
 }
+
+// Add form submission validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[action="{{ route('permit.vehicle.updateVehicleSessionEntry', $index) }}"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Check for duplicate error
+            const duplicateError = document.getElementById('duplicate_error');
+            if (duplicateError && duplicateError.textContent.trim() !== '') {
+                e.preventDefault();
+                alert('Cannot submit: This Vehicle Number is already in the cart. Please use a different vehicle number.');
+                return false;
+            }
+        });
+    }
+});
 </script>
 @endpush

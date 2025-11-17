@@ -181,19 +181,19 @@
 
                 <div class="col-md-6">
                     <label for="vehicle_number" class="form-label"><i class="bi bi-hash me-1"></i> Vehicle Number</label>
-                    <input type="text" class="form-control" name="vehicle_number" id="vehicle_number" required value="{{ old('vehicle_number') }}" oninput="this.value = this.value.toUpperCase();" onblur="fetchVehicleDetails(); checkDuplicateInCart();">
+                    <input type="text" class="form-control" name="vehicle_number" id="vehicle_number" required value="{{ old('vehicle_number') }}" oninput="this.value = this.value.toUpperCase(); handleVehicleNumberChange(); checkDuplicateInCart();" onblur="fetchVehicleDetails();">
                     <span id="duplicate_error" class="text-danger small d-block"></span>
                 </div>
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="revenue_license_number" class="form-label"><i class="bi bi-card-list me-1"></i> Revenue License Number</label>
+                    <label for="revenue_license_number" class="form-label"><i class="bi bi-card-list me-1"></i> Revenue License Number <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="revenue_license_number" id="revenue_license_number" required value="{{ old('revenue_license_number') }}" oninput="this.value = this.value.toUpperCase();">
                 </div>
                 <div class="col-md-6">
-                    <label for="insurance_number" class="form-label"><i class="bi bi-shield-check me-1"></i> Insurance Number</label>
-                    <input type="text" class="form-control" name="insurance_number" id="insurance_number" value="{{ old('insurance_number') }}" oninput="this.value = this.value.toUpperCase();">
+                    <label for="insurance_number" class="form-label"><i class="bi bi-shield-check me-1"></i> Insurance Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="insurance_number" id="insurance_number" required value="{{ old('insurance_number') }}" oninput="this.value = this.value.toUpperCase();">
                 </div>
             </div>
 
@@ -239,7 +239,7 @@
             
             <div class="mb-3">
                 <label for="owner_address" class="form-label"><i class="bi bi-house me-1"></i> Owner's Address</label>
-                <input type="text" class="form-control" name="owner_address" id="owner_address" required value="{{ old('owner_address') }}"
+                <input type="text" class="form-control" name="owner_address" id="owner_address" value="{{ old('owner_address') }}"
                 oninput="this.value = this.value.toUpperCase();">
             </div>
 
@@ -352,6 +352,24 @@
     <script>
         // Store checked form data to detect changes
         let checkedFormData = null;
+        // Store the last fetched vehicle number to track changes
+        let lastFetchedVehicleNumber = '';
+
+        // Function to handle vehicle number change - clear autofilled data when changed
+        window.handleVehicleNumberChange = function() {
+            const currentVehicleNumber = document.getElementById('vehicle_number').value.trim();
+            
+            // If vehicle number has changed from the last fetched one, clear autofilled fields
+            if (lastFetchedVehicleNumber && currentVehicleNumber !== lastFetchedVehicleNumber) {
+                document.getElementById('revenue_license_number').value = '';
+                document.getElementById('insurance_number').value = '';
+                document.getElementById('owner_name').value = '';
+                document.getElementById('owner_address').value = '';
+                
+                // Reset the last fetched vehicle number
+                lastFetchedVehicleNumber = '';
+            }
+        }
 
         // Function to check for duplicate vehicle number in session cart
         window.checkDuplicateInCart = function() {
@@ -364,8 +382,8 @@
                 return;
             }
 
-            // Get current cart from the page
-            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            // Get current cart from the page - use table.table selector
+            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
             let isDuplicate = false;
 
             cartRows.forEach(row => {
@@ -419,6 +437,9 @@
                     document.getElementById('owner_name').value = data.data.owner_name || '';
                     document.getElementById('owner_address').value = data.data.owner_address || '';
                     
+                    // Store the fetched vehicle number
+                    lastFetchedVehicleNumber = vehicleNumber;
+                    
                     console.log('Vehicle details auto-filled successfully');
                 }
             })
@@ -453,10 +474,14 @@
 
         // --- Availability Check Function ---
         window.checkVehicleAvailability = function() {
+            const vehicleType = document.getElementById('vehicle_type').value;
             const vehicleNumber = document.getElementById('vehicle_number').value.trim();
             const fromDate = document.getElementById('from_date').value;
             const toDate = document.getElementById('to_date').value;
             const companyName = document.getElementById('company_name').value;
+            const revenueLicenseNumber = document.getElementById('revenue_license_number').value.trim();
+            const insuranceNumber = document.getElementById('insurance_number').value.trim();
+            const ownerName = document.getElementById('owner_name').value.trim();
             const msg = document.getElementById('availability-msg');
             const addBtn = document.getElementById('addToListBtn');
 
@@ -466,11 +491,23 @@
             addBtn.style.opacity = '0.6';
             addBtn.style.cursor = 'not-allowed';
 
+            // Check for duplicate error first
+            const duplicateError = document.getElementById('duplicate_error');
+            if (duplicateError && duplicateError.textContent.trim() !== '') {
+                msg.innerText = 'Cannot check availability: This Vehicle Number is already in the cart.';
+                msg.style.color = 'red';
+                return;
+            }
+
             // Check for empty fields and build detailed message
             const missingFields = [];
+            if (!vehicleType) missingFields.push('Vehicle Type');
             if (!vehicleNumber) missingFields.push('Vehicle Number');
+            if (!revenueLicenseNumber) missingFields.push('Revenue License Number');
+            if (!insuranceNumber) missingFields.push('Insurance Number');
             if (!fromDate) missingFields.push('From Date');
             if (!toDate) missingFields.push('To Date');
+            if (!ownerName) missingFields.push('Owner\'s Name');
             if (!companyName) missingFields.push('Company Name');
 
             if (missingFields.length > 0) {
@@ -490,7 +527,7 @@
             }
 
             // Check for duplicate in cart before making API call
-            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
             let isDuplicate = false;
 
             cartRows.forEach(row => {
@@ -672,7 +709,7 @@
         // Clear Form function - preserves company data and cart state
         window.clearForm = function() {
             // Check if there are any entries in the cart
-            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
             const hasCartEntries = cartRows.length > 0;
             
             // Store company name before clearing (only if cart has entries)

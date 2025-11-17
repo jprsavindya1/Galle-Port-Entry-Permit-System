@@ -158,13 +158,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input">
+                            <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input" {{ old('doc_nic') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_nic">NIC</label>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_police_report" value="1" id="doc_police_report" class="form-check-input">
+                            <input type="checkbox" name="doc_police_report" value="1" id="doc_police_report" class="form-check-input" {{ old('doc_police_report') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_police_report">Police Report</label>
                         </div>
                     </div>
@@ -181,8 +181,8 @@
                 <div class="col-md-9">
                     <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
                     <input type="text" class="form-control" name="id_number" id="id_number" value="{{ old('id_number') }}" required
-                        oninput="this.value = this.value.toUpperCase();"
-                        onblur="fetchPersonDetails(); checkDuplicateInCart();">
+                        oninput="this.value = this.value.toUpperCase(); handleIdNumberChange(); checkDuplicateInCart();"
+                        onblur="fetchPersonDetails();">
                     <div style="min-height: 20px;">
                         <span id="id_number_error" class="text-danger small d-block"></span>
                         <span id="duplicate_error" class="text-danger small d-block"></span>
@@ -408,6 +408,26 @@
         let checkedFormData = null;
         // Store ID validation state globally
         let isIdValid = false;
+        // Store the last fetched ID number to track changes
+        let lastFetchedIdNumber = '';
+
+        // Function to handle ID number change - clear autofilled data when changed
+        window.handleIdNumberChange = function() {
+            const currentIdNumber = document.getElementById('id_number').value.trim();
+            
+            // If ID number has changed from the last fetched one, clear autofilled fields
+            if (lastFetchedIdNumber && currentIdNumber !== lastFetchedIdNumber) {
+                document.getElementById('full_name').value = '';
+                document.getElementById('initials').value = '';
+                document.getElementById('residence_address').value = '';
+                
+                // Clear designation using Select2
+                $('#designation').val(null).trigger('change');
+                
+                // Reset the last fetched ID number
+                lastFetchedIdNumber = '';
+            }
+        }
 
         // Function to check for duplicate NIC in session cart
         window.checkDuplicateInCart = function() {
@@ -420,8 +440,8 @@
                 return;
             }
 
-            // Get current cart from the page
-            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            // Get current cart from the page - use table.table selector since there's no specific class
+            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
             let isDuplicate = false;
 
             cartRows.forEach(row => {
@@ -479,6 +499,9 @@
                     }
                     
                     document.getElementById('residence_address').value = data.data.residence_address || '';
+                    
+                    // Store the fetched ID number
+                    lastFetchedIdNumber = idNumber;
                     
                     console.log('Person details auto-filled successfully');
                 }
@@ -565,6 +588,11 @@
 
             // Run validation on typing
             idNumber.addEventListener("input", validateId);
+            
+            // Run validation on page load if ID number is pre-filled (from old() values)
+            if (idNumber.value.trim() !== "") {
+                validateId();
+            }
         });
 
         // --- Form Submission Validation ---
@@ -643,6 +671,14 @@
             addBtn.disabled = true;
             addBtn.style.opacity = '0.6';
             addBtn.style.cursor = 'not-allowed';
+
+            // Check for duplicate error first
+            const duplicateError = document.getElementById('duplicate_error');
+            if (duplicateError && duplicateError.textContent.trim() !== '') {
+                msg.innerText = 'Cannot check availability: This NIC is already in the cart.';
+                msg.style.color = 'red';
+                return;
+            }
 
             // Check for empty fields and build detailed message
             const missingFields = [];
@@ -792,7 +828,7 @@
         // Clear Form function - preserves company data and cart state
         window.clearForm = function() {
             // Check if there are any entries in the cart
-            const cartRows = document.querySelectorAll('.user-dashboard-table tbody tr');
+            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
             const hasCartEntries = cartRows.length > 0;
             
             // Store company-related data before clearing (only if cart has entries)

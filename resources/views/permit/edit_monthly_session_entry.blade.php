@@ -143,8 +143,9 @@
                     <div class="col-md-6">
                         <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
                         <input type="text" class="form-control" name="id_number" id="id_number" 
-                               value="{{ old('id_number', $permit['id_number']) }}" required oninput="this.value = this.value.toUpperCase(); updateIdValidation();">
+                               value="{{ old('id_number', $permit['id_number']) }}" required oninput="this.value = this.value.toUpperCase(); updateIdValidation(); handleIdNumberChange(); checkDuplicateInCart();" onblur="fetchPersonDetails();">
                         <span id="id_number_error" class="text-danger small"></span>
+                        <span id="duplicate_error" class="text-danger small"></span>
                     </div>
                 </div>
 
@@ -288,16 +289,148 @@
 let checkedFormData = null;
 // Store ID validation state globally
 let isIdValid = false;
+// Store the last fetched ID number to track changes
+let lastFetchedIdNumber = '';
 // Store original values from the form (from monthly form)
 let originalValues = {
     id_type: 'NIC',
     id_number: '{{ $permit["id_number"] ?? "" }}'
 };
 
+// Function to handle ID number change - clear autofilled data when changed
+window.handleIdNumberChange = function() {
+    const currentIdNumber = document.getElementById('id_number').value.trim();
+    
+    // If ID number has changed from the last fetched one, clear autofilled fields
+    if (lastFetchedIdNumber && currentIdNumber !== lastFetchedIdNumber) {
+        document.getElementById('full_name').value = '';
+        document.getElementById('initials').value = '';
+        document.getElementById('residence_address').value = '';
+        
+        // Clear designation
+        const designationSelect = document.getElementById('designation');
+        if (designationSelect) {
+            designationSelect.value = '';
+        }
+        
+        // Reset the last fetched ID number
+        lastFetchedIdNumber = '';
+    }
+}
+
+// Function to fetch person details from database
+window.fetchPersonDetails = function() {
+    const idNumber = document.getElementById('id_number').value.trim();
+    
+    if (!idNumber) {
+        return;
+    }
+
+    fetch("{{ route('permit.fetchPersonDetails') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({ id_number: idNumber })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.found) {
+            // Auto-fill the fields
+            document.getElementById('full_name').value = data.data.full_name || '';
+            document.getElementById('initials').value = data.data.initials || '';
+            
+            // Set designation
+            if (data.data.designation) {
+                const designationSelect = document.getElementById('designation');
+                if (designationSelect) {
+                    designationSelect.value = data.data.designation;
+                }
+            }
+            
+            document.getElementById('residence_address').value = data.data.residence_address || '';
+            
+            // Store the fetched ID number
+            lastFetchedIdNumber = idNumber;
+            
+            console.log('Person details auto-filled successfully');
+        }
+    })
+    .catch(error => {
+        console.error("Failed to fetch person details:", error);
+    });
+}
+
+// Function to check for duplicate ID numbers in the cart (excluding current entry)
+window.checkDuplicateInCart = function() {
+    const currentIdNumber = document.getElementById('id_number').value.trim();
+    const originalIdNumber = originalValues.id_number; // The original ID for this entry
+    const duplicateError = document.getElementById('duplicate_error');
+    const updateBtn = document.getElementById('updateBtn');
+    
+    if (!currentIdNumber) {
+        duplicateError.textContent = '';
+        duplicateError.style.display = 'none';
+        return;
+    }
+    
+    // Get all session permits from the session
+    const sessionPermits = @json(session('monthly_permit_cart', []));
+    const currentEditIndex = {{ $index }};
+    
+    console.log('Checking duplicates...', {
+        currentIdNumber,
+        currentEditIndex,
+        sessionPermits
+    });
+    
+    let isDuplicate = false;
+    
+    // Check each permit in the session
+    sessionPermits.forEach((permit, index) => {
+        // Skip the current entry being edited
+        if (index === currentEditIndex) {
+            return;
+        }
+        
+        // Compare ID numbers (case insensitive)
+        if (permit.id_number && permit.id_number.toUpperCase() === currentIdNumber.toUpperCase()) {
+            isDuplicate = true;
+        }
+    });
+    
+    if (isDuplicate) {
+        duplicateError.textContent = '⚠️ This NIC is already in the cart. Cannot have duplicate entries.';
+        duplicateError.style.display = 'block';
+        duplicateError.style.color = '#dc3545';
+        duplicateError.style.fontWeight = '500';
+        if (updateBtn) {
+            updateBtn.disabled = true;
+            updateBtn.style.opacity = '0.6';
+            updateBtn.style.cursor = 'not-allowed';
+        }
+    } else {
+        duplicateError.textContent = '';
+        duplicateError.style.display = 'none';
+        if (updateBtn && isIdValid) {
+            updateBtn.disabled = false;
+            updateBtn.style.opacity = '1';
+            updateBtn.style.cursor = 'pointer';
+        }
+    }
+}
+
 // Initialize validation on page load
 document.addEventListener('DOMContentLoaded', function() {
     validateId(); // Initial validation
     autoFillToDate(); // Set initial to_date
+    
+    // Run validation on page load if ID number is pre-filled
+    const idNumber = document.getElementById('id_number');
+    if (idNumber && idNumber.value.trim() !== "") {
+        validateId();
+    }
     
     // Enable ID type dropdown before form submission
     const form = document.querySelector('form[action="{{ route('permit.monthly.updateMonthlySessionEntry', $index) }}"]');
@@ -305,6 +438,15 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             const idTypeDropdown = document.getElementById('id_type');
             idTypeDropdown.disabled = false;
+            
+            // Check for duplicate error
+            const duplicateError = document.getElementById('duplicate_error');
+            if (duplicateError && duplicateError.textContent.trim() !== '') {
+                e.preventDefault();
+                alert('Cannot submit: This NIC is already in the cart. Please use a different NIC.');
+                idTypeDropdown.disabled = true;
+                return false;
+            }
             
             // Check if ID is valid before allowing submission
             if (!isIdValid && document.getElementById('id_number').value.trim() !== '') {
@@ -418,6 +560,14 @@ function checkMonthlyAvailability(isEdit = false) {
     updateBtn.style.opacity = '0.6';
     updateBtn.style.cursor = 'not-allowed';
 
+    // Check for duplicate error first
+    const duplicateError = document.getElementById('duplicate_error');
+    if (duplicateError && duplicateError.textContent.trim() !== '') {
+        msg.innerText = 'Cannot check availability: This NIC is already in the cart.';
+        msg.style.color = 'red';
+        return;
+    }
+
     // Validate ID before checking availability
     if (!isIdValid) {
         msg.innerText = 'Please enter a valid NIC Number';
@@ -464,8 +614,12 @@ function checkMonthlyAvailability(isEdit = false) {
         msg.innerText = data.message;
         msg.style.color = data.available ? 'green' : 'red';
         
-        // Enable button only if available
-        if (data.available) {
+        // Check if there's a duplicate error before enabling
+        const duplicateError = document.getElementById('duplicate_error');
+        const hasDuplicateError = duplicateError && duplicateError.textContent.trim() !== '';
+        
+        // Enable button only if available AND no duplicate error
+        if (data.available && !hasDuplicateError) {
             updateBtn.disabled = false;
             updateBtn.style.backgroundColor = '';
             updateBtn.style.borderColor = '';
@@ -485,7 +639,7 @@ function checkMonthlyAvailability(isEdit = false) {
             // Attach change listeners to form fields
             attachChangeListeners();
         } else {
-            // Keep it grey when not available
+            // Keep it grey when not available or has duplicate
             updateBtn.style.backgroundColor = '#9e9e9e';
             updateBtn.style.borderColor = '#9e9e9e';
             checkedFormData = null;

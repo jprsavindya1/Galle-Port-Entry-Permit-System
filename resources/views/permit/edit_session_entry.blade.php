@@ -186,9 +186,10 @@
                     <div class="col-md-6">
                         <label for="id_number" class="form-label">Identification Number <span class="text-danger">*</span></label>
                         <input type="text" id="id_number" name="id_number" class="form-control" required
-                               value="{{ $permit['id_number'] ?? '' }}" oninput="updateIdValidation()">
+                               value="{{ $permit['id_number'] ?? '' }}" oninput="updateIdValidation(); handleIdNumberChange(); checkDuplicateInCart();" onblur="fetchPersonDetails();">
                         <div style="min-height: 20px;">
                             <span id="id_number_error" class="text-danger" style="font-size: 0.875rem; display: none;"></span>
+                            <span id="duplicate_error" class="text-danger small"></span>
                         </div>
                     </div>
                 </div>
@@ -330,6 +331,8 @@
         let checkedFormData = null;
         // Store ID validation state globally
         let isIdValid = false;
+        // Store the last fetched ID number to track changes
+        let lastFetchedIdNumber = '';
         // Store previous ID type to detect changes
         let previousIdType = null;
         // Store original values from the form (from temporary form)
@@ -337,6 +340,124 @@
             id_type: '{{ $permit["id_type"] ?? "" }}',
             id_number: '{{ $permit["id_number"] ?? "" }}'
         };
+
+        // Function to handle ID number change - clear autofilled data when changed
+        window.handleIdNumberChange = function() {
+            const currentIdNumber = document.getElementById('id_number').value.trim();
+            
+            // If ID number has changed from the last fetched one, clear autofilled fields
+            if (lastFetchedIdNumber && currentIdNumber !== lastFetchedIdNumber) {
+                document.getElementById('full_name').value = '';
+                document.getElementById('initials').value = '';
+                document.getElementById('residence_address').value = '';
+                
+                // Clear designation using Select2
+                $('#designation').val(null).trigger('change');
+                
+                // Reset the last fetched ID number
+                lastFetchedIdNumber = '';
+            }
+        }
+
+        // Function to fetch person details from database
+        window.fetchPersonDetails = function() {
+            const idNumber = document.getElementById('id_number').value.trim();
+            
+            if (!idNumber) {
+                return;
+            }
+
+            fetch("{{ route('permit.fetchPersonDetails') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ id_number: idNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.found) {
+                    // Auto-fill the fields
+                    document.getElementById('full_name').value = data.data.full_name || '';
+                    document.getElementById('initials').value = data.data.initials || '';
+                    
+                    // Set designation using Select2
+                    if (data.data.designation) {
+                        $('#designation').val(data.data.designation).trigger('change');
+                    }
+                    
+                    document.getElementById('residence_address').value = data.data.residence_address || '';
+                    
+                    // Store the fetched ID number
+                    lastFetchedIdNumber = idNumber;
+                    
+                    console.log('Person details auto-filled successfully');
+                }
+            })
+            .catch(error => {
+                console.error("Failed to fetch person details:", error);
+            });
+        }
+
+        // Function to check for duplicate ID numbers in the cart (excluding current entry)
+        window.checkDuplicateInCart = function() {
+            const currentIdNumber = document.getElementById('id_number').value.trim();
+            const originalIdNumber = originalValues.id_number; // The original ID for this entry
+            const duplicateError = document.getElementById('duplicate_error');
+            const updateBtn = document.getElementById('updateBtn');
+            
+            if (!currentIdNumber) {
+                duplicateError.textContent = '';
+                duplicateError.style.display = 'none';
+                return;
+            }
+            
+            // Get all session permits from the session
+            const sessionPermits = @json(session('temporary_permit_cart', []));
+            const currentEditIndex = {{ $index }};
+            
+            console.log('Checking duplicates...', {
+                currentIdNumber,
+                currentEditIndex,
+                sessionPermits
+            });
+            
+            let isDuplicate = false;
+            
+            // Check each permit in the session
+            sessionPermits.forEach((permit, index) => {
+                // Skip the current entry being edited
+                if (index === currentEditIndex) {
+                    return;
+                }
+                
+                // Compare ID numbers (case insensitive)
+                if (permit.id_number && permit.id_number.toUpperCase() === currentIdNumber.toUpperCase()) {
+                    isDuplicate = true;
+                }
+            });
+            
+            if (isDuplicate) {
+                duplicateError.textContent = '⚠️ This ID Number is already in the cart. Cannot have duplicate entries.';
+                duplicateError.style.display = 'block';
+                duplicateError.style.color = '#dc3545';
+                duplicateError.style.fontWeight = '500';
+                if (updateBtn) {
+                    updateBtn.disabled = true;
+                    updateBtn.style.opacity = '0.6';
+                    updateBtn.style.cursor = 'not-allowed';
+                }
+            } else {
+                duplicateError.textContent = '';
+                duplicateError.style.display = 'none';
+                if (updateBtn && isIdValid) {
+                    updateBtn.disabled = false;
+                    updateBtn.style.opacity = '1';
+                    updateBtn.style.cursor = 'pointer';
+                }
+            }
+        }
 
         // Initialize Select2 on the Designation dropdown
         $('#designation').select2({
@@ -354,7 +475,12 @@
         // Call setMaxToDate on page load to initialize the date constraints
         document.addEventListener('DOMContentLoaded', function() {
             setMaxToDate();
-            validateId(); // Initial validation
+            
+            // Validate ID if it has a value on page load (e.g., after validation error)
+            const idNumber = document.getElementById('id_number');
+            if (idNumber.value.trim() !== "") {
+                validateId(); // Initial validation
+            }
             
             // Initialize previous ID type
             const idTypeDropdown = document.getElementById('id_type');
@@ -366,6 +492,15 @@
                 form.addEventListener('submit', function(e) {
                     // Enable ID type dropdown before form submission
                     idTypeDropdown.disabled = false;
+                    
+                    // Check for duplicate error
+                    const duplicateError = document.getElementById('duplicate_error');
+                    if (duplicateError && duplicateError.textContent.trim() !== '') {
+                        e.preventDefault();
+                        alert('Cannot submit: This ID Number is already in the cart. Please use a different ID.');
+                        idTypeDropdown.disabled = true;
+                        return false;
+                    }
                     
                     // Check if ID is valid before allowing submission
                     if (!isIdValid && document.getElementById('id_number').value.trim() !== '') {
@@ -567,6 +702,14 @@
             updateBtn.style.opacity = '0.6';
             updateBtn.style.cursor = 'not-allowed';
 
+            // Check for duplicate error first
+            const duplicateError = document.getElementById('duplicate_error');
+            if (duplicateError && duplicateError.textContent.trim() !== '') {
+                msg.innerText = 'Cannot check availability: This ID Number is already in the cart.';
+                msg.style.color = 'red';
+                return;
+            }
+
             // Validate ID before checking availability
             if (!isIdValid) {
                 msg.innerText = 'Please enter a valid Identification Number';
@@ -603,8 +746,12 @@
                 msg.innerText = data.message;
                 msg.style.color = data.available ? 'green' : 'red';
                 
-                // Enable button only if available
-                if (data.available) {
+                // Check if there's a duplicate error before enabling
+                const duplicateError = document.getElementById('duplicate_error');
+                const hasDuplicateError = duplicateError && duplicateError.textContent.trim() !== '';
+                
+                // Enable button only if available AND no duplicate error
+                if (data.available && !hasDuplicateError) {
                     updateBtn.disabled = false;
                     updateBtn.style.backgroundColor = '';
                     updateBtn.style.borderColor = '';
@@ -624,7 +771,7 @@
                     // Attach change listeners to form fields
                     attachChangeListeners();
                 } else {
-                    // Keep it grey when not available
+                    // Keep it grey when not available or has duplicate
                     updateBtn.style.backgroundColor = '#9e9e9e';
                     updateBtn.style.borderColor = '#9e9e9e';
                     checkedFormData = null;
