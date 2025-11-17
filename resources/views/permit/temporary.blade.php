@@ -160,20 +160,20 @@
             {{-- DOCUMENTS ATTACHED SECTION --}}
             <fieldset class="mb-4">
                 <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached </legend>
-                <div class="row">
-                    <div class="col-md-4">
+                <div class="row gx-2">
+                    <div class="col-auto">
                         <div class="form-check">
                             <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input doc-checkbox" onchange="syncIdType('NIC')" {{ old('doc_nic') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_nic">NIC</label>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-auto">
                         <div class="form-check">
                             <input type="checkbox" name="doc_passport" value="1" id="doc_passport" class="form-check-input doc-checkbox" onchange="syncIdType('Passport')" {{ old('doc_passport') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_passport">Passport</label>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-auto">
                         <div class="form-check">
                             <input type="checkbox" name="doc_driving_licence" value="1" id="doc_driving_licence" class="form-check-input doc-checkbox" onchange="syncIdType('Driving License')" {{ old('doc_driving_licence') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_driving_licence">Driving Licence</label>
@@ -932,10 +932,22 @@
             document.getElementById('duplicate_error').textContent = '';
             document.getElementById('availability-msg').textContent = '';
             
-            // Reset document checkboxes
-            document.getElementById('doc_nic').checked = false;
-            document.getElementById('doc_passport').checked = false;
-            document.getElementById('doc_driving_licence').checked = false;
+            // Reset document checkboxes - IMPORTANT: Clear these explicitly
+            const docNic = document.getElementById('doc_nic');
+            const docPassport = document.getElementById('doc_passport');
+            const docDrivingLicence = document.getElementById('doc_driving_licence');
+            if (docNic) {
+                docNic.checked = false;
+                docNic.removeAttribute('checked');
+            }
+            if (docPassport) {
+                docPassport.checked = false;
+                docPassport.removeAttribute('checked');
+            }
+            if (docDrivingLicence) {
+                docDrivingLicence.checked = false;
+                docDrivingLicence.removeAttribute('checked');
+            }
             
             // Reset ID type dropdown and enable it
             const idTypeDropdown = document.getElementById('id_type');
@@ -946,10 +958,16 @@
             
             // Reset pass type and issue type radio buttons
             const passTypeRadios = document.querySelectorAll('input[name="pass_type"]');
-            passTypeRadios.forEach(radio => radio.checked = false);
+            passTypeRadios.forEach(radio => {
+                radio.checked = false;
+                radio.removeAttribute('checked');
+            });
             
             const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
-            issueTypeRadios.forEach(radio => radio.checked = false);
+            issueTypeRadios.forEach(radio => {
+                radio.checked = false;
+                radio.removeAttribute('checked');
+            });
             
             // Restore company-related data only if cart has entries
             if (hasCartEntries) {

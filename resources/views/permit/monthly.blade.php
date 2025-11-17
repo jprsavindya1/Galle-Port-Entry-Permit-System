@@ -155,14 +155,14 @@
             {{-- DOCUMENTS ATTACHED SECTION --}}
             <fieldset class="mb-4">
                 <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached </legend>
-                <div class="row">
-                    <div class="col-md-6">
+                <div class="row gx-2">
+                    <div class="col-auto">
                         <div class="form-check">
                             <input type="checkbox" name="doc_nic" value="1" id="doc_nic" class="form-check-input" {{ old('doc_nic') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_nic">NIC</label>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-auto">
                         <div class="form-check">
                             <input type="checkbox" name="doc_police_report" value="1" id="doc_police_report" class="form-check-input" {{ old('doc_police_report') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_police_report">Police Report</label>
@@ -827,90 +827,148 @@
 
         // Clear Form function - preserves company data and cart state
         window.clearForm = function() {
-            // Check if there are any entries in the cart
-            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
-            const hasCartEntries = cartRows.length > 0;
-            
-            // Store company-related data before clearing (only if cart has entries)
-            let companyName = '';
-            let companyAddress = '';
-            let designation = '';
-            
-            if (hasCartEntries) {
-                companyName = document.getElementById('company_name').value;
-                companyAddress = document.getElementById('company_address').value;
-                designation = document.getElementById('designation').value;
+            try {
+                // Check if there are any entries in the cart
+                const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
+                const hasCartEntries = cartRows.length > 0;
+                
+                // Store company-related data before clearing (only if cart has entries)
+                let companyName = '';
+                let companyAddress = '';
+                let designation = '';
+                
+                if (hasCartEntries) {
+                    const companyField = document.getElementById('company_name');
+                    const addressField = document.getElementById('company_address');
+                    const designationField = document.getElementById('designation');
+                    if (companyField) companyName = companyField.value;
+                    if (addressField) companyAddress = addressField.value;
+                    if (designationField) designation = designationField.value;
+                }
+                
+                // Clear all form fields with null checks
+                const idNumber = document.getElementById('id_number');
+                const fullName = document.getElementById('full_name');
+                const initials = document.getElementById('initials');
+                const fromDate = document.getElementById('from_date');
+                const toDate = document.getElementById('to_date');
+                const residenceAddress = document.getElementById('residence_address');
+                const reason = document.getElementById('reason');
+                const policeReportFrom = document.getElementById('police_report_from_date');
+                const policeReportTo = document.getElementById('police_report_to_date');
+                
+                if (idNumber) idNumber.value = '';
+                if (fullName) fullName.value = '';
+                if (initials) initials.value = '';
+                if (fromDate) fromDate.value = '';
+                if (toDate) toDate.value = '';
+                if (residenceAddress) residenceAddress.value = '';
+                if (reason) reason.value = '';
+                if (policeReportFrom) policeReportFrom.value = '';
+                if (policeReportTo) policeReportTo.value = '';
+                
+                // Clear company fields if no cart entries
+                if (!hasCartEntries) {
+                    const companyField = document.getElementById('company_name');
+                    const addressField = document.getElementById('company_address');
+                    const designationField = document.getElementById('designation');
+                    
+                    if (companyField) {
+                        companyField.value = '';
+                        $('#company_name').val(null).trigger('change');
+                    }
+                    if (addressField) addressField.value = '';
+                    if (designationField) {
+                        designationField.value = '';
+                        $('#designation').val(null).trigger('change');
+                    }
+                }
+                
+                // Clear error messages
+                const idNumberError = document.getElementById('id_number_error');
+                const duplicateError = document.getElementById('duplicate_error');
+                if (idNumberError) idNumberError.textContent = '';
+                if (duplicateError) duplicateError.textContent = '';
+                
+                // Reset document checkboxes - IMPORTANT: Clear these explicitly
+                const docNic = document.getElementById('doc_nic');
+                const docPoliceReport = document.getElementById('doc_police_report');
+                
+                console.log('Clearing checkboxes:', docNic, docPoliceReport); // Debug
+                
+                if (docNic) {
+                    docNic.checked = false;
+                    docNic.removeAttribute('checked');
+                    console.log('NIC checkbox cleared'); // Debug
+                }
+                if (docPoliceReport) {
+                    docPoliceReport.checked = false;
+                    docPoliceReport.removeAttribute('checked');
+                    console.log('Police Report checkbox cleared'); // Debug
+                }
+                
+                // ID type is always NIC for monthly, but reset it
+                const idType = document.getElementById('id_type');
+                if (idType) idType.value = 'NIC';
+                
+                // Reset pass type and issue type radio buttons
+                const passTypeRadios = document.querySelectorAll('input[name="pass_type"]');
+                passTypeRadios.forEach(radio => {
+                    radio.checked = false;
+                    radio.removeAttribute('checked');
+                });
+                
+                const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
+                issueTypeRadios.forEach(radio => {
+                    radio.checked = false;
+                    radio.removeAttribute('checked');
+                });
+                
+                // Restore company-related data only if cart has entries
+                if (hasCartEntries) {
+                    const companyField = document.getElementById('company_name');
+                    const addressField = document.getElementById('company_address');
+                    const designationField = document.getElementById('designation');
+                    
+                    if (companyField) {
+                        companyField.value = companyName;
+                        $('#company_name').trigger('change.select2');
+                    }
+                    if (addressField) addressField.value = companyAddress;
+                    if (designationField) {
+                        designationField.value = designation;
+                        $('#designation').trigger('change.select2');
+                    }
+                }
+                
+                // Reset validation states
+                isIdValid = false;
+                checkedFormData = null;
+                
+                // Disable the "Add to List" button
+                const addBtn = document.getElementById('addToListBtn');
+                if (addBtn) {
+                    addBtn.disabled = true;
+                    addBtn.style.backgroundColor = '#9e9e9e';
+                    addBtn.style.borderColor = '#9e9e9e';
+                    addBtn.style.opacity = '0.65';
+                    addBtn.style.cursor = 'not-allowed';
+                }
+                
+                // Show success message
+                const msg = document.getElementById('availability-msg');
+                if (msg) {
+                    msg.innerText = 'Form cleared successfully.';
+                    msg.style.color = '#2196F3';
+                    
+                    // Clear the message after 3 seconds
+                    setTimeout(() => {
+                        msg.innerText = '';
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Error in clearForm:', error);
             }
-            
-            // Clear all form fields
-            document.getElementById('id_number').value = '';
-            document.getElementById('full_name').value = '';
-            document.getElementById('initials').value = '';
-            document.getElementById('from_date').value = '';
-            document.getElementById('to_date').value = '';
-            document.getElementById('residence_address').value = '';
-            document.getElementById('reason').value = '';
-            document.getElementById('police_report_from_date').value = '';
-            document.getElementById('police_report_to_date').value = '';
-            
-            // Clear company fields if no cart entries
-            if (!hasCartEntries) {
-                document.getElementById('company_name').value = '';
-                $('#company_name').val(null).trigger('change'); // Clear Select2
-                document.getElementById('company_address').value = '';
-                document.getElementById('designation').value = '';
-                $('#designation').val(null).trigger('change'); // Clear Select2
-            }
-            
-            // Clear error messages and availability message
-            document.getElementById('id_number_error').textContent = '';
-            document.getElementById('duplicate_error').textContent = '';
-            document.getElementById('availability-msg').textContent = '';
-            
-            // Reset document checkboxes
-            document.getElementById('doc_nic').checked = false;
-            document.getElementById('doc_police_report').checked = false;
-            
-            // ID type is always NIC for monthly, but reset it
-            document.getElementById('id_type').value = 'NIC';
-            
-            // Reset pass type and issue type radio buttons
-            const passTypeRadios = document.querySelectorAll('input[name="pass_type"]');
-            passTypeRadios.forEach(radio => radio.checked = false);
-            
-            const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
-            issueTypeRadios.forEach(radio => radio.checked = false);
-            
-            // Restore company-related data only if cart has entries
-            if (hasCartEntries) {
-                document.getElementById('company_name').value = companyName;
-                $('#company_name').trigger('change.select2'); // Update Select2 display
-                document.getElementById('company_address').value = companyAddress;
-                document.getElementById('designation').value = designation;
-                $('#designation').trigger('change.select2'); // Update Select2 display
-            }
-            
-            // Reset validation states
-            isIdValid = false;
-            checkedFormData = null;
-            
-            // Disable the "Add to List" button
-            const addBtn = document.getElementById('addToListBtn');
-            addBtn.disabled = true;
-            addBtn.style.backgroundColor = '#9e9e9e';
-            addBtn.style.borderColor = '#9e9e9e';
-            addBtn.style.opacity = '0.65';
-            addBtn.style.cursor = 'not-allowed';
-            
-            // Show success message
-            const msg = document.getElementById('availability-msg');
-            msg.innerText = 'Form cleared successfully.';
-            msg.style.color = '#2196F3';
-            
-            // Clear the message after 3 seconds
-            setTimeout(() => {
-                msg.innerText = '';
-            }, 3000);
         }
 
         // SweetAlert2 for cart delete confirmation

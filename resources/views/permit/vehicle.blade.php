@@ -149,14 +149,14 @@
             {{-- DOCUMENTS ATTACHED SECTION --}}
             <fieldset class="mb-4">
                 <legend class="col-form-label pt-0"><i class="bi bi-paperclip me-1"></i> Documents Attached </legend>
-                <div class="row">
-                    <div class="col-md-6">
+                <div class="row gx-2">
+                    <div class="col-auto">
                         <div class="form-check">
                             <input type="checkbox" name="doc_revenue_licence" value="1" id="doc_revenue_licence" class="form-check-input">
                             <label class="form-check-label" for="doc_revenue_licence">Revenue Licence</label>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-auto">
                         <div class="form-check">
                             <input type="checkbox" name="doc_insurance" value="1" id="doc_insurance" class="form-check-input">
                             <label class="form-check-label" for="doc_insurance">Insurance</label>
@@ -708,73 +708,115 @@
 
         // Clear Form function - preserves company data and cart state
         window.clearForm = function() {
-            // Check if there are any entries in the cart
-            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
-            const hasCartEntries = cartRows.length > 0;
-            
-            // Store company name before clearing (only if cart has entries)
-            let companyName = '';
-            
-            if (hasCartEntries) {
-                companyName = document.getElementById('company_name').value;
+            try {
+                // Check if there are any entries in the cart
+                const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
+                const hasCartEntries = cartRows.length > 0;
+                
+                // Store company name before clearing (only if cart has entries)
+                let companyName = '';
+                
+                if (hasCartEntries) {
+                    const companyField = document.getElementById('company_name');
+                    if (companyField) companyName = companyField.value;
+                }
+                
+                // Clear all form fields with null checks
+                const vehicleNumber = document.getElementById('vehicle_number');
+                const fromDate = document.getElementById('from_date');
+                const toDate = document.getElementById('to_date');
+                const vehicleType = document.getElementById('vehicle_type');
+                const revenueLicenseNumber = document.getElementById('revenue_license_number');
+                const insuranceNumber = document.getElementById('insurance_number');
+                const ownerName = document.getElementById('owner_name');
+                const ownerAddress = document.getElementById('owner_address');
+                const reason = document.getElementById('reason');
+                const remarks = document.getElementById('remarks');
+                
+                if (vehicleNumber) vehicleNumber.value = '';
+                if (fromDate) fromDate.value = '';
+                if (toDate) toDate.value = '';
+                if (vehicleType) vehicleType.value = '';
+                if (revenueLicenseNumber) revenueLicenseNumber.value = '';
+                if (insuranceNumber) insuranceNumber.value = '';
+                if (ownerName) ownerName.value = '';
+                if (ownerAddress) ownerAddress.value = '';
+                if (reason) reason.value = '';
+                if (remarks) remarks.value = '';
+                
+                // Clear company field if no cart entries
+                if (!hasCartEntries) {
+                    const companyField = document.getElementById('company_name');
+                    if (companyField) {
+                        companyField.value = '';
+                        $('#company_name').val(null).trigger('change'); // Clear Select2
+                    }
+                }
+                
+                // Clear error messages
+                const duplicateError = document.getElementById('duplicate_error');
+                if (duplicateError) duplicateError.textContent = '';
+                
+                // Reset document checkboxes - IMPORTANT: Clear these explicitly
+                const docRevenueLicence = document.getElementById('doc_revenue_licence');
+                const docInsurance = document.getElementById('doc_insurance');
+                
+                console.log('Clearing checkboxes:', docRevenueLicence, docInsurance); // Debug
+                
+                if (docRevenueLicence) {
+                    docRevenueLicence.checked = false;
+                    docRevenueLicence.removeAttribute('checked');
+                    console.log('Revenue Licence cleared'); // Debug
+                }
+                if (docInsurance) {
+                    docInsurance.checked = false;
+                    docInsurance.removeAttribute('checked');
+                    console.log('Insurance cleared'); // Debug
+                }
+                
+                // Reset issue type radio buttons
+                const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
+                issueTypeRadios.forEach(radio => {
+                    radio.checked = false;
+                    radio.removeAttribute('checked');
+                });
+                
+                // Restore company name only if cart has entries
+                if (hasCartEntries) {
+                    const companyField = document.getElementById('company_name');
+                    if (companyField) {
+                        companyField.value = companyName;
+                        $('#company_name').trigger('change.select2'); // Update Select2 display
+                    }
+                }
+                
+                // Reset validation states
+                checkedFormData = null;
+                
+                // Disable the "Add to List" button
+                const addBtn = document.getElementById('addToListBtn');
+                if (addBtn) {
+                    addBtn.disabled = true;
+                    addBtn.style.backgroundColor = '#9e9e9e';
+                    addBtn.style.borderColor = '#9e9e9e';
+                    addBtn.style.opacity = '0.65';
+                    addBtn.style.cursor = 'not-allowed';
+                }
+                
+                // Show success message
+                const msg = document.getElementById('availability-msg');
+                if (msg) {
+                    msg.innerText = 'Form cleared successfully.';
+                    msg.style.color = '#2196F3';
+                    
+                    // Clear the message after 3 seconds
+                    setTimeout(() => {
+                        msg.innerText = '';
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Error in clearForm:', error);
             }
-            
-            // Clear all form fields
-            document.getElementById('vehicle_number').value = '';
-            document.getElementById('from_date').value = '';
-            document.getElementById('to_date').value = '';
-            document.getElementById('vehicle_type').value = '';
-            document.getElementById('vehicle_make').value = '';
-            document.getElementById('vehicle_model').value = '';
-            document.getElementById('owner_name').value = '';
-            document.getElementById('owner_address').value = '';
-            document.getElementById('reason').value = '';
-            document.getElementById('remarks').value = '';
-            
-            // Clear company field if no cart entries
-            if (!hasCartEntries) {
-                document.getElementById('company_name').value = '';
-                $('#company_name').val(null).trigger('change'); // Clear Select2
-            }
-            
-            // Clear error messages and availability message
-            document.getElementById('duplicate_error').textContent = '';
-            document.getElementById('availability-msg').textContent = '';
-            
-            // Reset document checkboxes
-            document.getElementById('doc_revenue_licence').checked = false;
-            document.getElementById('doc_insurance').checked = false;
-            
-            // Reset issue type radio buttons
-            const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
-            issueTypeRadios.forEach(radio => radio.checked = false);
-            
-            // Restore company name only if cart has entries
-            if (hasCartEntries) {
-                document.getElementById('company_name').value = companyName;
-                $('#company_name').trigger('change.select2'); // Update Select2 display
-            }
-            
-            // Reset validation states
-            checkedFormData = null;
-            
-            // Disable the "Add to List" button
-            const addBtn = document.getElementById('addToListBtn');
-            addBtn.disabled = true;
-            addBtn.style.backgroundColor = '#9e9e9e';
-            addBtn.style.borderColor = '#9e9e9e';
-            addBtn.style.opacity = '0.65';
-            addBtn.style.cursor = 'not-allowed';
-            
-            // Show success message
-            const msg = document.getElementById('availability-msg');
-            msg.innerText = 'Form cleared successfully.';
-            msg.style.color = '#2196F3';
-            
-            // Clear the message after 3 seconds
-            setTimeout(() => {
-                msg.innerText = '';
-            }, 3000);
         }
 
         // SweetAlert2 for cart delete confirmation
