@@ -94,11 +94,12 @@ Location: `app/Helpers/IdGeneratorHelper.php`
    - Increments atomically
    - Returns: `TP251101####` or `MP251101####` or `VH251101####`
 
-4. **`generateInvoiceId()`**
-   - Checks payment table
-   - Finds highest counter for today
+4. **`generateInvoiceId($permitType)`**
+   - Checks payment table for specific permit type
+   - Finds highest counter for current year+month
    - Increments atomically
-   - Returns: `INV251112###`
+   - Returns: `INV-T2512##` (Temporary), `INV-M2512##` (Monthly), or `INV-V2512##` (Vehicle)
+   - Format: INV-[T|M|V] + YY + MM + count (e.g., INV-T251220)
 
 ---
 
@@ -125,8 +126,8 @@ foreach ($cart as $entry) {
 
 ### Processing Payment
 ```php
-// Generate invoice ID when creating payment
-$invoiceId = IdGeneratorHelper::generateInvoiceId();
+// Generate invoice ID when creating payment (pass permit type)
+$invoiceId = IdGeneratorHelper::generateInvoiceId($permitType); // 'TP', 'MP', or 'VH'
 
 Payment::create([
     'invoice_id' => $invoiceId,

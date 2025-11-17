@@ -301,7 +301,7 @@
                 
                 <div class="col-md-5">
                     <label class="form-label mb-1" for="search-query"><i class="fas fa-search me-1"></i> Search</label>
-                    <input type="text" name="q" id="search-query" class="form-control" placeholder="Company, ID, Name, or App No." value="{{ request('q') }}" style="border-radius:0.5rem;border:1px solid #bbdefb;background:#fff;">
+                    <input type="text" name="q" id="search-query" class="form-control" placeholder="Invoice, Permit, App No., Company, Name, ID, Vehicle..." value="{{ request('q') }}" style="border-radius:0.5rem;border:1px solid #bbdefb;background:#fff;" title="Search by: Invoice ID, Permit ID, Application No., Submission ID, Company Name, Person Name/Initials, ID Number, Vehicle Number, Revenue License, Insurance Number">
                 </div>
                 
                 <div class="col-md-3">

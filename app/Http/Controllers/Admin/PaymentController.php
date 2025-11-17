@@ -244,8 +244,8 @@ foreach ($cart as $entry) {
             }
         }
 
-        // Generate collision-free invoice ID
-        $invoiceId = IdGeneratorHelper::generateInvoiceId();
+        // Generate collision-free invoice ID with permit type
+        $invoiceId = IdGeneratorHelper::generateInvoiceId($permitType);
 
         // Total amount
       $amountTotal = $rateTotal + $sslTotal + $vatTotal;
@@ -342,8 +342,11 @@ foreach ($cart as $entry) {
             return redirect()->route('permit.temporary')->with('error', 'Session expired or invalid.');
         }
 
-        // Generate collision-free invoice ID
-        $invoiceId = IdGeneratorHelper::generateInvoiceId();
+        // Get permit type from cart
+        $permitType = $cart[0]['type'] ?? 'TP';
+
+        // Generate collision-free invoice ID with permit type
+        $invoiceId = IdGeneratorHelper::generateInvoiceId($permitType);
 
         Payment::create([
             'submission_id' => $submissionId,

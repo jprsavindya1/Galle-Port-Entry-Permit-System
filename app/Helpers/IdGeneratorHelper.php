@@ -211,16 +211,32 @@ class IdGeneratorHelper
 
     /**
      * Generate unique invoice ID with database lock to prevent collisions
-     * Format: INV + YYMMDD + count (e.g., INV251112001)
+     * Format: INV-[T|M|V] + YY + MM + count (e.g., INV-T251220150)
+     * T = Temporary, M = Monthly, V = Vehicle
      * 
+     * @param string $permitType The permit type (TP, MP, or VH)
      * @return string
      */
-    public static function generateInvoiceId(): string
+    public static function generateInvoiceId(string $permitType): string
     {
-        $datePrefix = 'INV' . now()->format('ymd');
+        // Map permit type to invoice type letter
+        $typeMap = [
+            'TP' => 'T',
+            'MP' => 'M',
+            'VH' => 'V',
+        ];
 
-        // Use advisory lock
-        $lockName = 'invoice_id_generation';
+        if (!isset($typeMap[$permitType])) {
+            throw new \Exception("Invalid permit type for invoice generation: $permitType");
+        }
+
+        $typeLetter = $typeMap[$permitType];
+        $year = now()->format('y');
+        $month = now()->format('m');
+        $datePrefix = 'INV-' . $typeLetter . $year . $month;
+
+        // Use advisory lock specific to permit type
+        $lockName = 'invoice_id_generation_' . $permitType;
         $lockResult = DB::selectOne("SELECT GET_LOCK(?, 10) as locked", [$lockName]);
 
         if (!$lockResult || !$lockResult->locked) {
@@ -235,11 +251,11 @@ class IdGeneratorHelper
             $nextNumber = 1;
 
             if ($latest) {
-                $counter = (int) substr($latest->invoice_id, -3);
+                $counter = (int) substr($latest->invoice_id, -2);
                 $nextNumber = $counter + 1;
             }
 
-            $invoiceId = $datePrefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+            $invoiceId = $datePrefix . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
 
             return $invoiceId;
         } finally {

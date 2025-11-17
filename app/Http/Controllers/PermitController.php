@@ -144,32 +144,45 @@ class PermitController extends Controller
     if ($request->filled('q')) {
         $search = $request->q;
         
-        $temporaryQuery->where(function($q) use ($search) {
-            $q->where('company_name', 'like', "%$search%")
-              ->orWhere('id_number', 'like', "%$search%")
-              ->orWhere('full_name', 'like', "%$search%")
-              ->orWhere('permit_id', 'like', "%$search%")
-              ->orWhere('application_number', 'like', "%$search%")
-              ->orWhere('submission_id', 'like', "%$search%");
-        });
+        // Temporary permits search with invoice_id via payment join
+        $temporaryQuery->leftJoin('payments as temp_payments', 'temporary_permits.submission_id', '=', 'temp_payments.submission_id')
+            ->where(function($q) use ($search) {
+                $q->where('temporary_permits.company_name', 'like', "%$search%")
+                  ->orWhere('temporary_permits.id_number', 'like', "%$search%")
+                  ->orWhere('temporary_permits.full_name', 'like', "%$search%")
+                  ->orWhere('temporary_permits.initials', 'like', "%$search%")
+                  ->orWhere('temporary_permits.permit_id', 'like', "%$search%")
+                  ->orWhere('temporary_permits.application_number', 'like', "%$search%")
+                  ->orWhere('temporary_permits.submission_id', 'like', "%$search%")
+                  ->orWhere('temp_payments.invoice_id', 'like', "%$search%");
+            });
         
-        $monthlyQuery->where(function($q) use ($search) {
-            $q->where('company_name', 'like', "%$search%")
-              ->orWhere('id_number', 'like', "%$search%")
-              ->orWhere('full_name', 'like', "%$search%")
-              ->orWhere('permit_id', 'like', "%$search%")
-              ->orWhere('application_number', 'like', "%$search%")
-              ->orWhere('submission_id', 'like', "%$search%");
-        });
+        // Monthly permits search with invoice_id via payment join
+        $monthlyQuery->leftJoin('payments as monthly_payments', 'monthly_permits.submission_id', '=', 'monthly_payments.submission_id')
+            ->where(function($q) use ($search) {
+                $q->where('monthly_permits.company_name', 'like', "%$search%")
+                  ->orWhere('monthly_permits.id_number', 'like', "%$search%")
+                  ->orWhere('monthly_permits.full_name', 'like', "%$search%")
+                  ->orWhere('monthly_permits.initials', 'like', "%$search%")
+                  ->orWhere('monthly_permits.permit_id', 'like', "%$search%")
+                  ->orWhere('monthly_permits.application_number', 'like', "%$search%")
+                  ->orWhere('monthly_permits.submission_id', 'like', "%$search%")
+                  ->orWhere('monthly_payments.invoice_id', 'like', "%$search%");
+            });
         
-        $vehicleQuery->where(function($q) use ($search) {
-            $q->where('company_name', 'like', "%$search%")
-              ->orWhere('vehicle_number', 'like', "%$search%")
-              ->orWhere('owner_name', 'like', "%$search%")
-              ->orWhere('permit_id', 'like', "%$search%")
-              ->orWhere('application_number', 'like', "%$search%")
-              ->orWhere('submission_id', 'like', "%$search%");
-        });
+        // Vehicle permits search with invoice_id via payment join
+        $vehicleQuery->leftJoin('payments as vehicle_payments', 'vehicle_permits.submission_id', '=', 'vehicle_payments.submission_id')
+            ->where(function($q) use ($search) {
+                $q->where('vehicle_permits.company_name', 'like', "%$search%")
+                  ->orWhere('vehicle_permits.vehicle_number', 'like', "%$search%")
+                  ->orWhere('vehicle_permits.owner_name', 'like', "%$search%")
+                  ->orWhere('vehicle_permits.revenue_license_number', 'like', "%$search%")
+                  ->orWhere('vehicle_permits.insurance_number', 'like', "%$search%")
+                  ->orWhere('vehicle_permits.permit_id', 'like', "%$search%")
+                  ->orWhere('vehicle_permits.application_number', 'like', "%$search%")
+                  ->orWhere('vehicle_permits.submission_id', 'like', "%$search%")
+                  ->orWhere('vehicle_payments.invoice_id', 'like', "%$search%");
+            });
     }
 
     // --- Date filter (filters by payment date via join) ---
