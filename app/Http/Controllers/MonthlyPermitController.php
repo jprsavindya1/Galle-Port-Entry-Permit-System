@@ -257,16 +257,36 @@ public function removeEntry($index)
         ]);
     }
 
-    // Only check against other MONTHLY permits (not temporary)
-    // Monthly permits CAN be issued even if temporary permits exist (monthly overrides temporary)
-    $monthlyConflict = MonthlyPermit::where('status', 'active')
+    // First check for active TEMPORARY permits (must be cancelled before issuing monthly)
+    // Check by person identity (name + initials) to prevent circumventing with different ID types
+    $tempConflict = TemporaryPermit::where('status', 'active')
+        ->where('full_name', $data['full_name'])
+        ->where('initials', $data['initials'])
         ->where(function ($query) use ($data) {
+            // Check for ANY overlap (including exact same dates)
             $query->where(function ($q) use ($data) {
-                $q->where('full_name', $data['full_name'])
-                  ->where('initials', $data['initials']);
-            })
-            ->orWhere('id_number', $data['id_number']);
+                // Existing permit starts before or on new permit end date
+                $q->where('from_date', '<=', $data['to_date'])
+                  // AND existing permit ends after or on new permit start date
+                  ->where('to_date', '>=', $data['from_date']);
+            });
         })
+        ->first();
+
+    if ($tempConflict) {
+        $fromDate = \Carbon\Carbon::parse($tempConflict->from_date)->format('d M Y');
+        $toDate = \Carbon\Carbon::parse($tempConflict->to_date)->format('d M Y');
+        return response()->json([
+            'available' => false,
+            'message' => "This person has an ACTIVE TEMPORARY PERMIT (ID: {$tempConflict->permit_id}) valid from {$fromDate} to {$toDate}. Please cancel the temporary permit before issuing a monthly permit."
+        ]);
+    }
+
+    // Then check against other MONTHLY permits
+    // Check by person identity (name + initials) to prevent circumventing with different ID types
+    $monthlyConflict = MonthlyPermit::where('status', 'active')
+        ->where('full_name', $data['full_name'])
+        ->where('initials', $data['initials'])
         ->where(function ($query) use ($data) {
             // Check for ANY overlap (including exact same dates)
             $query->where(function ($q) use ($data) {
@@ -287,7 +307,6 @@ public function removeEntry($index)
         ]);
     }
 
-    // Monthly permits CAN override temporary permits - no need to check temporary conflicts
     return response()->json([
         'available' => true, 
         'message' => 'Success!'

@@ -306,14 +306,10 @@ public function removeEntry($index)
     }
 
     // First check for active MONTHLY permits (higher priority)
+    // Check by person identity (name + initials) to prevent circumventing with different ID types
     $monthlyConflict = MonthlyPermit::where('status', 'active')
-        ->where(function ($query) use ($data) {
-            $query->where(function ($q) use ($data) {
-                $q->where('full_name', $data['full_name'])
-                  ->where('initials', $data['initials']);
-            })
-            ->orWhere('id_number', $data['id_number']);
-        })
+        ->where('full_name', $data['full_name'])
+        ->where('initials', $data['initials'])
         ->where(function ($query) use ($data) {
             // Check for ANY overlap (including exact same dates)
             $query->where(function ($q) use ($data) {
@@ -335,14 +331,10 @@ public function removeEntry($index)
     }
 
     // Then check for other TEMPORARY permit conflicts
+    // Check by person identity (name + initials) to prevent circumventing with different ID types
     $tempConflict = TemporaryPermit::where('status', 'active')
-        ->where(function ($query) use ($data) {
-            $query->where(function ($q) use ($data) {
-                $q->where('full_name', $data['full_name'])
-                  ->where('initials', $data['initials']);
-            })
-            ->orWhere('id_number', $data['id_number']);
-        })
+        ->where('full_name', $data['full_name'])
+        ->where('initials', $data['initials'])
         ->where(function ($query) use ($data) {
             // Check for ANY overlap (including exact same dates)
             $query->where(function ($q) use ($data) {
