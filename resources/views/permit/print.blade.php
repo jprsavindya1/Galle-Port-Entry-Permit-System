@@ -118,8 +118,13 @@
             break;
 
         case 'VH':
-            $title_en = "Temporary Permit";
-            $title_si = "තාවකාලික බලපත්‍රය";
+            if (str_contains(strtolower($permit->vehicle_type ?? ''), 'monthly')) {
+                $title_en = "Monthly Permit";
+                $title_si = "මාසික බලපත්‍රය";
+            } else {
+                $title_en = "Temporary Permit";
+                $title_si = "තාවකාලික බලපත්‍රය";
+            }
             $person_label = "Vehicle රථවාහන";
             break;
 
@@ -192,7 +197,7 @@
         <button id="btnBack">Back to Temporary Permit</button>
     @elseif($payment->permit_type === 'MP')
         <button id="btnBack">Back to Monthly Permit</button>
-    @elseif($payment->permit_type === 'VP')
+    @elseif($payment->permit_type === 'VH')
         <button id="btnBack">Back to Vehicle Permit</button>
     @else
         <button id="btnBack">Back</button>

@@ -81,4 +81,9 @@ class MonthlyPermit extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'printed_by');
     }
+
+    public function getTypeAttribute()
+    {
+        return 'MP';
+    }
 }
