@@ -152,13 +152,13 @@
                 <div class="row gx-2">
                     <div class="col-auto">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_revenue_licence" value="1" id="doc_revenue_licence" class="form-check-input">
+                            <input type="checkbox" name="doc_revenue_licence" value="1" id="doc_revenue_licence" class="form-check-input" {{ old('doc_revenue_licence') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_revenue_licence">Revenue Licence</label>
                         </div>
                     </div>
                     <div class="col-auto">
                         <div class="form-check">
-                            <input type="checkbox" name="doc_insurance" value="1" id="doc_insurance" class="form-check-input">
+                            <input type="checkbox" name="doc_insurance" value="1" id="doc_insurance" class="form-check-input" {{ old('doc_insurance') ? 'checked' : '' }}>
                             <label class="form-check-label" for="doc_insurance">Insurance</label>
                         </div>
                     </div>
@@ -238,7 +238,7 @@
             </div>
             
             <div class="mb-3">
-                <label for="owner_address" class="form-label"><i class="bi bi-house me-1"></i> Owner's Address</label>
+                <label for="owner_address" class="form-label"><i class="bi bi-house me-1"></i> Owner's Address (Optional)</label>
                 <input type="text" class="form-control" name="owner_address" id="owner_address" value="{{ old('owner_address') }}"
                 oninput="this.value = this.value.toUpperCase();">
             </div>
@@ -620,9 +620,15 @@
                     
                     // Store the checked form data
                     checkedFormData = {
+                        doc_revenue_licence: document.getElementById('doc_revenue_licence').checked ? '1' : '0',
+                        doc_insurance: document.getElementById('doc_insurance').checked ? '1' : '0',
+                        vehicle_type: document.getElementById('vehicle_type').value,
                         vehicle_number: vehicleNumber,
+                        revenue_license_number: document.getElementById('revenue_license_number').value.trim(),
+                        insurance_number: document.getElementById('insurance_number').value.trim(),
                         from_date: fromDate,
                         to_date: toDate,
+                        owner_name: document.getElementById('owner_name').value.trim(),
                         company_name: companyName
                     };
                     
@@ -646,9 +652,15 @@
             if (!checkedFormData) return false;
             
             const currentData = {
+                doc_revenue_licence: document.getElementById('doc_revenue_licence').checked ? '1' : '0',
+                doc_insurance: document.getElementById('doc_insurance').checked ? '1' : '0',
+                vehicle_type: document.getElementById('vehicle_type').value,
                 vehicle_number: document.getElementById('vehicle_number').value.trim(),
+                revenue_license_number: document.getElementById('revenue_license_number').value.trim(),
+                insurance_number: document.getElementById('insurance_number').value.trim(),
                 from_date: document.getElementById('from_date').value,
                 to_date: document.getElementById('to_date').value,
+                owner_name: document.getElementById('owner_name').value.trim(),
                 company_name: document.getElementById('company_name').value
             };
             
@@ -676,7 +688,11 @@
 
         // Function to attach change listeners to form fields
         function attachChangeListeners() {
-            const fields = ['vehicle_number', 'from_date', 'to_date', 'company_name'];
+            const fields = [
+                'doc_revenue_licence', 'doc_insurance', 'vehicle_type', 'vehicle_number', 
+                'revenue_license_number', 'insurance_number', 'from_date', 'to_date', 
+                'owner_name', 'company_name'
+            ];
             
             fields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
@@ -685,9 +701,11 @@
                     field.removeEventListener('change', handleFormChange);
                     field.removeEventListener('input', handleFormChange);
                     
-                    // Add new listeners
+                    // Add change listener for all fields (works for checkboxes, selects, and inputs)
                     field.addEventListener('change', handleFormChange);
-                    if (field.tagName !== 'SELECT') {
+                    
+                    // Add input listener for text inputs (not needed for checkboxes/selects)
+                    if (field.type !== 'checkbox' && field.tagName !== 'SELECT') {
                         field.addEventListener('input', handleFormChange);
                     }
                 }

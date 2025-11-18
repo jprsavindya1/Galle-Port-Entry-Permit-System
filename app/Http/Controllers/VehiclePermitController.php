@@ -47,7 +47,7 @@ public function addVehicleToSession(Request $request)
         'to_date' => 'required|date|after_or_equal:from_date',
         'issue_type' => 'required|string|in:free,payment',
         'owner_name' => 'required|string',
-        'owner_address' => 'required|string',
+        'owner_address' => 'nullable|string',
         'company_name' => 'required|string',
         'company_address' => 'nullable|string',
         'remarks' => 'nullable|string',
@@ -224,7 +224,7 @@ public function updateVehicleSessionEntry(Request $request, $index)
         'to_date' => 'required|date|after_or_equal:from_date',
         'issue_type' => 'required|string|in:free,payment',
         'owner_name' => 'required|string',
-        'owner_address' => 'required|string',
+        'owner_address' => 'nullable|string',
         // company_name/company_address typically come from session or hidden inputs
         'company_name' => 'nullable|string',
         'company_address' => 'nullable|string',

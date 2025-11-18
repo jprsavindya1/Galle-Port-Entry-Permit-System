@@ -184,9 +184,9 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="owner_address" class="form-label"><i class="bi bi-house-door me-1"></i> Owner's Address</label>
+                    <label for="owner_address" class="form-label"><i class="bi bi-house-door me-1"></i> Owner's Address (Optional)</label>
                     <input type="text" name="owner_address" id="owner_address" class="form-control"
-                           value="{{ old('owner_address', $permit['owner_address']) }}" required>
+                           value="{{ old('owner_address', $permit['owner_address']) }}">
                 </div>
 
                 <div class="row mb-4">

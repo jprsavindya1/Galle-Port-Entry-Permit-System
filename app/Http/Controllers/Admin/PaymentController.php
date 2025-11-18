@@ -199,6 +199,9 @@ foreach ($cart as $entry) {
     $entry['total'] = $total;
     $entry['status'] = 'active'; // Set status to active when permit is created
     
+    // Ensure owner_address is not null
+    $entry['owner_address'] = $entry['owner_address'] ?? '';
+    
     // Ensure document checkboxes default to 0 if not present
     $entry['doc_nic'] = $entry['doc_nic'] ?? 0;
     $entry['doc_passport'] = $entry['doc_passport'] ?? 0;
