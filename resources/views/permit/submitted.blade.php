@@ -553,7 +553,7 @@
                                                 <a href="{{ route('payment.invoice', $permit->submission_id) }}"
                                                    class="btn btn-sm {{ $permit->status === 'cancelled' ? 'btn-secondary' : 'btn-warning' }} w-100 mb-1"
                                                    @if($permit->status === 'cancelled') style="pointer-events: none; opacity: 0.5;" aria-disabled="true" @endif>
-                                                    View Group
+                                                    View Permits
                                                 </a>
 
                                                 @php

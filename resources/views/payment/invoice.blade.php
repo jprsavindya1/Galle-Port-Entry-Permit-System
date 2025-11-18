@@ -156,6 +156,11 @@
     background-color: #9e9e9e;
     border-color: #9e9e9e;
 }
+.disabled-batch-print {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 /* ===== Summary Card Styling ===== */
 .summary-card {
@@ -348,7 +353,7 @@
             <div class="invoice-title">
                 <i class="bi bi-receipt-cutoff me-2"></i> Payment Invoice
             </div>
-            <button onclick="window.print()" class="btn btn-primary btn-custom no-print">
+            <button onclick="enableBatchPrint(); window.print()" class="btn btn-primary btn-custom no-print">
                 <i class="bi bi-printer"></i> Print Invoice
             </button>
         </div>
@@ -527,7 +532,7 @@
             <a href="{{ route('permit.print', $payment->submission_id) }}" 
                target="_blank" 
                id="batchPrintBtn" 
-               class="btn btn-primary btn-custom">
+               class="btn btn-primary btn-custom{{ (!$allPrinted && !$somePrinted) ? ' disabled-batch-print' : '' }}">
                 <i class="bi bi-printer-fill me-1"></i> 
                 @if($allPrinted)
                     Reprint All Permits
@@ -552,12 +557,25 @@
 </div>
 
 <script>
+    function enableBatchPrint() {
+        const batchPrintBtn = document.getElementById('batchPrintBtn');
+        if (batchPrintBtn) {
+            batchPrintBtn.classList.remove('disabled-batch-print');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const batchPrintBtn = document.getElementById('batchPrintBtn');
         
         // Add click tracking for batch print
         if (batchPrintBtn) {
             batchPrintBtn.addEventListener('click', function(e) {
+                // Check if still disabled
+                if (this.classList.contains('disabled-batch-print')) {
+                    e.preventDefault();
+                    return;
+                }
+                
                 // Show a loading indicator
                 const originalText = this.innerHTML;
                 this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Opening Print View...';
