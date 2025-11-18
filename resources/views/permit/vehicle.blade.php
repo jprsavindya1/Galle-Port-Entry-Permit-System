@@ -169,7 +169,7 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="vehicle_type" class="form-label"><i class="bi bi-truck me-1"></i> Vehicle Type</label>
-                    <select name="vehicle_type" id="vehicle_type" class="form-select" required>
+                    <select name="vehicle_type" id="vehicle_type" class="form-select" required onchange="handleVehicleTypeChange()">
                         <option value="">-- Select Vehicle Type --</option>
                         @foreach($vehicles as $vehicle)
                             <option value="{{ $vehicle->name }}" {{ old('vehicle_type') == $vehicle->name ? 'selected' : '' }}>
@@ -350,11 +350,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Store checked form data to detect changes
-        let checkedFormData = null;
-        // Store the last fetched vehicle number to track changes
-        let lastFetchedVehicleNumber = '';
-
         // Function to handle vehicle number change - clear autofilled data when changed
         window.handleVehicleNumberChange = function() {
             const currentVehicleNumber = document.getElementById('vehicle_number').value.trim();
@@ -368,6 +363,54 @@
                 
                 // Reset the last fetched vehicle number
                 lastFetchedVehicleNumber = '';
+            }
+        }
+
+        // Function to handle vehicle type change and set date restrictions
+        window.handleVehicleTypeChange = function() {
+            const vehicleType = document.getElementById('vehicle_type').value.toLowerCase();
+            const fromDateInput = document.getElementById('from_date');
+            const toDateInput = document.getElementById('to_date');
+
+            if (!fromDateInput || !toDateInput) return;
+
+            // Reset any existing restrictions
+            toDateInput.removeAttribute('max');
+            toDateInput.removeAttribute('readonly');
+            toDateInput.min = fromDateInput.value || '';
+
+            if (vehicleType.includes('daily')) {
+                // For daily vehicles: max 28 days selection
+                if (fromDateInput.value) {
+                    const fromDate = new Date(fromDateInput.value);
+                    const maxToDate = new Date(fromDate);
+                    maxToDate.setDate(maxToDate.getDate() + 28);
+
+                    const yyyy = maxToDate.getFullYear();
+                    const mm = String(maxToDate.getMonth() + 1).padStart(2, '0');
+                    const dd = String(maxToDate.getDate()).padStart(2, '0');
+
+                    toDateInput.max = `${yyyy}-${mm}-${dd}`;
+
+                    // If current to_date exceeds the max or is empty, set to from_date
+                    if (!toDateInput.value || new Date(toDateInput.value) > maxToDate) {
+                        toDateInput.value = fromDateInput.value;
+                    }
+                }
+            } else if (vehicleType.includes('monthly')) {
+                // For monthly vehicles: auto-set exactly 29 days from start date
+                if (fromDateInput.value) {
+                    const fromDate = new Date(fromDateInput.value);
+                    const toDate = new Date(fromDate);
+                    toDate.setDate(toDate.getDate() + 29);
+
+                    const yyyy = toDate.getFullYear();
+                    const mm = String(toDate.getMonth() + 1).padStart(2, '0');
+                    const dd = String(toDate.getDate()).padStart(2, '0');
+
+                    toDateInput.value = `${yyyy}-${mm}-${dd}`;
+                    toDateInput.setAttribute('readonly', 'readonly');
+                }
             }
         }
 
@@ -686,9 +729,16 @@
         document.addEventListener('DOMContentLoaded', function() {
             const idTypeInput = document.getElementById('id_type');
             const fromDateInput = document.getElementById('from_date');
+            const vehicleTypeInput = document.getElementById('vehicle_type');
 
             if (fromDateInput) {
-                fromDateInput.addEventListener('change', setMaxToDate);
+                fromDateInput.addEventListener('change', function() {
+                    setMaxToDate();
+                    handleVehicleTypeChange(); // Also update vehicle type restrictions
+                });
+            }
+            if (vehicleTypeInput) {
+                vehicleTypeInput.addEventListener('change', handleVehicleTypeChange);
             }
             if (idTypeInput) {
                 idTypeInput.addEventListener('change', setMaxToDate);
@@ -735,7 +785,11 @@
                 
                 if (vehicleNumber) vehicleNumber.value = '';
                 if (fromDate) fromDate.value = '';
-                if (toDate) toDate.value = '';
+                if (toDate) {
+                    toDate.value = '';
+                    toDate.removeAttribute('readonly'); // Reset readonly for monthly vehicles
+                    toDate.removeAttribute('max'); // Reset max date restriction
+                }
                 if (vehicleType) vehicleType.value = '';
                 if (revenueLicenseNumber) revenueLicenseNumber.value = '';
                 if (insuranceNumber) insuranceNumber.value = '';

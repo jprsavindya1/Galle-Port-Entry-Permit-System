@@ -42,7 +42,15 @@ class PaymentController extends Controller
                 $vehicle = Vehicle::where('name', $item['vehicle_type'])->first();
                 $vehicleRate = $vehicle ? $vehicle->rate : 0;
 
-                $tRate = $vehicleRate * $days;
+                // Check vehicle type for payment calculation
+                $vehicleName = strtolower($item['vehicle_type']);
+                if (strpos($vehicleName, 'monthly') !== false) {
+                    // For monthly vehicles: payment = rate (no days multiplication)
+                    $tRate = $vehicleRate;
+                } else {
+                    // For daily vehicles (or any other): payment = rate * days
+                    $tRate = $vehicleRate * $days;
+                }
                 if ($item['issue_type'] === 'free') {
                     $ssl = 0;
                     $vat = 0;
@@ -151,7 +159,17 @@ foreach ($cart as $entry) {
 
     if ($entry['type'] === 'VH') {
         $vehicle = Vehicle::where('name', $entry['vehicle_type'])->first();
-        $rate = ($vehicle ? $vehicle->rate : 0) * $days;
+        $vehicleRate = $vehicle ? $vehicle->rate : 0;
+        
+        // Check vehicle type for payment calculation
+        $vehicleName = strtolower($entry['vehicle_type']);
+        if (strpos($vehicleName, 'monthly') !== false) {
+            // For monthly vehicles: payment = rate (no days multiplication)
+            $rate = $vehicleRate;
+        } else {
+            // For daily vehicles (or any other): payment = rate * days
+            $rate = $vehicleRate * $days;
+        }
     } elseif ($entry['type'] === 'MP') {
         $rate = $monthlyRateSetting; // Fixed rate for monthly (no days multiplication)
     } else {
@@ -221,7 +239,17 @@ foreach ($cart as $entry) {
                if ($permitType === 'VH') {
                     // Vehicle rate
                     $vehicle = Vehicle::where('name', $entry['vehicle_type'])->first();
-                    $baseRate = ($vehicle ? $vehicle->rate : 0) * $days;
+                    $vehicleRate = $vehicle ? $vehicle->rate : 0;
+                    
+                    // Check vehicle type for payment calculation
+                    $vehicleName = strtolower($entry['vehicle_type']);
+                    if (strpos($vehicleName, 'monthly') !== false) {
+                        // For monthly vehicles: payment = rate (no days multiplication)
+                        $baseRate = $vehicleRate;
+                    } else {
+                        // For daily vehicles (or any other): payment = rate * days
+                        $baseRate = $vehicleRate * $days;
+                    }
 
                     // Use same formula as summary page for consistency
                     $sslDivisor = 100 - $sslRate;

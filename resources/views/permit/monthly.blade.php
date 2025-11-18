@@ -244,6 +244,9 @@
                             </option>
                         @endforeach
                     </select>
+                    <div style="min-height: 20px;">
+                        <span id="designation_error" class="text-danger small d-block"></span>
+                    </div>
                 </div>
             </div>
 
@@ -543,6 +546,15 @@
                 }, 10);
             });
             
+            // Clear designation error when a value is selected
+            $('#designation').on('change', function() {
+                const designationError = document.getElementById('designation_error');
+                if (this.value && designationError) {
+                    designationError.textContent = '';
+                    designationError.style.display = 'none';
+                }
+            });
+            
             // Sync company address on change 
             $('#company_name').on('change', function() {
                 setCompanyAddress();
@@ -608,6 +620,20 @@
                         return false;
                     }
                     
+                    // Validate designation before form submission
+                    const designation = document.getElementById('designation').value;
+                    if (!designation) {
+                        e.preventDefault();
+                        const designationError = document.getElementById('designation_error');
+                        designationError.textContent = '⚠️ Please select a designation';
+                        designationError.style.display = 'block';
+                        designationError.style.color = '#dc3545';
+                        designationError.style.fontWeight = '500';
+                        alert('Please select a designation before submitting.');
+                        document.getElementById('designation').focus();
+                        return false;
+                    }
+                    
                     // Enable company dropdown if disabled (for cart session)
                     const companyDropdown = document.getElementById('company_name');
                     if (companyDropdown && companyDropdown.disabled) {
@@ -662,11 +688,15 @@
             const fromDate = document.getElementById('from_date').value;
             const toDate = document.getElementById('to_date').value;
             const companyName = document.getElementById('company_name').value;
+            const designation = document.getElementById('designation').value;
 
             const msg = document.getElementById('availability-msg');
             const addBtn = document.getElementById('addToListBtn');
             
             msg.innerText = '';
+            // Clear designation error
+            document.getElementById('designation_error').textContent = '';
+            
             // Disable button while checking
             addBtn.disabled = true;
             addBtn.style.opacity = '0.6';
@@ -689,6 +719,13 @@
             if (!fromDate) missingFields.push('From Date');
             if (!toDate) missingFields.push('To Date');
             if (!companyName) missingFields.push('Company Name');
+            if (!designation) {
+                missingFields.push('Designation');
+                document.getElementById('designation_error').textContent = '⚠️ Please select a designation';
+                document.getElementById('designation_error').style.display = 'block';
+                document.getElementById('designation_error').style.color = '#dc3545';
+                document.getElementById('designation_error').style.fontWeight = '500';
+            }
 
             if (missingFields.length > 0) {
                 msg.innerText = "Please fill in: " + missingFields.join(', ');

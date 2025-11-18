@@ -84,25 +84,22 @@
     .user-dashboard-table tbody td:nth-child(2),
     .user-dashboard-table tbody td:nth-child(3),
     .user-dashboard-table tbody td:nth-child(4),
-    .user-dashboard-table tbody td:nth-child(9),
-    .user-dashboard-table tbody td:nth-child(10),
-    .user-dashboard-table tbody td:nth-child(11),
+    .user-dashboard-table tbody td:nth-child(8),
     .user-dashboard-table tfoot td:nth-child(8),
-    .user-dashboard-table tfoot td:nth-child(9),
-    .user-dashboard-table tfoot td:nth-child(10),
-    .user-dashboard-table tfoot td:nth-child(11) {
+    .user-dashboard-table tfoot td:nth-child(9) {
         /* General alignment for names, numbers, and currency columns */
         text-align: left;
     }
     
+    .user-dashboard-table tbody td:nth-child(7),
     .user-dashboard-table tbody td:nth-child(9),
     .user-dashboard-table tbody td:nth-child(10),
     .user-dashboard-table tbody td:nth-child(11),
     .user-dashboard-table tbody td:nth-child(12),
-    .user-dashboard-table tfoot td:nth-child(8),
     .user-dashboard-table tfoot td:nth-child(9),
     .user-dashboard-table tfoot td:nth-child(10),
-    .user-dashboard-table tfoot td:nth-child(11) {
+    .user-dashboard-table tfoot td:nth-child(11),
+    .user-dashboard-table tfoot td:nth-child(12) {
         /* Right alignment for all currency columns */
         text-align: right;
         padding-right: 1rem;
@@ -144,6 +141,7 @@
                             <th style="width: 12%">ID Number</th>
                             <th style="width: 7%">From</th>
                             <th style="width: 7%">To</th>
+                            <th style="width: 8%">Base Rate (LKR)</th>
                             <th style="width: 5%">Days</th>
                             <th style="width: 8%">Rate (LKR)</th>
                             <th style="width: 7%">SSL (LKR)</th>
@@ -158,6 +156,7 @@
                             $rateTotal = 0;
                             $sslTotal = 0;
                             $vatTotal = 0;
+                            $baseRateTotal = 0;
                         @endphp
 
                         @foreach ($detailedPayments as $index => $payment)
@@ -168,12 +167,16 @@
                                 $rate = $payment['rate'] ?? 0;
                                 $ssl = $payment['ssl'] ?? 0;
                                 $vat = $payment['vat'] ?? 0;
+                                $baseRate = $days > 0 ? $rate / $days : 0;
 
                                 // Only sum up for non-free issues
                                 if ($entry['issue_type'] !== 'free') {
                                     $rateTotal += $rate;
                                     $sslTotal  += $ssl;
                                     $vatTotal  += $vat;
+                                    if ($entry['type'] !== 'MP') {
+                                        $baseRateTotal += $baseRate;
+                                    }
                                 }
                             @endphp
                             <tr>
@@ -183,6 +186,7 @@
                                 <td style="text-align: left !important;">{{ $entry['id_number'] ?? '-' }}</td>
                                 <td>{{ $entry['from_date'] }}</td>
                                 <td>{{ $entry['to_date'] }}</td>
+                                <td>{{ $entry['issue_type'] === 'free' ? '0.00' : ($entry['type'] === 'MP' ? '-' : number_format($baseRate, 2)) }}</td>
                                 <td>{{ $days }}</td>
                                 <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($rate, 2) }}</td>
                                 <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($ssl, 2) }}</td>
@@ -201,6 +205,7 @@
                     <tfoot>
                         <tr>
                             <td colspan="7" class="text-end"><strong>Total Payable Amount (LKR)</strong></td>
+                            <td><strong>=</strong></td>
                             <td><strong>{{ number_format($rateTotal, 2) }}</strong></td>
                             <td><strong>{{ number_format($sslTotal, 2) }}</strong></td>
                             <td><strong>{{ number_format($vatTotal, 2) }}</strong></td>
@@ -224,6 +229,7 @@
                             <th style="width: 12%">Revenue License</th>
                             <th style="width: 8%">From</th>
                             <th style="width: 8%">To</th>
+                            <th style="width: 8%">Base Rate (LKR)</th>
                             <th style="width: 5%">Days</th>
                             <th style="width: 8%">Rate (LKR)</th>
                             <th style="width: 7%">SSL (LKR)</th>
@@ -238,21 +244,38 @@
                             $rateTotal = 0;
                             $sslTotal = 0;
                             $vatTotal = 0;
+                            $baseRateTotal = 0;
                         @endphp
 
                         @foreach ($detailedPayments as $index => $payment)
                             @php
                                 $entry = $payment['entry'];
-                                $days = \Carbon\Carbon::parse($entry['from_date'])->diffInDays(\Carbon\Carbon::parse($entry['to_date'])) + 1;
+                                $calculatedDays = \Carbon\Carbon::parse($entry['from_date'])->diffInDays(\Carbon\Carbon::parse($entry['to_date'])) + 1;
+                                $maxDays = str_contains(strtolower($entry['vehicle_type'] ?? ''), 'monthly') ? 29 : 28;
+                                $days = min($calculatedDays, $maxDays);
 
-                                $rate = $payment['rate'] ?? 0;
+                                $originalRate = $payment['rate'] ?? 0;
                                 $ssl = $payment['ssl'] ?? 0;
                                 $vat = $payment['vat'] ?? 0;
+
+                                if (str_contains(strtolower($entry['vehicle_type'] ?? ''), 'monthly')) {
+                                    // For monthly, rate is fixed, not per day
+                                    $rate = $originalRate;
+                                    $baseRate = '-';
+                                } else {
+                                    // For daily, recalculate rate based on capped days
+                                    $dailyRate = $calculatedDays > 0 ? $originalRate / $calculatedDays : 0;
+                                    $rate = $dailyRate * $days;
+                                    $baseRate = $dailyRate;
+                                }
 
                                 if ($entry['issue_type'] !== 'free') {
                                     $rateTotal += $rate;
                                     $sslTotal  += $ssl;
                                     $vatTotal  += $vat;
+                                    if (is_numeric($baseRate)) {
+                                        $baseRateTotal += $baseRate;
+                                    }
                                 }
                             @endphp
                             <tr>
@@ -262,6 +285,7 @@
                                 <td style="text-align: left !important;">{{ $entry['revenue_license_number'] ?? '-' }}</td>
                                 <td>{{ $entry['from_date'] }}</td>
                                 <td>{{ $entry['to_date'] }}</td>
+                                <td>{{ $entry['issue_type'] === 'free' ? '0.00' : (is_numeric($baseRate) ? number_format($baseRate, 2) : '-') }}</td>
                                 <td>{{ $days }}</td>
                                 <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($rate, 2) }}</td>
                                 <td>{{ $entry['issue_type'] === 'free' ? '0.00' : number_format($ssl, 2) }}</td>
@@ -280,6 +304,7 @@
                     <tfoot>
                         <tr>
                             <td colspan="7" class="text-end"><strong>Total Payable Amount (LKR)</strong></td>
+                            <td><strong>=</strong></td>
                             <td><strong>{{ number_format($rateTotal, 2) }}</strong></td>
                             <td><strong>{{ number_format($sslTotal, 2) }}</strong></td>
                             <td><strong>{{ number_format($vatTotal, 2) }}</strong></td>

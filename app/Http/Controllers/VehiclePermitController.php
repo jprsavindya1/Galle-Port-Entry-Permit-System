@@ -126,12 +126,20 @@ public function paymentVehicleSummary()
     foreach ($cart as $item) {
         $item['type'] = 'VH';
 
-        $vehicle = Vehicle::find($item['vehicle_type']);
+        $vehicle = Vehicle::where('name', $item['vehicle_type'])->first();
         if (!$vehicle) continue;
 
         $days = \Carbon\Carbon::parse($item['from_date'])->diffInDays(\Carbon\Carbon::parse($item['to_date'])) + 1;
 
-        $tRate = $vehicle->rate * $days;
+        // Check vehicle type for payment calculation
+        $vehicleName = strtolower(trim($item['vehicle_type']));
+        if (strpos($vehicleName, 'monthly') !== false) {
+            // For monthly vehicles: payment = rate (no days multiplication)
+            $tRate = $vehicle->rate;
+        } else {
+            // For daily vehicles (or any other): payment = rate * days
+            $tRate = $vehicle->rate * $days;
+        }
 
         if ($item['issue_type'] === 'free') {
             $tRate = 0;
