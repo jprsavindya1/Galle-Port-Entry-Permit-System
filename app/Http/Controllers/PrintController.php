@@ -59,17 +59,17 @@ class PrintController extends Controller
         return view('permit.print', compact('permits', 'payment', 'submission_id'));
 
     }
-    public function showSingle($permitType, $id)
+    public function showSingle($type, $id)
 {
     // Find the permit based on type
-    switch ($permitType) {
-        case 'temporary':
+    switch ($type) {
+        case 'TP':
             $permit = TemporaryPermit::findOrFail($id);
             break;
-        case 'monthly':
+        case 'MP':
             $permit = MonthlyPermit::findOrFail($id);
             break;
-        case 'vehicle':
+        case 'VH':
             $permit = VehiclePermit::findOrFail($id);
             break;
         default:

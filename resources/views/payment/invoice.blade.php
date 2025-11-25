@@ -530,7 +530,6 @@
 
         <div class="d-flex justify-content-between no-print">
             <a href="{{ route('permit.print', $payment->submission_id) }}" 
-               target="_blank" 
                id="batchPrintBtn" 
                class="btn btn-primary btn-custom{{ (!$allPrinted && !$somePrinted) ? ' disabled-batch-print' : '' }}">
                 <i class="bi bi-printer-fill me-1"></i> 

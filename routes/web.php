@@ -221,7 +221,7 @@ Route::get('/permit/print/batch/{submission_id}', [PrintController::class, 'show
     ->name('permit.print');
 
 // Single print (by permit ID with type)
-Route::get('/permit/print/single/{permitType}/{id}', [PrintController::class, 'showSingle'])
+Route::get('/permit/print/single/{type}/{id}', [PrintController::class, 'showSingle'])
     ->name('permit.print.single');
 
     // reports routes

@@ -253,13 +253,18 @@
                                 $calculatedDays = \Carbon\Carbon::parse($entry['from_date'])->diffInDays(\Carbon\Carbon::parse($entry['to_date'])) + 1;
                                 $vehicleTypeLower = strtolower($entry['vehicle_type'] ?? '');
                                 
-                                if (str_contains($vehicleTypeLower, 'monthly') || str_contains($vehicleTypeLower, 'annually')) {
-                                    // For monthly and annual, rate is fixed, not per day
-                                    $days = $calculatedDays;
+                                if (str_contains($vehicleTypeLower, 'monthly')) {
+                                    // For monthly: show date picker auto-set days (29)
+                                    $days = 29;
+                                    $rate = $payment['rate'] ?? 0;
+                                    $baseRate = '-';
+                                } elseif (str_contains($vehicleTypeLower, 'annually')) {
+                                    // For annual: show date picker auto-set days (364)
+                                    $days = 364;
                                     $rate = $payment['rate'] ?? 0;
                                     $baseRate = '-';
                                 } else {
-                                    // For daily, use calculated days with max limit
+                                    // For daily: cap at 28 days for display
                                     $maxDays = 28;
                                     $days = min($calculatedDays, $maxDays);
                                     $dailyRate = $calculatedDays > 0 ? ($payment['rate'] ?? 0) / $calculatedDays : 0;

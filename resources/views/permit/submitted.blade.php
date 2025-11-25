@@ -559,8 +559,7 @@
                                                 @php
                                                     $permitTypeSlug = strtolower(str_replace('P', '', $permit->type)) === 'v' ? 'vehicle' : (strtolower(str_replace('P', '', $permit->type)) === 'm' ? 'monthly' : 'temporary');
                                                 @endphp
-                                                <a href="{{ route('permit.print.single', [$permitTypeSlug, $permit->id]) }}"
-                                                   target="_blank"
+                                                <a href="{{ route('permit.print.single', [$permit->type, $permit->id]) }}"
                                                    class="btn btn-sm {{ $permit->status === 'cancelled' ? 'btn-secondary' : 'btn-primary' }} w-100"
                                                    @if($permit->status === 'cancelled') style="pointer-events: none; opacity: 0.5;" aria-disabled="true" @endif>
                                                     Print

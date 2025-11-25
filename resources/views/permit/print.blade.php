@@ -1,111 +1,112 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Print Permit</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Arial', sans-serif;
-        }
+@extends('layouts.app')
 
-        .permit-container {
-            position: relative;
-            width: 1120px;
-            height: 792px; /* One permit = one section on roll */
-            background-image: url('{{ asset('images/permit_background.png') }}');
-            background-size: cover;
-            background-repeat: no-repeat;
-            page-break-after: always; /*continuous printing, one permit per "page" */
-        }
+@section('content')
+<style>
+    /* Hide nav and sidebar during print */
+    @media print {
+        nav.navbar, .sidebar-slpa-logo { display: none !important; }
+        main { padding: 0 !important; margin: 0 !important; }
+        #printControls { display: none !important; }
+        body { margin: 0; }
+        .permit-container { page-break-after: always; }
+    }
 
-        .field {
-            position: absolute;
-            font-size: 16px;
-            font-weight: bold;
-        }
+    .permit-container {
+        position: relative;
+        width: 1120px;
+        height: 792px; /* One permit = one section on roll */
+        background-image: url('{{ asset('images/permit_background.png') }}');
+        background-size: cover;
+        background-repeat: no-repeat;
+        page-break-after: always; /*continuous printing, one permit per "page" */
+        font-family: 'Arial', sans-serif;
+    }
 
-        .temporary-permit { top: 60px; left: 100px; }
-        .person-label { top: 20px; left: 500px; }
-        .permit-title { top: 60px; left: 400px; font-size: 20px; }
-        .permit-number { top: 20px; right: 100px; }
+    .field {
+        position: absolute;
+        font-size: 16px;
+        font-weight: bold;
+    }
 
-        .name { top: 110px; left: 100px; }
-        .designation { top: 110px; left: 500px; }
+    .temporary-permit { top: 60px; left: 100px; }
+    .person-label { top: 20px; left: 500px; }
+    .permit-title { top: 60px; left: 400px; font-size: 20px; }
+    .permit-number { top: 20px; right: 100px; }
 
-        .company_name { top: 160px; left: 100px; }
-        .from-date { top: 70px; left: 900px; }
+    .name { top: 110px; left: 100px; }
+    .designation { top: 110px; left: 500px; }
 
-        .reason { top: 210px; left: 100px; }
-        .to-date { top: 110px; left: 900px; }
+    .company_name { top: 160px; left: 100px; }
+    .from-date { top: 70px; left: 900px; }
 
-        .id-type { top: 160px; left: 900px; }
+    .reason { top: 210px; left: 100px; }
+    .to-date { top: 110px; left: 900px; }
 
-        .total-amount { top: 210px; left: 600px; }
-        .time { top: 200px; left: 900px; }
+    .id-type { top: 160px; left: 900px; }
 
-        .permit-type { top: 250px; left: 420px; font-size: 20px; font-weight: bold; }
+    .total-amount { top: 210px; left: 600px; }
+    .time { top: 200px; left: 900px; }
 
-        @media print {
-            #printControls { display: none !important; }
-            body { margin: 0; }
-            .permit-container { page-break-after: always; }
-        }
+    .permit-type { top: 250px; left: 420px; font-size: 20px; font-weight: bold; }
 
-        #printControls {
-            margin: 20px;
-            text-align: center;
-        }
-        #printControls button {
-            margin: 0 10px;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        #printControls button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        #printControls button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        #btnPrintAgain {
-            background-color: #3b82f6;
-            color: white;
-        }
-        #btnPrintAgain:hover {
-            background-color: #2563eb;
-        }
-        #btnBackInvoice {
-            background-color: #0ea5e9;
-            color: white;
-        }
-        #btnBackInvoice:hover {
-            background-color: #0284c7;
-        }
-        #btnBack {
-            background-color: #06b6d4;
-            color: white;
-        }
-        #btnBack:hover {
-            background-color: #0891b2;
-        }
-        #btnHome {
-            background-color: #1e40af;
-            color: white;
-        }
-        #btnHome:hover {
-            background-color: #1e3a8a;
-        }
-    </style>
-</head>
-<body>
+    @media print {
+        #printControls { display: none !important; }
+        body { margin: 0; }
+        .permit-container { page-break-after: always; }
+    }
+
+    #printControls {
+        margin: 20px;
+        text-align: center;
+    }
+    #printControls button {
+        margin: 0 10px;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    #printControls button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    #printControls button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    #btnPrintAgain {
+        background-color: #3b82f6;
+        color: white;
+    }
+    #btnPrintAgain:hover {
+        background-color: #2563eb;
+    }
+    #btnBackInvoice {
+        background-color: #0ea5e9;
+        color: white;
+    }
+    #btnBackInvoice:hover {
+        background-color: #0284c7;
+    }
+    #btnBack {
+        background-color: #06b6d4;
+        color: white;
+    }
+    #btnBack:hover {
+        background-color: #0891b2;
+    }
+    #btnHome {
+        background-color: #1e40af;
+        color: white;
+    }
+    #btnHome:hover {
+        background-color: #1e3a8a;
+    }
+</style>
 
 @foreach ($permits as $permit)
 
@@ -230,5 +231,4 @@
         window.location.href = "{{ route('dashboard') }}";
     });
 </script>
-</body>
-</html>
+@endsection
