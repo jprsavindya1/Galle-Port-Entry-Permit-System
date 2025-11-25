@@ -251,23 +251,24 @@
                             @php
                                 $entry = $payment['entry'];
                                 $calculatedDays = \Carbon\Carbon::parse($entry['from_date'])->diffInDays(\Carbon\Carbon::parse($entry['to_date'])) + 1;
-                                $maxDays = str_contains(strtolower($entry['vehicle_type'] ?? ''), 'monthly') ? 29 : 28;
-                                $days = min($calculatedDays, $maxDays);
-
-                                $originalRate = $payment['rate'] ?? 0;
-                                $ssl = $payment['ssl'] ?? 0;
-                                $vat = $payment['vat'] ?? 0;
-
-                                if (str_contains(strtolower($entry['vehicle_type'] ?? ''), 'monthly')) {
-                                    // For monthly, rate is fixed, not per day
-                                    $rate = $originalRate;
+                                $vehicleTypeLower = strtolower($entry['vehicle_type'] ?? '');
+                                
+                                if (str_contains($vehicleTypeLower, 'monthly') || str_contains($vehicleTypeLower, 'annually')) {
+                                    // For monthly and annual, rate is fixed, not per day
+                                    $days = $calculatedDays;
+                                    $rate = $payment['rate'] ?? 0;
                                     $baseRate = '-';
                                 } else {
-                                    // For daily, recalculate rate based on capped days
-                                    $dailyRate = $calculatedDays > 0 ? $originalRate / $calculatedDays : 0;
+                                    // For daily, use calculated days with max limit
+                                    $maxDays = 28;
+                                    $days = min($calculatedDays, $maxDays);
+                                    $dailyRate = $calculatedDays > 0 ? ($payment['rate'] ?? 0) / $calculatedDays : 0;
                                     $rate = $dailyRate * $days;
                                     $baseRate = $dailyRate;
                                 }
+
+                                $ssl = $payment['ssl'] ?? 0;
+                                $vat = $payment['vat'] ?? 0;
 
                                 if ($entry['issue_type'] !== 'free') {
                                     $rateTotal += $rate;

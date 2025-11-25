@@ -411,6 +411,20 @@
                     toDateInput.value = `${yyyy}-${mm}-${dd}`;
                     toDateInput.setAttribute('readonly', 'readonly');
                 }
+            } else if (vehicleType.includes('annually')) {
+                // For annual vehicles: auto-set exactly 364 days from start date
+                if (fromDateInput.value) {
+                    const fromDate = new Date(fromDateInput.value);
+                    const toDate = new Date(fromDate);
+                    toDate.setDate(toDate.getDate() + 364);
+
+                    const yyyy = toDate.getFullYear();
+                    const mm = String(toDate.getMonth() + 1).padStart(2, '0');
+                    const dd = String(toDate.getDate()).padStart(2, '0');
+
+                    toDateInput.value = `${yyyy}-${mm}-${dd}`;
+                    toDateInput.setAttribute('readonly', 'readonly');
+                }
             }
         }
 
@@ -805,7 +819,7 @@
                 if (fromDate) fromDate.value = '';
                 if (toDate) {
                     toDate.value = '';
-                    toDate.removeAttribute('readonly'); // Reset readonly for monthly vehicles
+                    toDate.removeAttribute('readonly'); // Reset readonly for monthly and annual vehicles
                     toDate.removeAttribute('max'); // Reset max date restriction
                 }
                 if (vehicleType) vehicleType.value = '';

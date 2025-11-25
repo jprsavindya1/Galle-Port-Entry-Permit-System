@@ -136,6 +136,9 @@ public function paymentVehicleSummary()
         if (strpos($vehicleName, 'monthly') !== false) {
             // For monthly vehicles: payment = rate (no days multiplication)
             $tRate = $vehicle->rate;
+        } elseif (strpos($vehicleName, 'annually') !== false) {
+            // For annual vehicles: payment = rate (no days multiplication)
+            $tRate = $vehicle->rate;
         } else {
             // For daily vehicles (or any other): payment = rate * days
             $tRate = $vehicle->rate * $days;

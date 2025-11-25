@@ -47,6 +47,9 @@ class PaymentController extends Controller
                 if (strpos($vehicleName, 'monthly') !== false) {
                     // For monthly vehicles: payment = rate (no days multiplication)
                     $tRate = $vehicleRate;
+                } elseif (strpos($vehicleName, 'annually') !== false) {
+                    // For annual vehicles: payment = rate (no days multiplication)
+                    $tRate = $vehicleRate;
                 } else {
                     // For daily vehicles (or any other): payment = rate * days
                     $tRate = $vehicleRate * $days;
@@ -166,6 +169,9 @@ foreach ($cart as $entry) {
         if (strpos($vehicleName, 'monthly') !== false) {
             // For monthly vehicles: payment = rate (no days multiplication)
             $rate = $vehicleRate;
+        } elseif (strpos($vehicleName, 'annually') !== false) {
+            // For annual vehicles: payment = rate (no days multiplication)
+            $rate = $vehicleRate;
         } else {
             // For daily vehicles (or any other): payment = rate * days
             $rate = $vehicleRate * $days;
@@ -248,6 +254,9 @@ foreach ($cart as $entry) {
                     $vehicleName = strtolower($entry['vehicle_type']);
                     if (strpos($vehicleName, 'monthly') !== false) {
                         // For monthly vehicles: payment = rate (no days multiplication)
+                        $baseRate = $vehicleRate;
+                    } elseif (strpos($vehicleName, 'annually') !== false) {
+                        // For annual vehicles: payment = rate (no days multiplication)
                         $baseRate = $vehicleRate;
                     } else {
                         // For daily vehicles (or any other): payment = rate * days
