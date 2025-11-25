@@ -62,12 +62,9 @@ class VehicleController extends Controller
 
         Vehicle::create($validated);
 
-        if ($request->ajax()) {
-            $vehicles = Vehicle::paginate(10);
-            return view('admin.vehicles._list', compact('vehicles'))->render();
-        }
-
-        return redirect()->route('admin.vehicles.index')->with('success', 'Vehicle added successfully.');
+        $vehicles = Vehicle::paginate(10);
+        $html = view('admin.vehicles._list', compact('vehicles'))->render();
+        return response()->json(['success' => true, 'message' => 'Vehicle added successfully.', 'html' => $html]);
     }
 
     // Update an existing vehicle
@@ -81,12 +78,9 @@ class VehicleController extends Controller
 
         $vehicle->update($validated);
 
-        if ($request->ajax()) {
-            $vehicles = Vehicle::paginate(10);
-            return view('admin.vehicles._list', compact('vehicles'))->render();
-        }
-
-        return redirect()->route('admin.vehicles.index')->with('success', 'Vehicle updated successfully.');
+        $vehicles = Vehicle::paginate(10);
+        $html = view('admin.vehicles._list', compact('vehicles'))->render();
+        return response()->json(['success' => true, 'message' => 'Vehicle updated successfully.', 'html' => $html]);
     }
 
     // Delete a vehicle

@@ -75,6 +75,48 @@
         border-color: #e53935 !important;
         color: #e53935 !important;
     }
+    
+    /* Custom SweetAlert2 styling for success alerts */
+    .success-popup {
+        border-radius: 0.75rem !important;
+        padding: 1.5rem !important;
+    }
+    
+    .success-title {
+        color: #4caf50 !important;
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .success-confirm-btn {
+        border-radius: 0.375rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        background-color: #4caf50 !important;
+        border-color: #4caf50 !important;
+    }
+    
+    /* Custom SweetAlert2 styling for error alerts */
+    .error-popup {
+        border-radius: 0.75rem !important;
+        padding: 1.5rem !important;
+    }
+    
+    .error-title {
+        color: #e53935 !important;
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .error-confirm-btn {
+        border-radius: 0.375rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        background-color: #e53935 !important;
+        border-color: #e53935 !important;
+    }
 </style>
 <div class="container py-4">
     <div class="user-dashboard-card">
@@ -136,10 +178,28 @@
 $(function(){
     function loadAjaxContent(url) {
         $('#dynamic-content').html('<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>');
-        $.get(url, function(data){
-            $('#dynamic-content').html(data);
-        }).fail(function(){
-            $('#dynamic-content').html('<div class="alert alert-danger">Failed to load content.</div>');
+        $.ajax({
+            url: url,
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data){
+                $('#dynamic-content').html(data);
+            },
+            error: function(){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to load content.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'error-popup',
+                        title: 'error-title',
+                        confirmButton: 'error-confirm-btn'
+                    }
+                });
+            }
         });
     }
 
@@ -151,6 +211,12 @@ $(function(){
 
     // Ajax link clicks inside dynamic content (Add/Edit links)
     $('#dynamic-content').on('click', '.ajax-link', function(e){
+        e.preventDefault();
+        loadAjaxContent($(this).attr('href'));
+    });
+
+    // Ajax pagination links inside dynamic content
+    $(document).on('click', 'a[href*="?page="]', function(e){
         e.preventDefault();
         loadAjaxContent($(this).attr('href'));
     });
@@ -188,17 +254,48 @@ $(function(){
                     data: form.serialize(),
                     success: function(response){
                         if(response.success){
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted',
+                                text: 'Item deleted successfully.',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    popup: 'success-popup',
+                                    title: 'success-title',
+                                    confirmButton: 'success-confirm-btn'
+                                }
+                            });
                             if(reloadUrl){
                                 loadAjaxContent(reloadUrl);
                             } else {
                                 alert('Reload URL not specified.');
                             }
                         } else {
-                            alert(response.message || 'Delete failed.');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || 'Delete failed.',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    popup: 'error-popup',
+                                    title: 'error-title',
+                                    confirmButton: 'error-confirm-btn'
+                                }
+                            });
                         }
                     },
                     error: function(){
-                        alert('An error occurred while deleting.');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while deleting.',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                popup: 'error-popup',
+                                title: 'error-title',
+                                confirmButton: 'error-confirm-btn'
+                            }
+                        });
                     }
                 });
             }
@@ -217,11 +314,50 @@ $(function(){
             url: url,
             type: method,
             data: form.serialize(),
+            dataType: 'json',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             success: function(response){
-                $('#dynamic-content').html(response);
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: response.message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'success-popup',
+                            title: 'success-title',
+                            confirmButton: 'success-confirm-btn'
+                        }
+                    });
+                    $('#dynamic-content').html(response.html);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to save. Please check your input.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'error-popup',
+                            title: 'error-title',
+                            confirmButton: 'error-confirm-btn'
+                        }
+                    });
+                }
             },
             error: function(xhr){
-                alert('Failed to save. Please check your input.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to save. Please check your input.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'error-popup',
+                        title: 'error-title',
+                        confirmButton: 'error-confirm-btn'
+                    }
+                });
             }
         });
     });

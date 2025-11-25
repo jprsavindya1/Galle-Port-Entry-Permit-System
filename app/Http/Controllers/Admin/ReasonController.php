@@ -40,12 +40,9 @@ class ReasonController extends Controller
 
         Reason::create($request->only('name'));
 
-        if ($request->ajax()) {
-            $reasons = Reason::paginate(10);
-            return view('admin.reasons._list', compact('reasons'))->render();
-        }
-
-        return redirect()->route('admin.reasons.index')->with('success', 'Reason added.');
+        $reasons = Reason::paginate(10);
+        $html = view('admin.reasons._list', compact('reasons'))->render();
+        return response()->json(['success' => true, 'message' => 'Reason added successfully.', 'html' => $html]);
     }
 
     public function edit(Request $request, Reason $reason)
@@ -68,12 +65,9 @@ class ReasonController extends Controller
 
         $reason->update($request->only('name'));
 
-        if ($request->ajax()) {
-            $reasons = Reason::paginate(10);
-            return view('admin.reasons._list', compact('reasons'))->render();
-        }
-
-        return redirect()->route('admin.reasons.index')->with('success', 'Reason updated.');
+        $reasons = Reason::paginate(10);
+        $html = view('admin.reasons._list', compact('reasons'))->render();
+        return response()->json(['success' => true, 'message' => 'Reason updated successfully.', 'html' => $html]);
     }
 
     public function destroy(Request $request, Reason $reason)

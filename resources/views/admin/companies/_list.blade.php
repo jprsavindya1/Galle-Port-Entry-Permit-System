@@ -67,7 +67,7 @@
                 <button type="submit" class="btn btn-primary w-100" style="border-radius:0.5rem;font-weight:500;"><i class="bi bi-search"></i> Search</button>
             </div>
             <div class="col-md-2">
-                <a href="{{ route('admin.companies.index') }}" class="btn btn-secondary w-100" style="border-radius:0.5rem;font-weight:500;"><i class="bi bi-arrow-clockwise"></i> Reset</a>
+                <a href="{{ route('admin.companies.index') }}" class="btn btn-secondary w-100 ajax-link" style="border-radius:0.5rem;font-weight:500;"><i class="bi bi-arrow-clockwise"></i> Reset</a>
             </div>
         </form>
 
@@ -108,62 +108,8 @@
 
         @if(method_exists($companies, 'links'))
             <div class="mt-3">
-                {{ $companies->withQueryString()->links() }}
+                {{ $companies->withPath(route('admin.companies.index'))->withQueryString()->links() }}
             </div>
         @endif
     </div>
 </div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle search form submission via AJAX
-    const searchForm = document.getElementById('company-search-form');
-    if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const searchValue = this.querySelector('input[name="search"]').value;
-            const url = this.getAttribute('action');
-            const urlWithSearch = url + '?search=' + encodeURIComponent(searchValue);
-            
-            fetch(urlWithSearch, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('company-list-container').innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Search failed:', error);
-                alert('Search failed. Please try again.');
-            });
-        });
-    }
-    
-    // Handle pagination links via AJAX
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.pagination a')) {
-            e.preventDefault();
-            const link = e.target.closest('.pagination a');
-            const url = link.getAttribute('href');
-            
-            fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('company-list-container').innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Pagination failed:', error);
-            });
-        }
-    });
-});
-</script>
-@endpush

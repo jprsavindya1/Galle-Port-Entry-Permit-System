@@ -41,12 +41,9 @@ class DesignationController extends Controller
 
         Designation::create($request->only('name'));
 
-        if ($request->ajax()) {
-            $designations = Designation::paginate(10);
-            return view('admin.designations._list', compact('designations'))->render();
-        }
-
-        return redirect()->route('admin.designations.index')->with('success', 'Designation added.');
+        $designations = Designation::paginate(10);
+        $html = view('admin.designations._list', compact('designations'))->render();
+        return response()->json(['success' => true, 'message' => 'Designation added successfully.', 'html' => $html]);
     }
 
     public function edit(Request $request, Designation $designation)
@@ -69,12 +66,9 @@ class DesignationController extends Controller
 
         $designation->update($request->only('name'));
 
-        if ($request->ajax()) {
-            $designations = Designation::paginate(10);
-            return view('admin.designations._list', compact('designations'))->render();
-        }
-
-        return redirect()->route('admin.designations.index')->with('success', 'Designation updated.');
+        $designations = Designation::paginate(10);
+        $html = view('admin.designations._list', compact('designations'))->render();
+        return response()->json(['success' => true, 'message' => 'Designation updated successfully.', 'html' => $html]);
     }
 
     public function destroy(Request $request, Designation $designation)

@@ -58,13 +58,9 @@ public function store(Request $request)
 
     Company::create($validated);
 
-    if ($request->ajax()) {
-        // After creating, return the updated list view HTML to replace dynamically
-        $companies = Company::paginate(10);
-        return view('admin.companies._list', compact('companies'))->render();
-    }
-
-    return redirect()->route('admin.companies.index')->with('success', 'Company added successfully.');
+    $companies = Company::paginate(10);
+    $html = view('admin.companies._list', compact('companies'))->render();
+    return response()->json(['success' => true, 'message' => 'Company added successfully.', 'html' => $html]);
 }
 public function update(Request $request, Company $company)
 {
@@ -75,13 +71,9 @@ public function update(Request $request, Company $company)
 
     $company->update($validated);
 
-    if ($request->ajax()) {
-        // Return updated company list partial (HTML) to replace dynamically
-        $companies = Company::paginate(10);
-        return view('admin.companies._list', compact('companies'))->render();
-    }
-
-    return redirect()->route('admin.companies.index')->with('success', 'Company updated successfully.');
+    $companies = Company::paginate(10);
+    $html = view('admin.companies._list', compact('companies'))->render();
+    return response()->json(['success' => true, 'message' => 'Company updated successfully.', 'html' => $html]);
 }
 
 

@@ -67,7 +67,7 @@
                 <button type="submit" class="btn btn-primary w-100" style="border-radius:0.5rem;font-weight:500;"><i class="bi bi-search"></i> Search</button>
             </div>
             <div class="col-md-2">
-                <a href="{{ route('admin.designations.index') }}" class="btn btn-secondary w-100" style="border-radius:0.5rem;font-weight:500;"><i class="bi bi-arrow-clockwise"></i> Reset</a>
+                <a href="{{ route('admin.designations.index') }}" class="btn btn-secondary w-100 ajax-link" style="border-radius:0.5rem;font-weight:500;"><i class="bi bi-arrow-clockwise"></i> Reset</a>
             </div>
         </form>
 
@@ -104,39 +104,8 @@
 
         @if(method_exists($designations, 'links'))
             <div class="mt-3">
-                {{ $designations->withQueryString()->links() }}
+                {{ $designations->withPath(route('admin.designations.index'))->withQueryString()->links() }}
             </div>
         @endif
     </div>
 </div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchForm = document.getElementById('designation-search-form');
-    if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const searchValue = this.querySelector('input[name="search"]').value;
-            const url = this.getAttribute('action') + '?search=' + encodeURIComponent(searchValue);
-            
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(response => response.text())
-                .then(html => { document.getElementById('designation-list-container').innerHTML = html; })
-                .catch(error => { console.error('Search failed:', error); alert('Search failed. Please try again.'); });
-        });
-    }
-    
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.pagination a')) {
-            e.preventDefault();
-            const url = e.target.closest('.pagination a').getAttribute('href');
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(response => response.text())
-                .then(html => { document.getElementById('designation-list-container').innerHTML = html; })
-                .catch(error => { console.error('Pagination failed:', error); });
-        }
-    });
-});
-</script>
-@endpush
