@@ -776,17 +776,19 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (bsModal) {
                             bsModal.hide();
                         }
+                        // Remove only this modal after hiding
+                        setTimeout(() => {
+                            if (modalEl.parentElement) {
+                                modalEl.remove();
+                            }
+                            // Clean up any remaining backdrops and body classes
+                            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                            document.body.classList.remove('modal-open');
+                            document.body.style.removeProperty('overflow');
+                            document.body.style.removeProperty('padding-right');
+                            console.log('Modal cleaned up');
+                        }, 300);
                     }
-                    
-                    // Clean everything after a short delay
-                    setTimeout(() => {
-                        document.querySelectorAll('.modal').forEach(m => m.remove());
-                        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-                        document.body.classList.remove('modal-open');
-                        document.body.style.removeProperty('overflow');
-                        document.body.style.removeProperty('padding-right');
-                        console.log('Modals cleaned up');
-                    }, 300);
 
                     showToast('error', 'Permit Cancelled', 'The permit has been successfully cancelled.');
                 }
@@ -852,15 +854,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Get permit type from URL
                     const permitTypeMatch = actionUrl.match(/permits\/(\w+)\/\d+\/activate/);
                     const permitType = permitTypeMatch ? permitTypeMatch[1] : 'temporary';
-
-                    console.log('Cleaning up modals...');
-
-                    // Clean up everything first
-                    document.querySelectorAll('.modal').forEach(m => m.remove());
-                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-                    document.body.classList.remove('modal-open');
-                    document.body.style.removeProperty('overflow');
-                    document.body.style.removeProperty('padding-right');
 
                     console.log('Updating UI for permit:', data.id);
 
