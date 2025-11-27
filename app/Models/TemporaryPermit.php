@@ -14,6 +14,7 @@ class TemporaryPermit extends Model
         'application_number',
         'id_type',
         'id_number',
+        'nic_number',
         'from_date',
         'to_date',
         'full_name',

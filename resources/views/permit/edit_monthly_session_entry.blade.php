@@ -365,11 +365,12 @@ window.fetchPersonDetails = function() {
 // Function to check for duplicate ID numbers in the cart (excluding current entry)
 window.checkDuplicateInCart = function() {
     const currentIdNumber = document.getElementById('id_number').value.trim();
+    const currentFullName = document.getElementById('full_name').value.trim();
     const originalIdNumber = originalValues.id_number; // The original ID for this entry
     const duplicateError = document.getElementById('duplicate_error');
     const updateBtn = document.getElementById('updateBtn');
     
-    if (!currentIdNumber) {
+    if (!currentIdNumber && !currentFullName) {
         duplicateError.textContent = '';
         duplicateError.style.display = 'none';
         return;
@@ -381,6 +382,7 @@ window.checkDuplicateInCart = function() {
     
     console.log('Checking duplicates...', {
         currentIdNumber,
+        currentFullName,
         currentEditIndex,
         sessionPermits
     });
@@ -394,14 +396,15 @@ window.checkDuplicateInCart = function() {
             return;
         }
         
-        // Compare ID numbers (case insensitive)
-        if (permit.id_number && permit.id_number.toUpperCase() === currentIdNumber.toUpperCase()) {
+        // Compare ID numbers and full names (case insensitive)
+        if ((permit.id_number && permit.id_number.toUpperCase() === currentIdNumber.toUpperCase()) || 
+            (permit.full_name && permit.full_name.toUpperCase() === currentFullName.toUpperCase())) {
             isDuplicate = true;
         }
     });
     
     if (isDuplicate) {
-        duplicateError.textContent = '⚠️ This NIC is already in the cart. Cannot have duplicate entries.';
+        duplicateError.textContent = '⚠️ This NIC or name is already in the cart. One person can only have one permit per submission.';
         duplicateError.style.display = 'block';
         duplicateError.style.color = '#dc3545';
         duplicateError.style.fontWeight = '500';
@@ -443,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const duplicateError = document.getElementById('duplicate_error');
             if (duplicateError && duplicateError.textContent.trim() !== '') {
                 e.preventDefault();
-                alert('Cannot submit: This NIC is already in the cart. Please use a different NIC.');
+                alert('Cannot submit: This NIC or name is already in the cart. Please use a different NIC.');
                 idTypeDropdown.disabled = true;
                 return false;
             }
@@ -563,7 +566,7 @@ function checkMonthlyAvailability(isEdit = false) {
     // Check for duplicate error first
     const duplicateError = document.getElementById('duplicate_error');
     if (duplicateError && duplicateError.textContent.trim() !== '') {
-        msg.innerText = 'Cannot check availability: This NIC is already in the cart.';
+        msg.innerText = 'Cannot check availability: This NIC or name is already in the cart.';
         msg.style.color = 'red';
         return;
     }

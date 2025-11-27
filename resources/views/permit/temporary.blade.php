@@ -207,6 +207,31 @@
                 </div>
             </div>
 
+            {{-- Passport Type Selection --}}
+            <div class="row mb-3" id="passport_type_row" style="display: none;">
+                <div class="col-md-12">
+                    <label class="form-label"><i class="bi bi-flag me-1"></i> Passport Type</label><br>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" name="passport_type" id="local_passport" value="local" class="form-check-input" {{ old('passport_type', 'local') == 'local' ? 'checked' : '' }} onchange="toggleNicField()">
+                        <label class="form-check-label" for="local_passport">Local Passport</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" name="passport_type" id="foreigner_passport" value="foreigner" class="form-check-input" {{ old('passport_type') == 'foreigner' ? 'checked' : '' }} onchange="toggleNicField()">
+                        <label class="form-check-label" for="foreigner_passport">Foreigner Passport</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3" id="nic_number_row" style="display: none;">
+                <div class="col-md-12">
+                    <label for="nic_number" id="nic_label" class="form-label"><i class="bi bi-card-text me-1"></i> NIC Number (Optional)</label>
+                    <input type="text" name="nic_number" id="nic_number" 
+                            value="{{ old('nic_number') }}" class="form-control"
+                            oninput="this.value = this.value.toUpperCase(); checkDuplicateInCart();"
+                            placeholder="Enter NIC number on the Identification document">
+                </div>
+            </div>
+
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="from_date" class="form-label"><i class="bi bi-calendar-date me-1"></i> From Date</label>
@@ -401,6 +426,10 @@
 @endsection
 
 @push('scripts')
+    <script>
+        // Store cart data for duplicate checking
+        window.cartData = @json(session('temporary_permit_cart', []));
+    </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- SweetAlert2 JS -->
@@ -475,6 +504,13 @@
                 // Update the identification type dropdown
                 idTypeDropdown.value = idType;
                 
+                // If Passport selected, set default to local passport
+                if (idType === 'Passport') {
+                    if (!document.getElementById('local_passport').checked && !document.getElementById('foreigner_passport').checked) {
+                        document.getElementById('local_passport').checked = true;
+                    }
+                }
+                
                 // Enable and lock the identification type dropdown
                 idTypeDropdown.disabled = true;
                 idTypeDropdown.style.backgroundColor = '#f8fafc';
@@ -546,28 +582,43 @@
 
         // Function to check for duplicate ID in session cart
         window.checkDuplicateInCart = function() {
-            const idNumber = document.getElementById('id_number').value.trim();
+            const idNumber = document.getElementById('id_number').value.trim().toUpperCase();
+            const nicNumber = document.getElementById('nic_number').value.trim().toUpperCase();
             const duplicateError = document.getElementById('duplicate_error');
             const addBtn = document.getElementById('addToListBtn');
             
-            if (!idNumber) {
+            if (!idNumber && !nicNumber) {
                 duplicateError.textContent = '';
                 return;
             }
 
-            // Get current cart from the page - use table.table selector
-            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
             let isDuplicate = false;
+            let duplicateType = '';
 
-            cartRows.forEach(row => {
-                const cartIdNumber = row.cells[1]?.textContent.trim().toUpperCase();
-                if (cartIdNumber === idNumber.toUpperCase()) {
-                    isDuplicate = true;
+            // Check against cart data for connected IDs
+            if (window.cartData && window.cartData.length > 0) {
+                for (const entry of window.cartData) {
+                    const cartIdNumber = (entry.id_number || '').toUpperCase();
+                    const cartNicNumber = (entry.nic_number || '').toUpperCase();
+                    
+                    // Check if current ID number matches any existing ID numbers or NIC numbers
+                    if (idNumber && (cartIdNumber === idNumber || cartNicNumber === idNumber)) {
+                        isDuplicate = true;
+                        duplicateType = `identification number`;
+                        break;
+                    }
+                    
+                    // Check if current NIC number matches any existing ID numbers or NIC numbers
+                    if (nicNumber && (cartIdNumber === nicNumber || cartNicNumber === nicNumber)) {
+                        isDuplicate = true;
+                        duplicateType = `identification number`;
+                        break;
+                    }
                 }
-            });
+            }
 
             if (isDuplicate) {
-                duplicateError.textContent = '⚠️ This ID number is already in the cart. Cannot add duplicate entries.';
+                duplicateError.textContent = `⚠️ The person who this ${duplicateType} belongs to already has an entry in the cart. One person can only have one permit per submission.`;
                 duplicateError.style.display = 'block';
                 duplicateError.style.color = '#dc3545';
                 duplicateError.style.fontWeight = '500';
@@ -636,7 +687,50 @@
             // Define updateIdValidation as a global function so it can be called from onchange
             window.updateIdValidation = function() {
                 validateId();
+                toggleNicField();
+                // Clear NIC field when switching ID types
+                document.getElementById('nic_number').value = '';
+            }            // Function to show/hide NIC Number field based on ID Type and Passport Type
+            function toggleNicField() {
+                const idType = document.getElementById('id_type').value;
+                const nicInput = document.getElementById('nic_number');
+                const nicLabel = document.getElementById('nic_label');
+                
+                if (idType === 'Passport') {
+                    $('#passport_type_row').show();
+                    const localPassport = document.getElementById('local_passport').checked;
+                    const foreignerPassport = document.getElementById('foreigner_passport').checked;
+                    
+                    if (localPassport) {
+                        $('#nic_number_row').show();
+                        nicLabel.textContent = 'NIC Number (Required)';
+                        nicInput.required = true;
+                    } else if (foreignerPassport) {
+                        $('#nic_number_row').hide();
+                        nicInput.value = '';
+                        nicInput.required = false;
+                    } else {
+                        // No radio selected, hide nic
+                        $('#nic_number_row').hide();
+                        nicInput.value = '';
+                        nicInput.required = false;
+                    }
+                } else if (idType === 'Driving License') {
+                    $('#passport_type_row').hide();
+                    $('#nic_number_row').show();
+                    nicLabel.textContent = 'NIC Number (Required)';
+                    nicInput.required = true;
+                } else {
+                    $('#passport_type_row').hide();
+                    $('#nic_number_row').hide();
+                    nicInput.value = '';
+                    nicInput.required = false;
+                }
             }
+
+            // Add event listeners for passport type radios to ensure toggleNicField is called
+            document.getElementById('local_passport').addEventListener('change', toggleNicField);
+            document.getElementById('foreigner_passport').addEventListener('change', toggleNicField);
 
             function validateId() {
                 let type = idType.value;
@@ -678,6 +772,9 @@
             if (idNumber.value.trim() !== "") {
                 validateId();
             }
+            
+            // Toggle NIC field visibility on page load
+            toggleNicField();
         });
 
         // setMaxToDate function
@@ -731,7 +828,7 @@
             // Check for duplicate error first
             const duplicateError = document.getElementById('duplicate_error');
             if (duplicateError && duplicateError.textContent.trim() !== '') {
-                msg.innerText = 'Cannot check availability: This ID Number is already in the cart.';
+                msg.innerText = 'Cannot check availability: This ID Number or name is already in the cart.';
                 msg.style.color = 'red';
                 return;
             }
@@ -811,6 +908,11 @@
                         company_name: companyName
                     };
                     
+                    // Include passport_type if applicable
+                    if (idType === 'Passport') {
+                        checkedFormData.passport_type = document.querySelector('input[name="passport_type"]:checked')?.value || '';
+                    }
+                    
                     // Attach change listeners to form fields
                     attachChangeListeners();
                 } else {
@@ -840,6 +942,11 @@
                 to_date: document.getElementById('to_date').value,
                 company_name: document.getElementById('company_name').value
             };
+            
+            // Include passport_type if applicable
+            if (currentData.id_type === 'Passport') {
+                currentData.passport_type = document.querySelector('input[name="passport_type"]:checked')?.value || '';
+            }
             
             return Object.keys(checkedFormData).some(key => checkedFormData[key] !== currentData[key]);
         }
@@ -881,6 +988,13 @@
                     }
                 }
             });
+            
+            // Attach listeners to passport type radios
+            const passportRadios = document.querySelectorAll('input[name="passport_type"]');
+            passportRadios.forEach(radio => {
+                radio.removeEventListener('change', handleFormChange);
+                radio.addEventListener('change', handleFormChange);
+            });
         }
 
         // setCompanyAddress function
@@ -911,6 +1025,7 @@
             
             // Clear all form fields
             document.getElementById('id_number').value = '';
+            document.getElementById('nic_number').value = '';
             document.getElementById('full_name').value = '';
             document.getElementById('initials').value = '';
             document.getElementById('from_date').value = '';
@@ -956,6 +1071,9 @@
             idTypeDropdown.style.backgroundColor = '';
             idTypeDropdown.style.cursor = '';
             
+            // Toggle NIC field visibility after resetting ID type
+            toggleNicField();
+            
             // Reset pass type and issue type radio buttons
             const passTypeRadios = document.querySelectorAll('input[name="pass_type"]');
             passTypeRadios.forEach(radio => {
@@ -965,6 +1083,13 @@
             
             const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
             issueTypeRadios.forEach(radio => {
+                radio.checked = false;
+                radio.removeAttribute('checked');
+            });
+            
+            // Reset passport type radio buttons
+            const passportTypeRadios = document.querySelectorAll('input[name="passport_type"]');
+            passportTypeRadios.forEach(radio => {
                 radio.checked = false;
                 radio.removeAttribute('checked');
             });
@@ -1024,6 +1149,15 @@
                 idTypeDropdown.style.cursor = 'not-allowed';
                 idTypeDropdown.style.color = '#1976d2';
                 idTypeDropdown.style.fontWeight = '500';
+                
+                // If Passport, show passport type row and set default
+                if (idTypeValue === 'Passport') {
+                    document.getElementById('passport_type_row').style.display = 'block';
+                    if (!document.getElementById('local_passport').checked && !document.getElementById('foreigner_passport').checked) {
+                        document.getElementById('local_passport').checked = true;
+                    }
+                    toggleNicField();
+                }
             } else {
                 // If no ID type, check if any document checkbox is pre-checked (from old() values)
                 // and sync the ID type accordingly
@@ -1041,6 +1175,12 @@
                     idTypeDropdown.style.cursor = 'not-allowed';
                     idTypeDropdown.style.color = '#1976d2';
                     idTypeDropdown.style.fontWeight = '500';
+                    // Show passport type row and set default
+                    document.getElementById('passport_type_row').style.display = 'block';
+                    if (!document.getElementById('local_passport').checked && !document.getElementById('foreigner_passport').checked) {
+                        document.getElementById('local_passport').checked = true;
+                    }
+                    toggleNicField();
                 } else if (document.getElementById('doc_driving_licence').checked) {
                     idTypeDropdown.value = 'Driving License';
                     idTypeDropdown.disabled = true;
@@ -1048,6 +1188,7 @@
                     idTypeDropdown.style.cursor = 'not-allowed';
                     idTypeDropdown.style.color = '#1976d2';
                     idTypeDropdown.style.fontWeight = '500';
+                    toggleNicField();
                 }
             }
             

@@ -42,6 +42,7 @@ public function addVehicleToSession(Request $request)
     $validated = $request->validate([
         'vehicle_type' => 'required|string',
         'vehicle_number' => 'required|string',
+        'nic_number' => 'nullable|string',
         'revenue_license_number' => 'required|string',
         'from_date' => 'required|date',
         'to_date' => 'required|date|after_or_equal:from_date',
@@ -84,11 +85,25 @@ public function addVehicleToSession(Request $request)
         session(['vehicle_company_address' => $validated['company_address']]);
     }
 
-    // Check for duplicate vehicle number in session cart
+    // Check for duplicate vehicle numbers and NIC numbers in session cart
+    $newVehicleNumber = strtolower(trim($validated['vehicle_number']));
+    $newNicNumber = strtolower(trim($validated['nic_number'] ?? ''));
+    
     foreach ($cart as $existingEntry) {
-        if (strtolower(trim($existingEntry['vehicle_number'])) === strtolower(trim($validated['vehicle_number']))) {
+        $existingVehicleNumber = strtolower(trim($existingEntry['vehicle_number']));
+        $existingNicNumber = strtolower(trim($existingEntry['nic_number'] ?? ''));
+        
+        // Check if new vehicle number matches any existing vehicle numbers
+        if ($newVehicleNumber && $existingVehicleNumber === $newVehicleNumber) {
             return redirect()->route('permit.vehicle')
-                ->withErrors(['vehicle_number' => 'This vehicle number is already added to the cart. Cannot add duplicate entries.'])
+                ->withErrors(['vehicle_number' => 'This vehicle number is already in the cart. Cannot add duplicate entries.'])
+                ->withInput();
+        }
+        
+        // Check if new NIC number matches any existing NIC numbers
+        if ($newNicNumber && $existingNicNumber === $newNicNumber) {
+            return redirect()->route('permit.vehicle')
+                ->withErrors(['nic_number' => 'This NIC number is already in the cart. One person can only have one permit per submission.'])
                 ->withInput();
         }
     }
@@ -222,6 +237,7 @@ public function updateVehicleSessionEntry(Request $request, $index)
     $validated = $request->validate([
         'vehicle_type' => 'required|string',
         'vehicle_number' => 'required|string',
+        'nic_number' => 'nullable|string',
         'revenue_license_number' => 'required|string',
         'from_date' => 'required|date',
         'to_date' => 'required|date|after_or_equal:from_date',

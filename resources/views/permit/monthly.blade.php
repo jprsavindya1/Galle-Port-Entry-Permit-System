@@ -435,10 +435,11 @@
         // Function to check for duplicate NIC in session cart
         window.checkDuplicateInCart = function() {
             const idNumber = document.getElementById('id_number').value.trim();
+            const fullName = document.getElementById('full_name').value.trim();
             const duplicateError = document.getElementById('duplicate_error');
             const addBtn = document.getElementById('addToListBtn');
             
-            if (!idNumber) {
+            if (!idNumber && !fullName) {
                 duplicateError.textContent = '';
                 return;
             }
@@ -449,13 +450,14 @@
 
             cartRows.forEach(row => {
                 const cartIdNumber = row.cells[1]?.textContent.trim().toUpperCase();
-                if (cartIdNumber === idNumber.toUpperCase()) {
+                const cartFullName = row.cells[2]?.textContent.trim().toUpperCase();
+                if ((idNumber && cartIdNumber === idNumber.toUpperCase()) || (fullName && cartFullName === fullName.toUpperCase())) {
                     isDuplicate = true;
                 }
             });
 
             if (isDuplicate) {
-                duplicateError.textContent = '⚠️ This NIC is already in the cart. Cannot add duplicate entries.';
+                duplicateError.textContent = '⚠️ This NIC or name is already in the cart. One person can only have one permit per submission.';
                 duplicateError.style.display = 'block';
                 duplicateError.style.color = '#dc3545';
                 duplicateError.style.fontWeight = '500';
@@ -705,7 +707,7 @@
             // Check for duplicate error first
             const duplicateError = document.getElementById('duplicate_error');
             if (duplicateError && duplicateError.textContent.trim() !== '') {
-                msg.innerText = 'Cannot check availability: This NIC is already in the cart.';
+                msg.innerText = 'Cannot check availability: This NIC or name is already in the cart.';
                 msg.style.color = 'red';
                 return;
             }

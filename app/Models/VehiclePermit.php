@@ -13,6 +13,7 @@ class VehiclePermit extends Model
         'permit_id',
         'application_number',
         'vehicle_number',
+        'nic_number',
         'vehicle_type',
         'from_date',
         'to_date',

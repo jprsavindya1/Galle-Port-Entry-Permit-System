@@ -187,6 +187,13 @@
             </div>
 
             <div class="row mb-3">
+                <div class="col-md-12">
+                    <label for="nic_number" class="form-label"><i class="bi bi-card-text me-1"></i> NIC Number (Optional)</label>
+                    <input type="text" class="form-control" name="nic_number" id="nic_number" value="{{ old('nic_number') }}" oninput="this.value = this.value.toUpperCase(); checkDuplicateInCart();" placeholder="Enter NIC number to connect with other IDs">
+                </div>
+            </div>
+
+            <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="revenue_license_number" class="form-label"><i class="bi bi-card-list me-1"></i> Revenue License Number <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="revenue_license_number" id="revenue_license_number" required value="{{ old('revenue_license_number') }}" oninput="this.value = this.value.toUpperCase();">
@@ -344,6 +351,10 @@
 @endsection
 
 @push('scripts')
+    <script>
+        // Store cart data for duplicate checking
+        window.cartData = @json(session('vehicle_permit_cart', []));
+    </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- SweetAlert2 JS -->
@@ -428,30 +439,45 @@
             }
         }
 
-        // Function to check for duplicate vehicle number in session cart
+        // Function to check for duplicate vehicle number and NIC in session cart
         window.checkDuplicateInCart = function() {
-            const vehicleNumber = document.getElementById('vehicle_number').value.trim();
+            const vehicleNumber = document.getElementById('vehicle_number').value.trim().toUpperCase();
+            const nicNumber = document.getElementById('nic_number').value.trim().toUpperCase();
             const duplicateError = document.getElementById('duplicate_error');
             const addBtn = document.getElementById('addToListBtn');
             
-            if (!vehicleNumber) {
+            if (!vehicleNumber && !nicNumber) {
                 duplicateError.textContent = '';
                 return;
             }
 
-            // Get current cart from the page - use table.table selector
-            const cartRows = document.querySelectorAll('.table-responsive table tbody tr');
             let isDuplicate = false;
+            let duplicateType = '';
 
-            cartRows.forEach(row => {
-                const cartVehicleNumber = row.cells[1]?.textContent.trim().toUpperCase(); // Column 1 is vehicle number
-                if (cartVehicleNumber === vehicleNumber.toUpperCase()) {
-                    isDuplicate = true;
+            // Check against cart data for vehicle numbers and NIC numbers
+            if (window.cartData && window.cartData.length > 0) {
+                for (const entry of window.cartData) {
+                    const cartVehicleNumber = (entry.vehicle_number || '').toUpperCase();
+                    const cartNicNumber = (entry.nic_number || '').toUpperCase();
+                    
+                    // Check if current vehicle number matches any existing vehicle numbers
+                    if (vehicleNumber && cartVehicleNumber === vehicleNumber) {
+                        isDuplicate = true;
+                        duplicateType = 'vehicle number';
+                        break;
+                    }
+                    
+                    // Check if current NIC number matches any existing NIC numbers
+                    if (nicNumber && cartNicNumber === nicNumber) {
+                        isDuplicate = true;
+                        duplicateType = 'NIC number';
+                        break;
+                    }
                 }
-            });
+            }
 
             if (isDuplicate) {
-                duplicateError.textContent = '⚠️ This vehicle number is already in the cart. Cannot add duplicate entries.';
+                duplicateError.textContent = `⚠️ This ${duplicateType} is already in the cart. One vehicle/person can only have one permit per submission.`;
                 duplicateError.style.display = 'block';
                 duplicateError.style.color = '#dc3545';
                 duplicateError.style.fontWeight = '500';
@@ -548,15 +574,13 @@
             addBtn.style.opacity = '0.6';
             addBtn.style.cursor = 'not-allowed';
 
-            // Check for duplicate error first
-            const duplicateError = document.getElementById('duplicate_error');
-            if (duplicateError && duplicateError.textContent.trim() !== '') {
-                msg.innerText = 'Cannot check availability: This Vehicle Number is already in the cart.';
-                msg.style.color = 'red';
-                return;
-            }
-
-            // Check for empty fields and build detailed message
+    // Check for duplicate error first
+    const duplicateError = document.getElementById('duplicate_error');
+    if (duplicateError && duplicateError.textContent.trim() !== '') {
+        msg.innerText = 'Cannot check availability: This Vehicle Number or owner name is already in the cart.';
+        msg.style.color = 'red';
+        return;
+    }            // Check for empty fields and build detailed message
             const missingFields = [];
             if (!vehicleType) missingFields.push('Vehicle Type');
             if (!vehicleNumber) missingFields.push('Vehicle Number');
@@ -805,6 +829,7 @@
                 
                 // Clear all form fields with null checks
                 const vehicleNumber = document.getElementById('vehicle_number');
+                const nicNumber = document.getElementById('nic_number');
                 const fromDate = document.getElementById('from_date');
                 const toDate = document.getElementById('to_date');
                 const vehicleType = document.getElementById('vehicle_type');
@@ -816,6 +841,7 @@
                 const remarks = document.getElementById('remarks');
                 
                 if (vehicleNumber) vehicleNumber.value = '';
+                if (nicNumber) nicNumber.value = '';
                 if (fromDate) fromDate.value = '';
                 if (toDate) {
                     toDate.value = '';

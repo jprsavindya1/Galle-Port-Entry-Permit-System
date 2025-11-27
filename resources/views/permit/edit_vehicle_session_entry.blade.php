@@ -325,10 +325,11 @@ window.fetchVehicleDetails = function() {
 // Function to check for duplicate vehicle numbers in the cart (excluding current entry)
 window.checkDuplicateInCart = function() {
     const currentVehicleNumber = document.getElementById('vehicle_number').value.trim();
+    const currentOwnerName = document.getElementById('owner_name').value.trim();
     const duplicateError = document.getElementById('duplicate_error');
     const updateBtn = document.getElementById('updateBtn');
     
-    if (!currentVehicleNumber) {
+    if (!currentVehicleNumber && !currentOwnerName) {
         duplicateError.textContent = '';
         duplicateError.style.display = 'none';
         return;
@@ -340,6 +341,7 @@ window.checkDuplicateInCart = function() {
     
     console.log('Checking duplicates...', {
         currentVehicleNumber,
+        currentOwnerName,
         currentEditIndex,
         sessionVehiclePermits
     });
@@ -353,14 +355,15 @@ window.checkDuplicateInCart = function() {
             return;
         }
         
-        // Compare vehicle numbers (case insensitive)
-        if (permit.vehicle_number && permit.vehicle_number.toUpperCase() === currentVehicleNumber.toUpperCase()) {
+        // Compare vehicle numbers and owner names (case insensitive)
+        if ((permit.vehicle_number && permit.vehicle_number.toUpperCase() === currentVehicleNumber.toUpperCase()) || 
+            (permit.owner_name && permit.owner_name.toUpperCase() === currentOwnerName.toUpperCase())) {
             isDuplicate = true;
         }
     });
     
     if (isDuplicate) {
-        duplicateError.textContent = '⚠️ This Vehicle Number is already in the cart. Cannot have duplicate entries.';
+        duplicateError.textContent = '⚠️ This Vehicle Number or owner name is already in the cart. One person can only have one permit per submission.';
         duplicateError.style.display = 'block';
         duplicateError.style.color = '#dc3545';
         duplicateError.style.fontWeight = '500';
@@ -408,7 +411,7 @@ function checkVehicleAvailability() {
     // Check for duplicate error first
     const duplicateError = document.getElementById('duplicate_error');
     if (duplicateError && duplicateError.textContent.trim() !== '') {
-        msgEl.textContent = 'Cannot check availability: This Vehicle Number is already in the cart.';
+        msgEl.textContent = 'Cannot check availability: This Vehicle Number or owner name is already in the cart.';
         msgEl.style.color = 'red';
         return;
     }
@@ -587,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const duplicateError = document.getElementById('duplicate_error');
             if (duplicateError && duplicateError.textContent.trim() !== '') {
                 e.preventDefault();
-                alert('Cannot submit: This Vehicle Number is already in the cart. Please use a different vehicle number.');
+                alert('Cannot submit: This Vehicle Number or owner name is already in the cart. Please use a different vehicle number.');
                 return false;
             }
         });

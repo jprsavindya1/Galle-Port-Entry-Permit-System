@@ -45,6 +45,8 @@ class TemporaryPermitController extends PermitController
         $validated = $request->validate([
             'id_type' => 'required|string',
             'id_number' => 'required|string',
+            'nic_number' => 'nullable|string',
+            'passport_type' => 'nullable|string|in:local,foreigner',
             'from_date' => 'required|date',
             'to_date' => 'required|date|after_or_equal:from_date',
             'full_name' => 'required|string',
@@ -61,6 +63,15 @@ class TemporaryPermitController extends PermitController
             'doc_passport' => 'nullable|boolean',
             'doc_driving_licence' => 'nullable|boolean',
         ]);
+        
+        // Additional validation for NIC number based on ID type and passport type
+        if ($validated['id_type'] === 'Driving License' || ($validated['id_type'] === 'Passport' && ($validated['passport_type'] ?? 'local') === 'local')) {
+            $request->validate([
+                'nic_number' => 'required|string',
+            ], [
+                'nic_number.required' => 'NIC Number is required for ' . ($validated['id_type'] === 'Driving License' ? 'Driving License' : 'Local Passport') . '.',
+            ]);
+        }
         
         // Convert checkbox values (checkboxes only send value if checked, otherwise null)
         $validated['doc_nic'] = $request->has('doc_nic') ? 1 : 0;
@@ -88,13 +99,35 @@ if (session()->has('temporary_company_name')) {
     session(['temporary_company_address' => $validated['company_address']]);
 }
 
-        // Check for duplicate ID number in session cart
+        // Check for duplicate connected IDs in session cart
+        $newIdNumber = strtolower(trim($validated['id_number']));
+        $newNicNumber = strtolower(trim($validated['nic_number'] ?? ''));
+        $conflictingIdType = null;
+        $conflictField = null;
+        
         foreach ($cart as $existingEntry) {
-            if (strtolower(trim($existingEntry['id_number'])) === strtolower(trim($validated['id_number']))) {
-                return redirect()->route('permit.temporary')
-                    ->withErrors(['id_number' => 'This ID number is already added to the cart. Cannot add duplicate entries.'])
-                    ->withInput();
+            $existingIdNumber = strtolower(trim($existingEntry['id_number']));
+            $existingNicNumber = strtolower(trim($existingEntry['nic_number'] ?? ''));
+            
+            // Check if new ID number matches any existing ID numbers or NIC numbers
+            if ($newIdNumber && ($existingIdNumber === $newIdNumber || $existingNicNumber === $newIdNumber)) {
+                $conflictingIdType = $existingEntry['id_type'];
+                $conflictField = 'id_number';
+                break;
             }
+            
+            // Check if new NIC number matches any existing ID numbers or NIC numbers
+            if ($newNicNumber && ($existingIdNumber === $newNicNumber || $existingNicNumber === $newNicNumber)) {
+                $conflictingIdType = $existingEntry['id_type'];
+                $conflictField = 'nic_number';
+                break;
+            }
+        }
+        
+        if ($conflictingIdType) {
+            return redirect()->route('permit.temporary')
+                ->withErrors([$conflictField => "The person who this identification number belongs to already has an entry in the cart. One person can only have one permit per submission."])
+                ->withInput();
         }
 
         // Convert pass_type array to comma-separated string for storage
@@ -398,6 +431,8 @@ public function editSessionEntry($index)
     $validated = $request->validate([
         'id_type' => 'required|string',
         'id_number' => 'required|string',
+        'nic_number' => 'nullable|string',
+        'passport_type' => 'nullable|string|in:local,foreigner',
         'from_date' => 'required|date',
         'to_date' => 'required|date|after_or_equal:from_date',
         'full_name' => 'required|string',
@@ -412,10 +447,47 @@ public function editSessionEntry($index)
         'reason' => 'required|string',
     ]);
 
+    // Additional validation for NIC number based on ID type and passport type
+    if ($validated['id_type'] === 'Driving License' || ($validated['id_type'] === 'Passport' && ($validated['passport_type'] ?? 'local') === 'local')) {
+        $request->validate([
+            'nic_number' => 'required|string',
+        ], [
+            'nic_number.required' => 'NIC Number is required for ' . ($validated['id_type'] === 'Driving License' ? 'Driving License' : 'Local Passport') . '.',
+        ]);
+    }
+
     $cart = session()->get('temporary_permit_cart', []);
 
     if (!isset($cart[$index])) {
         return redirect()->route('permit.temporary')->with('error', 'Permit entry not found.');
+    }
+
+    // Check for duplicate connected IDs in session cart (excluding current entry)
+    $newIdNumber = strtolower(trim($validated['id_number']));
+    $newNicNumber = strtolower(trim($validated['nic_number'] ?? ''));
+    
+    foreach ($cart as $existingIndex => $existingEntry) {
+        // Skip the current entry being updated
+        if ($existingIndex == $index) {
+            continue;
+        }
+        
+        $existingIdNumber = strtolower(trim($existingEntry['id_number']));
+        $existingNicNumber = strtolower(trim($existingEntry['nic_number'] ?? ''));
+        
+        // Check if new ID number matches any existing ID numbers or NIC numbers
+        if ($newIdNumber && ($existingIdNumber === $newIdNumber || $existingNicNumber === $newIdNumber)) {
+            return redirect()->route('permit.editSessionEntry', $index)
+                ->withErrors(['id_number' => "The person who this identification number belongs to already has an entry in the cart. One person can only have one permit per submission."])
+                ->withInput();
+        }
+        
+        // Check if new NIC number matches any existing ID numbers or NIC numbers
+        if ($newNicNumber && ($existingIdNumber === $newNicNumber || $existingNicNumber === $newNicNumber)) {
+            return redirect()->route('permit.editSessionEntry', $index)
+                ->withErrors(['nic_number' => "The person who this identification number belongs to already has an entry in the cart. One person can only have one permit per submission."])
+                ->withInput();
+        }
     }
 
     // Only check company consistency if NOT edit session
