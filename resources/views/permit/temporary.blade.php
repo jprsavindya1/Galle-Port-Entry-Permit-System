@@ -227,8 +227,9 @@
                     <label for="nic_number" id="nic_label" class="form-label"><i class="bi bi-card-text me-1"></i> NIC Number (Optional)</label>
                     <input type="text" name="nic_number" id="nic_number" 
                             value="{{ old('nic_number') }}" class="form-control"
-                            oninput="this.value = this.value.toUpperCase(); checkDuplicateInCart();"
+                            oninput="this.value = this.value.toUpperCase(); validateNicNumber(); checkDuplicateInCart();"
                             placeholder="Enter NIC number on the Identification document">
+                    <span id="nic_number_error" class="text-danger small"></span>
                 </div>
             </div>
 
@@ -440,6 +441,8 @@
         let checkedFormData = null;
         // Store ID validation state globally
         let isIdValid = false;
+        // Store NIC validation state globally
+        let isNicValid = true; // Default to true since NIC is optional
         // Store the last fetched ID number to track changes
         let lastFetchedIdNumber = '';
 
@@ -732,14 +735,64 @@
             document.getElementById('local_passport').addEventListener('change', toggleNicField);
             document.getElementById('foreigner_passport').addEventListener('change', toggleNicField);
 
+            // Function to validate NIC Number field
+            window.validateNicNumber = function() {
+                const nicInput = document.getElementById('nic_number');
+                const nicError = document.getElementById('nic_number_error');
+                const value = nicInput.value.trim();
+                
+                // If empty and not required, it's valid
+                if (value === '' && !nicInput.required) {
+                    nicError.textContent = '';
+                    nicInput.classList.remove('is-invalid');
+                    isNicValid = true;
+                    return true;
+                }
+                
+                // If empty and required, it's invalid
+                if (value === '' && nicInput.required) {
+                    nicError.textContent = 'NIC Number is required.';
+                    nicInput.classList.add('is-invalid');
+                    isNicValid = false;
+                    return false;
+                }
+                
+                // Validate NIC format: Old (9 digits + V) or New (12 digits)
+                const nicRegex = /^(?:\d{9}[Vv]|\d{12})$/;
+                
+                if (!nicRegex.test(value)) {
+                    nicError.textContent = 'Enter a valid NIC number (9 digits + V for old format or 12 digits for new format)';
+                    nicInput.classList.add('is-invalid');
+                    isNicValid = false;
+                    return false;
+                } else {
+                    nicError.textContent = '';
+                    nicInput.classList.remove('is-invalid');
+                    isNicValid = true;
+                    return true;
+                }
+            };
+
+            // Add event listener for NIC number validation
+            const nicNumberInput = document.getElementById('nic_number');
+            if (nicNumberInput) {
+                nicNumberInput.addEventListener('input', validateNicNumber);
+                nicNumberInput.addEventListener('blur', validateNicNumber);
+                
+                // Run validation on page load if NIC number is pre-filled
+                if (nicNumberInput.value.trim() !== '') {
+                    validateNicNumber();
+                }
+            }
+
             function validateId() {
                 let type = idType.value;
                 let value = idNumber.value.trim();
                 let regex, message = "";
 
                 if (type === "NIC") {
-                    // Old (9 digits + V/X) for cards before 2016 OR New (12 digits) for cards after 2016
-                    regex = /^(?:\d{9}[VXvx]|\d{12})$/;
+                    // Old (9 digits + V) for cards before 2016 OR New (12 digits) for cards after 2016
+                    regex = /^(?:\d{9}[Vv]|\d{12})$/;
                     message = "Enter a valid NIC number (9 digits + V for old format or 12 digits for new format).";
                 } else if (type === "Passport") {
                     // Starts with P, OL, or D followed by numbers
@@ -863,6 +916,14 @@
             // Validate ID number before checking availability
             if (!isIdValid) {
                 msg.innerText = "Please enter a valid Identification Number before checking availability";
+                msg.style.color = 'red';
+                return;
+            }
+
+            // Validate NIC number if it's required and filled
+            const nicNumberInput = document.getElementById('nic_number');
+            if (nicNumberInput && nicNumberInput.value.trim() !== '' && !isNicValid) {
+                msg.innerText = 'Please enter a valid NIC Number before checking availability.';
                 msg.style.color = 'red';
                 return;
             }
@@ -1044,6 +1105,7 @@
             
             // Clear error messages and availability message
             document.getElementById('id_number_error').textContent = '';
+            document.getElementById('nic_number_error').textContent = '';
             document.getElementById('duplicate_error').textContent = '';
             document.getElementById('availability-msg').textContent = '';
             
@@ -1105,6 +1167,7 @@
             
             // Reset validation states
             isIdValid = false;
+            isNicValid = true; // Reset to true since NIC is optional by default
             checkedFormData = null;
             
             // Disable the "Add to List" button

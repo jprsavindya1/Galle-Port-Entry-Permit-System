@@ -187,17 +187,18 @@
             </div>
 
             <div class="row mb-3">
-                <div class="col-md-12">
-                    <label for="nic_number" class="form-label"><i class="bi bi-card-text me-1"></i> NIC Number (Optional)</label>
-                    <input type="text" class="form-control" name="nic_number" id="nic_number" value="{{ old('nic_number') }}" oninput="this.value = this.value.toUpperCase(); checkDuplicateInCart();" placeholder="Enter NIC number to connect with other IDs">
-                </div>
-            </div>
-
-            <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="revenue_license_number" class="form-label"><i class="bi bi-card-list me-1"></i> Revenue License Number <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="revenue_license_number" id="revenue_license_number" required value="{{ old('revenue_license_number') }}" oninput="this.value = this.value.toUpperCase();">
                 </div>
+                <div class="col-md-6">
+                    <label for="nic_number" class="form-label"><i class="bi bi-card-text me-1"></i> NIC Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="nic_number" id="nic_number" required value="{{ old('nic_number') }}" oninput="this.value = this.value.toUpperCase(); validateNicNumber(); checkDuplicateInCart();" placeholder="">
+                    <span id="nic_number_error" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="insurance_number" class="form-label"><i class="bi bi-shield-check me-1"></i> Insurance Number <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="insurance_number" id="insurance_number" required value="{{ old('insurance_number') }}" oninput="this.value = this.value.toUpperCase();">
@@ -245,7 +246,7 @@
             </div>
             
             <div class="mb-3">
-                <label for="owner_address" class="form-label"><i class="bi bi-house me-1"></i> Owner's Address (Optional)</label>
+                <label for="owner_address" class="form-label"><i class="bi bi-house me-1"></i> Owner's Address </label>
                 <input type="text" class="form-control" name="owner_address" id="owner_address" value="{{ old('owner_address') }}"
                 oninput="this.value = this.value.toUpperCase();">
             </div>
@@ -361,6 +362,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        // Store NIC validation state globally
+        let isNicValid = false; // Required field so default to false
+        
         // Function to handle vehicle number change - clear autofilled data when changed
         window.handleVehicleNumberChange = function() {
             const currentVehicleNumber = document.getElementById('vehicle_number').value.trim();
@@ -376,6 +380,36 @@
                 lastFetchedVehicleNumber = '';
             }
         }
+
+        // Function to validate NIC Number field
+        window.validateNicNumber = function() {
+            const nicInput = document.getElementById('nic_number');
+            const nicError = document.getElementById('nic_number_error');
+            const value = nicInput.value.trim();
+            
+            // If empty and required, it's invalid
+            if (value === '') {
+                nicError.textContent = 'NIC Number is required.';
+                nicInput.classList.add('is-invalid');
+                isNicValid = false;
+                return false;
+            }
+            
+            // Validate NIC format: Old (9 digits + V) or New (12 digits)
+            const nicRegex = /^(?:\d{9}[Vv]|\d{12})$/;
+            
+            if (!nicRegex.test(value)) {
+                nicError.textContent = 'Enter a valid NIC number (9 digits + V for old format or 12 digits for new format)';
+                nicInput.classList.add('is-invalid');
+                isNicValid = false;
+                return false;
+            } else {
+                nicError.textContent = '';
+                nicInput.classList.remove('is-invalid');
+                isNicValid = true;
+                return true;
+            }
+        };
 
         // Function to handle vehicle type change and set date restrictions
         window.handleVehicleTypeChange = function() {
@@ -577,13 +611,14 @@
     // Check for duplicate error first
     const duplicateError = document.getElementById('duplicate_error');
     if (duplicateError && duplicateError.textContent.trim() !== '') {
-        msg.innerText = 'Cannot check availability: This Vehicle Number or owner name is already in the cart.';
+        msg.innerText = 'Cannot check availability: This Vehicle Number or NIC Number is already in the cart.';
         msg.style.color = 'red';
         return;
     }            // Check for empty fields and build detailed message
             const missingFields = [];
             if (!vehicleType) missingFields.push('Vehicle Type');
             if (!vehicleNumber) missingFields.push('Vehicle Number');
+            if (!document.getElementById('nic_number').value.trim()) missingFields.push('NIC Number');
             if (!revenueLicenseNumber) missingFields.push('Revenue License Number');
             if (!insuranceNumber) missingFields.push('Insurance Number');
             if (!fromDate) missingFields.push('From Date');
@@ -603,6 +638,13 @@
 
             if (!docRevenueLicence || !docInsurance) {
                 msg.innerText = "Please check both required documents: Revenue License and Insurance";
+                msg.style.color = 'red';
+                return;
+            }
+
+            // Validate NIC number before checking availability
+            if (!isNicValid) {
+                msg.innerText = 'Please enter a valid NIC Number before checking availability.';
                 msg.style.color = 'red';
                 return;
             }
@@ -638,6 +680,7 @@
                 },
                 body: JSON.stringify({
                     vehicle_number: vehicleNumber,
+                    nic_number: document.getElementById('nic_number').value.trim(),
                     from_date: fromDate,
                     to_date: toDate,
                     company_name: companyName
@@ -662,6 +705,7 @@
                         doc_insurance: document.getElementById('doc_insurance').checked ? '1' : '0',
                         vehicle_type: document.getElementById('vehicle_type').value,
                         vehicle_number: vehicleNumber,
+                        nic_number: document.getElementById('nic_number').value.trim(),
                         revenue_license_number: document.getElementById('revenue_license_number').value.trim(),
                         insurance_number: document.getElementById('insurance_number').value.trim(),
                         from_date: fromDate,
@@ -694,6 +738,7 @@
                 doc_insurance: document.getElementById('doc_insurance').checked ? '1' : '0',
                 vehicle_type: document.getElementById('vehicle_type').value,
                 vehicle_number: document.getElementById('vehicle_number').value.trim(),
+                nic_number: document.getElementById('nic_number').value.trim(),
                 revenue_license_number: document.getElementById('revenue_license_number').value.trim(),
                 insurance_number: document.getElementById('insurance_number').value.trim(),
                 from_date: document.getElementById('from_date').value,
@@ -727,7 +772,7 @@
         // Function to attach change listeners to form fields
         function attachChangeListeners() {
             const fields = [
-                'doc_revenue_licence', 'doc_insurance', 'vehicle_type', 'vehicle_number', 
+                'doc_revenue_licence', 'doc_insurance', 'vehicle_type', 'vehicle_number', 'nic_number',
                 'revenue_license_number', 'insurance_number', 'from_date', 'to_date', 
                 'owner_name', 'company_name'
             ];
@@ -786,6 +831,7 @@
             const idTypeInput = document.getElementById('id_type');
             const fromDateInput = document.getElementById('from_date');
             const vehicleTypeInput = document.getElementById('vehicle_type');
+            const nicNumberInput = document.getElementById('nic_number');
 
             if (fromDateInput) {
                 fromDateInput.addEventListener('change', function() {
@@ -798,6 +844,16 @@
             }
             if (idTypeInput) {
                 idTypeInput.addEventListener('change', setMaxToDate);
+            }
+            
+            // Add NIC validation event listeners
+            if (nicNumberInput) {
+                nicNumberInput.addEventListener('blur', validateNicNumber);
+                
+                // Run validation on page load if NIC number is pre-filled
+                if (nicNumberInput.value.trim() !== '') {
+                    validateNicNumber();
+                }
             }
             
             // Enable company dropdown before form submission
@@ -869,6 +925,9 @@
                 const duplicateError = document.getElementById('duplicate_error');
                 if (duplicateError) duplicateError.textContent = '';
                 
+                const nicError = document.getElementById('nic_number_error');
+                if (nicError) nicError.textContent = '';
+                
                 // Reset document checkboxes - IMPORTANT: Clear these explicitly
                 const docRevenueLicence = document.getElementById('doc_revenue_licence');
                 const docInsurance = document.getElementById('doc_insurance');
@@ -903,6 +962,7 @@
                 }
                 
                 // Reset validation states
+                isNicValid = false; // Reset to false since NIC is required
                 checkedFormData = null;
                 
                 // Disable the "Add to List" button

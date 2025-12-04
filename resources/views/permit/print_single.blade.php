@@ -36,6 +36,7 @@
     .id-type { top: 160px; left: 900px; }
     .total-amount { top: 210px; left: 600px; }
     .time { top: 200px; left: 900px; }
+    .pass-type { top: 240px; left: 500px; }
     .permit-type { top: 250px; left: 420px; font-size: 20px; font-weight: bold; }
 
     @media print { #printControls { display: none !important; } body { margin: 0; } }
@@ -127,6 +128,7 @@
 
     <div class="field time">Time: {{ \Carbon\Carbon::parse($permit->entry_time ?? now())->format('H:i') }}</div>
     <div class="field total-amount">{{ number_format($payment->amount_total ?? 0, 2) }}</div>
+    <div class="field pass-type">{{ strtoupper($permit->pass_type ?? '') }}</div>
 
     <!--@if($permit->type === 'VP')
         <div class="field permit-type">Remarks: {{ $permit->remarks }}</div>--> <!-- replace pass type with remarks -->

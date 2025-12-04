@@ -648,7 +648,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Icon mapping
         const icons = {
             success: '✓',
-            error: '✕',
+            error: '✓',
             info: 'ℹ'
         };
 

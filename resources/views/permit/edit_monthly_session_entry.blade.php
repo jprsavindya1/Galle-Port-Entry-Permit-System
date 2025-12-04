@@ -502,8 +502,8 @@ function validateId() {
         return false;
     }
 
-    // Old format: 9 digits + V/X or New format: 12 digits
-    const nicPattern = /^(?:\d{9}[VXvx]|\d{12})$/;
+    // Old format: 9 digits + V or New format: 12 digits
+    const nicPattern = /^(?:\d{9}[Vv]|\d{12})$/;
     const valid = nicPattern.test(idNumber);
 
     if (valid) {

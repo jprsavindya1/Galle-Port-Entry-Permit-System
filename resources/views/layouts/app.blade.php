@@ -159,10 +159,90 @@
         /* Sidebar - Deep Navy Blue */
         .sidebar-slpa-logo {
             min-width: 250px;
-            min-height: 100vh;
+            width: 250px;
+            height: calc(100vh - 70px); /* Full height minus navbar */
             background-color: var(--slpa-logo-blue); 
             box-shadow: 3px 0 10px rgba(0, 0, 0, 0.15);
             padding-top: 20px;
+            position: fixed;
+            top: 70px; /* Below navbar */
+            left: 0;
+            overflow-y: auto; /* Enable scroll for sidebar content if needed */
+            overflow-x: hidden;
+            z-index: 1000;
+        }
+        
+        /* Main content margin to account for fixed sidebar */
+        main.flex-grow-1 {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .sidebar-slpa-logo {
+                width: 200px;
+                min-width: 200px;
+            }
+            main.flex-grow-1 {
+                margin-left: 200px;
+                width: calc(100% - 200px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar-slpa-logo {
+                width: 180px;
+                min-width: 180px;
+            }
+            main.flex-grow-1 {
+                margin-left: 180px;
+                width: calc(100% - 180px);
+            }
+            nav.navbar-slpa-logo .navbar-brand .brand-text {
+                font-size: 1.2rem !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .sidebar-slpa-logo {
+                width: 60px;
+                min-width: 60px;
+            }
+            .sidebar-slpa-logo .nav-link,
+            .sidebar-slpa-logo .sidebar-header {
+                font-size: 0;
+                padding: 12px 8px;
+                text-align: center;
+            }
+            .sidebar-slpa-logo .nav-link::before {
+                content: '•';
+                font-size: 1.5rem;
+            }
+            .sidebar-slpa-logo .sidebar-header {
+                display: none;
+            }
+            main.flex-grow-1 {
+                margin-left: 60px;
+                width: calc(100% - 60px);
+            }
+            nav.navbar-slpa-logo .navbar-brand .brand-text {
+                font-size: 0.9rem !important;
+            }
+        }
+        
+        /* Fixed navbar */
+        nav.navbar.navbar-slpa-logo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+        }
+        
+        /* Body padding to account for fixed navbar */
+        body {
+            padding-top: 70px;
         }
 
         /* Sidebar Navigation Links */

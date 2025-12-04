@@ -355,17 +355,17 @@ protected function isBlacklisted(array $data, string $type = null): ?string
     $query = \App\Models\Blacklist::query();
 
     $query->where(function ($q) use ($data) {
-        $nic = trim($data['id_number'] ?? '');
+        $nic = trim($data['nic_number'] ?? $data['id_number'] ?? '');
         $fullName = trim($data['full_name'] ?? '');
         $company = strtolower(trim($data['company_name'] ?? ''));
         $vehicle = trim($data['vehicle_number'] ?? '');
 
-        if (!empty($fullName)) {
-            $q->orWhere('full_name', $fullName);
-        }
-
         if (!empty($nic)) {
             $q->orWhereRaw('BINARY `nic` = ?', [$nic]);
+        }
+
+        if (!empty($fullName)) {
+            $q->orWhere('full_name', $fullName);
         }
 
         if (!empty($company)) {

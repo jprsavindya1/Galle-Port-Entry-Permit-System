@@ -42,7 +42,7 @@ public function addVehicleToSession(Request $request)
     $validated = $request->validate([
         'vehicle_type' => 'required|string',
         'vehicle_number' => 'required|string',
-        'nic_number' => 'nullable|string',
+        'nic_number' => 'required|string',
         'revenue_license_number' => 'required|string',
         'from_date' => 'required|date',
         'to_date' => 'required|date|after_or_equal:from_date',
@@ -237,7 +237,7 @@ public function updateVehicleSessionEntry(Request $request, $index)
     $validated = $request->validate([
         'vehicle_type' => 'required|string',
         'vehicle_number' => 'required|string',
-        'nic_number' => 'nullable|string',
+        'nic_number' => 'required|string',
         'revenue_license_number' => 'required|string',
         'from_date' => 'required|date',
         'to_date' => 'required|date|after_or_equal:from_date',
@@ -327,6 +327,7 @@ public function checkVehicleAvailability(Request $request)
 {
     $data = $request->validate([
         'vehicle_number' => 'required|string',
+        'nic_number' => 'required|string',
         'from_date' => 'required|date',
         'to_date' => 'required|date|after_or_equal:from_date',
         'company_name' => 'nullable|string',

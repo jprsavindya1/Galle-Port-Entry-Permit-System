@@ -322,10 +322,10 @@
 
         switch(idType) {
             case 'NIC':
-                // Old format: 9 digits + V/X or New format: 12 digits
-                const nicPattern = /^(?:\d{9}[VXvx]|\d{12})$/;
+                // Old format: 9 digits + V or New format: 12 digits
+                const nicPattern = /^(?:\d{9}[Vv]|\d{12})$/;
                 isValid = nicPattern.test(idNumber);
-                errorMessage = 'Invalid NIC format. Use 9 digits + V/X or 12 digits';
+                errorMessage = 'Invalid NIC format. Use 9 digits + V or 12 digits';
                 break;
             case 'Passport':
                 // 1 or 2 letters followed by 6 or 7 digits

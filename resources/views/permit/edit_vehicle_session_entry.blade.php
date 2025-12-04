@@ -163,6 +163,15 @@
                                value="{{ old('revenue_license_number', $permit['revenue_license_number']) }}" required
                                oninput="this.value = this.value.toUpperCase();">
                     </div>
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label for="nic_number" class="form-label"><i class="bi bi-person-vcard me-1"></i> NIC Number (Required)</label>
+                        <input type="text" name="nic_number" id="nic_number" class="form-control"
+                               value="{{ old('nic_number', $permit['nic_number']) }}" required
+                               oninput="this.value = this.value.toUpperCase(); checkDuplicateInCart();">
+                    </div>
+                </div>
+
+                <div class="row mb-4">
                     <div class="col-md-6">
                         <label for="insurance_number" class="form-label"><i class="bi bi-shield-fill-check me-1"></i> Insurance Number</label>
                         <input type="text" name="insurance_number" id="insurance_number" class="form-control"
@@ -322,14 +331,14 @@ window.fetchVehicleDetails = function() {
     });
 }
 
-// Function to check for duplicate vehicle numbers in the cart (excluding current entry)
+// Function to check for duplicate vehicle numbers and NIC numbers in the cart (excluding current entry)
 window.checkDuplicateInCart = function() {
     const currentVehicleNumber = document.getElementById('vehicle_number').value.trim();
-    const currentOwnerName = document.getElementById('owner_name').value.trim();
+    const currentNicNumber = document.getElementById('nic_number').value.trim();
     const duplicateError = document.getElementById('duplicate_error');
     const updateBtn = document.getElementById('updateBtn');
     
-    if (!currentVehicleNumber && !currentOwnerName) {
+    if (!currentVehicleNumber && !currentNicNumber) {
         duplicateError.textContent = '';
         duplicateError.style.display = 'none';
         return;
@@ -341,12 +350,13 @@ window.checkDuplicateInCart = function() {
     
     console.log('Checking duplicates...', {
         currentVehicleNumber,
-        currentOwnerName,
+        currentNicNumber,
         currentEditIndex,
         sessionVehiclePermits
     });
     
     let isDuplicate = false;
+    let duplicateReason = '';
     
     // Check each permit in the session
     sessionVehiclePermits.forEach((permit, index) => {
@@ -355,15 +365,21 @@ window.checkDuplicateInCart = function() {
             return;
         }
         
-        // Compare vehicle numbers and owner names (case insensitive)
-        if ((permit.vehicle_number && permit.vehicle_number.toUpperCase() === currentVehicleNumber.toUpperCase()) || 
-            (permit.owner_name && permit.owner_name.toUpperCase() === currentOwnerName.toUpperCase())) {
+        // Compare vehicle numbers (case insensitive)
+        if (permit.vehicle_number && permit.vehicle_number.toUpperCase() === currentVehicleNumber.toUpperCase()) {
             isDuplicate = true;
+            duplicateReason = 'Vehicle Number';
+        }
+        
+        // Compare NIC numbers (case insensitive) - connected ID checking
+        if (permit.nic_number && permit.nic_number.toUpperCase() === currentNicNumber.toUpperCase()) {
+            isDuplicate = true;
+            duplicateReason = duplicateReason ? `${duplicateReason} and NIC Number` : 'NIC Number';
         }
     });
     
     if (isDuplicate) {
-        duplicateError.textContent = '⚠️ This Vehicle Number or owner name is already in the cart. One person can only have one permit per submission.';
+        duplicateError.textContent = `⚠️ This ${duplicateReason} is already in the cart. One person can only have one permit per submission.`;
         duplicateError.style.display = 'block';
         duplicateError.style.color = '#dc3545';
         duplicateError.style.fontWeight = '500';
@@ -391,6 +407,7 @@ window.checkDuplicateInCart = function() {
  */
 function checkVehicleAvailability() {
     let vehicle_number = document.querySelector('input[name="vehicle_number"]').value;
+    let nic_number = document.querySelector('input[name="nic_number"]').value;
     let from_date = document.querySelector('input[name="from_date"]').value;
     let to_date = document.querySelector('input[name="to_date"]').value;
     let company_name = document.querySelector('input[name="company_name"]').value;
@@ -411,13 +428,19 @@ function checkVehicleAvailability() {
     // Check for duplicate error first
     const duplicateError = document.getElementById('duplicate_error');
     if (duplicateError && duplicateError.textContent.trim() !== '') {
-        msgEl.textContent = 'Cannot check availability: This Vehicle Number or owner name is already in the cart.';
+        msgEl.textContent = 'Cannot check availability: This Vehicle Number or NIC Number is already in the cart.';
         msgEl.style.color = 'red';
         return;
     }
     
     if (!vehicle_number) {
         msgEl.textContent = "Please enter Vehicle Number.";
+        msgEl.style.color = "red";
+        return;
+    }
+    
+    if (!nic_number) {
+        msgEl.textContent = "Please enter NIC Number.";
         msgEl.style.color = "red";
         return;
     }
@@ -482,6 +505,7 @@ function checkVehicleAvailability() {
         },
         body: JSON.stringify({
             vehicle_number,
+            nic_number,
             from_date,
             to_date,
             company_name
@@ -508,6 +532,7 @@ function checkVehicleAvailability() {
             // Store the checked form data
             checkedFormData = {
                 vehicle_number: vehicle_number,
+                nic_number: nic_number,
                 from_date: from_date,
                 to_date: to_date,
                 company_name: company_name
@@ -534,6 +559,7 @@ function hasFormDataChanged() {
     
     const currentData = {
         vehicle_number: document.querySelector('input[name="vehicle_number"]').value,
+        nic_number: document.querySelector('input[name="nic_number"]').value,
         from_date: document.querySelector('input[name="from_date"]').value,
         to_date: document.querySelector('input[name="to_date"]').value,
         company_name: document.querySelector('input[name="company_name"]').value
@@ -563,7 +589,7 @@ function handleFormChange() {
 
 // Function to attach change listeners to form fields
 function attachChangeListeners() {
-    const fieldNames = ['vehicle_number', 'from_date', 'to_date', 'company_name'];
+    const fieldNames = ['vehicle_number', 'nic_number', 'from_date', 'to_date', 'company_name'];
     
     fieldNames.forEach(fieldName => {
         const field = document.querySelector(`[name="${fieldName}"]`);
@@ -590,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const duplicateError = document.getElementById('duplicate_error');
             if (duplicateError && duplicateError.textContent.trim() !== '') {
                 e.preventDefault();
-                alert('Cannot submit: This Vehicle Number or owner name is already in the cart. Please use a different vehicle number.');
+                alert('Cannot submit: This Vehicle Number or NIC Number is already in the cart. Please use a different vehicle number or NIC number.');
                 return false;
             }
         });

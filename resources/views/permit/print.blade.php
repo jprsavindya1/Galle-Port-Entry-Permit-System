@@ -47,6 +47,8 @@
     .total-amount { top: 210px; left: 600px; }
     .time { top: 200px; left: 900px; }
 
+    .pass-type { top: 240px; left: 600px; }
+
     .permit-type { top: 250px; left: 420px; font-size: 20px; font-weight: bold; }
 
     @media print {
@@ -176,15 +178,11 @@
 
    <div class="field total-amount">{{ number_format($permit->total ?? 0, 2) }}</div>
 
+   <div class="field pass-type">{{ strtoupper($permit->pass_type ?? '') }}</div>
 
 
-   <!-- @if($permit->type === 'VP')-->
-        <!-- For Vehicle permits: show Remarks instead of Pass Type -->
-        <!--<div class="field permit-type">Remarks: {{ $permit->remarks }}</div>
-    @else-->
-        <!-- For Temporary / Monthly permits: keep Pass Type -->
-        <!--<div class="field permit-type">{{ strtoupper($permit->pass_type) }}</div>
-    @endif>-->
+
+
 </div>
 
 @endforeach

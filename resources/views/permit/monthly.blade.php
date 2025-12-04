@@ -257,7 +257,7 @@
 
             <div class="mb-3">
                 <label for="residence_address" class="form-label"><i class="bi bi-house me-1"></i> Residence Address</label>
-                <textarea class="form-control" name="residence_address" rows="2">{{ old('residence_address') }}</textarea>
+                <textarea class="form-control" name="residence_address" id="residence_address" rows="2">{{ old('residence_address') }}</textarea>
             </div>
 
            
@@ -581,8 +581,8 @@
                 let regex, message = "";
 
                 if (type === "NIC") {
-                    // Old (9 digits + V/X) for cards before 2016 OR New (12 digits) for cards after 2016
-                    regex = /^(?:\d{9}[VXvx]|\d{12})$/;
+                    // Old (9 digits + V) for cards before 2016 OR New (12 digits) for cards after 2016
+                    regex = /^(?:\d{9}[Vv]|\d{12})$/;
                     message = "Enter a valid NIC number (9 digits + V for old format or 12 digits for new format).";
                 } 
                 // Note: For Monthly Permit, ID type is locked to NIC, so other validations are generally not needed.
@@ -893,8 +893,8 @@
                 const toDate = document.getElementById('to_date');
                 const residenceAddress = document.getElementById('residence_address');
                 const reason = document.getElementById('reason');
-                const policeReportFrom = document.getElementById('police_report_from_date');
-                const policeReportTo = document.getElementById('police_report_to_date');
+                const policeIssueDate = document.getElementById('police_issue_date');
+                const policeExpireDate = document.getElementById('police_expire_date');
                 
                 if (idNumber) idNumber.value = '';
                 if (fullName) fullName.value = '';
@@ -903,8 +903,8 @@
                 if (toDate) toDate.value = '';
                 if (residenceAddress) residenceAddress.value = '';
                 if (reason) reason.value = '';
-                if (policeReportFrom) policeReportFrom.value = '';
-                if (policeReportTo) policeReportTo.value = '';
+                if (policeIssueDate) policeIssueDate.value = '';
+                if (policeExpireDate) policeExpireDate.value = '';
                 
                 // Clear company fields if no cart entries
                 if (!hasCartEntries) {
@@ -983,6 +983,13 @@
                 // Reset validation states
                 isIdValid = false;
                 checkedFormData = null;
+                lastFetchedIdNumber = '';
+                
+                // Ensure residence address is cleared (double check)
+                const residenceAddressField = document.getElementById('residence_address');
+                if (residenceAddressField) {
+                    residenceAddressField.value = '';
+                }
                 
                 // Disable the "Add to List" button
                 const addBtn = document.getElementById('addToListBtn');
