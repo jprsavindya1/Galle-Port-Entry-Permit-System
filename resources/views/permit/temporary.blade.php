@@ -839,9 +839,9 @@
             const fromDate = new Date(fromDateInput.value);
             if (!fromDateInput.value) return;
 
-            let maxDays = 29; // default max days for NIC
+            let maxDays = 28; // default max days for NIC (29 days total including start date)
             if (idType === 'Passport' || idType === 'Driving License') {
-                maxDays = 14;
+                maxDays = 13; // 14 days total including start date
             }
 
             const maxToDate = new Date(fromDate);
