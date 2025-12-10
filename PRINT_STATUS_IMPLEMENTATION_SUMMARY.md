@@ -127,6 +127,9 @@ Records:
 
 #### Controllers (2 files)
 - `PrintController.php` - Added print tracking to show() and showSingle()
+  - `show($submission_id)` - Batch print with foreach loops calling update()
+  - `showSingle($type, $id)` - Single print with direct update() call
+  - Records: is_printed=true, printed_at=now(), printed_by=auth()->id()
 - `PermitController.php` - Added print fields to submittedList() query
 
 #### Views (2 files)

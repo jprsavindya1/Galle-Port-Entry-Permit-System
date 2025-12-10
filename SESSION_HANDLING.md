@@ -40,6 +40,21 @@ $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $re
 - Updates `last_activity` timestamp in session
 - Registered globally for all web routes
 
+**Registration in bootstrap/app.php:**
+```php
+->withMiddleware(function (Middleware $middleware): void {
+    $middleware->alias([
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'check.session' => \App\Http\Middleware\CheckSessionExpiration::class,
+    ]);
+    
+    // Add session check middleware to web group
+    $middleware->web(append: [
+        \App\Http\Middleware\CheckSessionExpiration::class,
+    ]);
+})
+```
+
 ### 3. Client-Side Session Management
 
 **File:** `resources/views/layouts/app.blade.php`

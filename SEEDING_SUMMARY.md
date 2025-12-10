@@ -8,12 +8,14 @@ All database seeders have been successfully created for the SLPA Port Entry Perm
 
 ### 1. Users (5 accounts)
 | Role | Email | Password | Access Level |
-|------|-------|----------|--------------|
-| Super Admin | superadmin@slpa.lk | password | Full system access |
-| Admin | admin@slpa.lk | password | Administrative functions |
-| Clerk 1 | clerk1@slpa.lk | password | Permit management |
-| Clerk 2 | clerk2@slpa.lk | password | Permit management |
-| Staff | staff@slpa.lk | password | Basic operations |
+|------|-------|----------|------------|
+| super-admin | superadmin@slpa.lk | password | Full system access |
+| admin | admin@slpa.lk | password | Administrative functions |
+| clerk | clerk1@slpa.lk | password | Permit management |
+| clerk | clerk2@slpa.lk | password | Permit management |
+| staff | staff@slpa.lk | password | Basic operations |
+
+**Note:** All accounts have `email_verified_at` set and use bcrypt hashed passwords.
 
 ### 2. Companies (25 organizations)
 - Sri Lanka Ports Authority
@@ -36,6 +38,7 @@ All database seeders have been successfully created for the SLPA Port Entry Perm
 | Three Wheeler | TW | 300.00 |
 | Car | CAR | 500.00 |
 | Van | VAN | 750.00 |
+| Mini Bus | MB | 800.00 |
 | Bus | BUS | 1,000.00 |
 | Lorry (Small) | LS | 1,000.00 |
 | Lorry (Medium) | LM | 1,500.00 |
@@ -48,6 +51,9 @@ All database seeders have been successfully created for the SLPA Port Entry Perm
 | Container Trailer | CT | 4,000.00 |
 | Heavy Equipment | HE | 4,000.00 |
 | Crane | CRN | 5,000.00 |
+| Bowser | BWS | 2,800.00 |
+| Low Loader | LL | 4,500.00 |
+| Other Vehicle | OTH | 1,000.00 |
 
 ### 5. Entry Reasons (36 purposes)
 - Official operations (Official Duty, Meeting, Inspection)

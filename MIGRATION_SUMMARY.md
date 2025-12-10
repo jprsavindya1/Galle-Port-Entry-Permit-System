@@ -45,11 +45,15 @@ This document outlines the database migrations created to split the single `perm
 
 **Note:** The `monthly_permits` table already existed with basic fields. This migration adds:
 - permit_id (unique)
+- application_number
+- police_issue_date, police_expire_date (for police report dates)
 - doc_nic, doc_police_report (document checkboxes)
 - rate, ssl, vat, total (payment fields)
 - status (default: 'pending'), cancel_reason
 - deleted_at (soft deletes)
 - Indexes on id_number, company_name, status, from_date, to_date
+
+**Important:** Field names are `police_issue_date` and `police_expire_date` (not police_report_* prefix)
 
 ---
 
@@ -63,23 +67,12 @@ This document outlines the database migrations created to split the single `perm
 
 **Important Notes:**
 - Uses chunk(100) for memory efficiency
-- Maps field names (e.g., `police_issue_date` from permits → `police_report_issue_date` in monthly_permits)
+- Maps field names correctly to `police_issue_date` and `police_expire_date`
 - Sets default values (status = 'pending' if null)
 - Preserves timestamps and soft delete status
 - Outputs migration counts for verification
 
 **Down Method:** Truncates temporary_permits and vehicle_permits, deletes migrated monthly_permits records
-
----
-
-### 5. `2025_11_12_125407_rename_police_report_dates_in_monthly_permits_table.php`
-**Purpose:** Standardize police report date field names across all tables
-
-**Changes:**
-- Renames `police_report_issue_date` → `police_issue_date`
-- Renames `police_report_expire_date` → `police_expire_date`
-
-**Reason:** The old `permits` table uses `police_issue_date` and `police_expire_date`. To avoid field mapping confusion and maintain consistency, all tables now use the same field names.
 
 ---
 

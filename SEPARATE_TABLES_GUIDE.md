@@ -21,13 +21,16 @@ use App\Models\TemporaryPermit;
 // Create
 TemporaryPermit::create([
     'permit_id' => 'TP25110001',
+    'application_number' => 'AP25111001',
     'id_type' => 'NIC',
     'id_number' => '199012345678',
+    'nic_number' => '199012345678',
     'from_date' => '2025-11-01',
     'to_date' => '2025-11-15',
     'full_name' => 'JOHN DOE',
     'initials' => 'J.D.',
     'company_name' => 'ABC Company',
+    'status' => 'pending',
     // ... other fields
 ]);
 
@@ -43,12 +46,14 @@ use App\Models\MonthlyPermit;
 // Create
 MonthlyPermit::create([
     'permit_id' => 'MP25110001',
+    'application_number' => 'AP25111002',
     'id_type' => 'NIC',
     'id_number' => '199012345678',
     'from_date' => '2025-11-01',
     'to_date' => '2025-11-30',
-    'police_report_issue_date' => '2025-10-25',
-    'police_report_expire_date' => '2026-10-25',
+    'police_issue_date' => '2025-10-25',
+    'police_expire_date' => '2026-10-25',
+    'status' => 'pending',
     // ... other fields
 ]);
 
@@ -63,11 +68,14 @@ use App\Models\VehiclePermit;
 // Create
 VehiclePermit::create([
     'permit_id' => 'VH25110001',
+    'application_number' => 'AP25111003',
     'vehicle_number' => 'ABC-1234',
+    'nic_number' => '199012345678',
     'vehicle_type' => 'Car',
     'owner_name' => 'JANE DOE',
     'from_date' => '2025-11-01',
     'to_date' => '2025-11-15',
+    'status' => 'pending',
     // ... other fields
 ]);
 

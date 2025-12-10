@@ -13,6 +13,7 @@ This system implements **collision-free ID generation** for a multi-user environ
 - **Purpose:** Unique identifier for each cart entry
 - **Resets:** Daily (based on date)
 - **Length:** 11 characters (AP + 6 date + 3 counter)
+- **Note:** Only counts active records (excludes soft-deleted permits)
 
 ### 2. **Submission ID**
 - **Format:** `A + YYMMDD + ##`
@@ -50,24 +51,36 @@ DB::transaction(function () {
 });
 ```
 
-#### 2. **Table-Level Locking**
-Uses MySQL `LOCK TABLES` to prevent concurrent access:
+#### 2. **Advisory Locks (MySQL GET_LOCK)**
+Uses MySQL named advisory locks to prevent concurrent access:
 ```php
-DB::statement('LOCK TABLES table_name WRITE');
+$lockName = 'app_number_generation';
+$lockResult = DB::selectOne("SELECT GET_LOCK(?, 10) as locked", [$lockName]);
+
+if (!$lockResult || !$lockResult->locked) {
+    throw new \Exception('Could not obtain lock');
+}
+
 try {
     // Generate ID
 } finally {
-    DB::statement('UNLOCK TABLES');
+    DB::selectOne("SELECT RELEASE_LOCK(?) as released", [$lockName]);
 }
 ```
 
-#### 3. **Row-Level Locking**
-Uses `lockForUpdate()` for pessimistic locking:
+**Benefits:**
+- Lock-specific names for each ID type
+- 10-second timeout prevents indefinite waiting
+- Automatic release even if process crashes
+- No table-level blocking
+
+#### 3. **MAX Aggregation for Performance**
+Uses database MAX function instead of ordering:
 ```php
-Model::where('id', 'like', $pattern)
-    ->orderBy('id', 'desc')
-    ->lockForUpdate()
-    ->first();
+$maxNumber = DB::table('temporary_permits')
+    ->where('application_number', 'like', $datePrefix . '%')
+    ->whereNull('deleted_at') // Only active records
+    ->max('application_number');
 ```
 
 ### Helper Class: `IdGeneratorHelper`
@@ -139,6 +152,172 @@ Payment::create([
 ---
 
 ## Multi-User Scenarios
+
+### Scenario 1: Two Users Creating Permits Simultaneously
+
+**Timeline:**
+```
+Time    User A                          User B
+----    ------                          ------
+10:00   Clicks "Check Availability"     
+10:00   Acquires lock: app_number_001   
+10:00   Gets AP25121001                 Clicks "Check Availability"
+10:00                                   Waits for lock...
+10:01   Releases lock                   
+10:01                                   Acquires lock: app_number_001
+10:01                                   Gets AP25121002
+10:01                                   Releases lock
+```
+
+**Result:** ✅ No collision - Sequential numbers generated
+
+### Scenario 2: Batch Creation vs Individual Creation
+
+**User A:** Creates 5 temporary permits (batch)
+- Calls `generateMultipleApplicationNumbers(5)`
+- Gets: AP25121001, AP25121002, AP25121003, AP25121004, AP25121005
+- Single lock acquisition
+
+**User B:** Creates 1 monthly permit (during User A's batch)
+- Waits for lock release
+- Gets: AP25121006
+
+**Result:** ✅ No collision - Lock prevents interleaving
+
+### Scenario 3: Different Permit Types (Same Day)
+
+**Timeline:**
+```
+User A: Temporary Permit → Generates TP25120001 (permit_id)
+User B: Monthly Permit   → Generates MP25120001 (permit_id)
+User C: Vehicle Permit   → Generates VH25120001 (permit_id)
+```
+
+**Application Numbers:**
+```
+User A → AP25121001
+User B → AP25121002
+User C → AP25121003
+```
+
+**Result:** ✅ Permit IDs are type-specific, Application Numbers are sequential
+
+### Scenario 4: Same Submission ID Required
+
+When submitting payment for a batch:
+```php
+// Single lock, single call
+$submissionId = IdGeneratorHelper::generateSubmissionId();
+
+foreach ($cartItems as $item) {
+    $item['submission_id'] = $submissionId; // Same for all in batch
+    $item['permit_id'] = IdGeneratorHelper::generatePermitId($type);
+}
+```
+
+**Result:** ✅ All permits in batch share same submission ID
+
+---
+
+## Performance Considerations
+
+### Advisory Lock Benefits
+1. **No Deadlocks:** Named locks can't create circular dependencies
+2. **Automatic Cleanup:** Locks release on connection close
+3. **Timeout Protection:** 10-second timeout prevents hanging
+4. **Fine-grained:** Lock only ID generation, not entire table
+
+### Optimization Techniques
+1. **MAX Aggregation:** Faster than ORDER BY + LIMIT 1 for application numbers
+2. **Exclude Soft Deletes:** WHERE NULL checks prevent counting deleted records
+3. **Batch Generation:** `generateMultipleApplicationNumbers()` reduces lock acquisitions
+4. **Type-specific Locks:** Parallel permit type creation possible
+
+---
+
+## Testing Collision Prevention
+
+### Scenario 1: Two Users Creating Temporary Permits Simultaneously
+
+**Timeline:**
+```
+Time    User A                          User B
+----    ------                          ------
+10:00   Clicks "Check Availability"     
+10:00   Acquires lock: app_number_001   
+10:00   Gets AP25121001                 Clicks "Check Availability"
+10:00                                   Waits for lock...
+10:01   Releases lock                   
+10:01                                   Acquires lock: app_number_001
+10:01                                   Gets AP25121002
+10:01                                   Releases lock
+```
+
+**Result:** ✅ No collision - Sequential numbers generated
+
+### Scenario 2: Batch Creation vs Individual Creation
+
+**User A:** Creates 5 temporary permits (batch)
+- Calls `generateMultipleApplicationNumbers(5)`
+- Gets: AP25121001, AP25121002, AP25121003, AP25121004, AP25121005
+- Single lock acquisition
+
+**User B:** Creates 1 monthly permit (during User A's batch)
+- Waits for lock release
+- Gets: AP25121006
+
+**Result:** ✅ No collision - Lock prevents interleaving
+
+### Scenario 3: Different Permit Types (Same Day)
+
+**Timeline:**
+```
+User A: Temporary Permit → Generates TP25120001 (permit_id)
+User B: Monthly Permit   → Generates MP25120001 (permit_id)
+User C: Vehicle Permit   → Generates VH25120001 (permit_id)
+```
+
+**Application Numbers:**
+```
+User A → AP25121001
+User B → AP25121002
+User C → AP25121003
+```
+
+**Result:** ✅ Permit IDs are type-specific, Application Numbers are sequential
+
+### Scenario 4: Same Submission ID Required
+
+When submitting payment for a batch:
+```php
+// Single lock, single call
+$submissionId = IdGeneratorHelper::generateSubmissionId();
+
+foreach ($cartItems as $item) {
+    $item['submission_id'] = $submissionId; // Same for all in batch
+    $item['permit_id'] = IdGeneratorHelper::generatePermitId($type);
+}
+```
+
+**Result:** ✅ All permits in batch share same submission ID
+
+---
+
+## Performance Considerations
+
+### Advisory Lock Benefits
+1. **No Deadlocks:** Named locks can't create circular dependencies
+2. **Automatic Cleanup:** Locks release on connection close
+3. **Timeout Protection:** 10-second timeout prevents hanging
+4. **Fine-grained:** Lock only ID generation, not entire table
+
+### Optimization Techniques
+1. **MAX Aggregation:** Faster than ORDER BY + LIMIT 1
+2. **Exclude Soft Deletes:** WHERE NULL checks prevent counting deleted records
+3. **Batch Generation:** `generateMultipleApplicationNumbers()` reduces lock acquisitions
+4. **Type-specific Locks:** Parallel permit type creation possible
+
+---
 
 ### Scenario 1: Simultaneous Cart Addition
 **Situation:** User A and User B add entries to their carts at the same time.

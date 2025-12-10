@@ -21,6 +21,25 @@ The system automatically:
 2. Records the current timestamp in `printed_at`
 3. Records the authenticated user's ID in `printed_by`
 
+**Implementation:**
+```php
+// PrintController.php - Batch Print
+foreach ($tempPermits as $permit) {
+    $permit->update([
+        'is_printed' => true,
+        'printed_at' => $now,
+        'printed_by' => $userId,
+    ]);
+}
+
+// PrintController.php - Single Print
+$permit->update([
+    'is_printed' => true,
+    'printed_at' => now(),
+    'printed_by' => auth()->id(),
+]);
+```
+
 ### 3. Visual Display on Submitted Page
 The submitted permits page now shows:
 - **Printed Status Badge**: Green badge with "Printed" for printed permits, gray badge with "Not Printed" for others
@@ -84,8 +103,14 @@ All three permit models (TemporaryPermit, MonthlyPermit, VehiclePermit) were upd
 
 #### PrintController
 Updated to track print status:
-- `show()` method: Tracks batch prints
-- `showSingle()` method: Tracks individual prints
+- `show($submission_id)` method: Tracks batch prints
+  - Loops through all permits (temporary, monthly, vehicle)
+  - Calls update() on each permit individually
+  - Records timestamp and user for each
+- `showSingle($type, $id)` method: Tracks individual prints
+  - Finds permit by type and ID
+  - Calls update() with print tracking fields
+  - Records timestamp and user
 
 #### PermitController
 Updated `submittedList()` method to include print tracking fields in the query results.

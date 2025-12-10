@@ -235,40 +235,51 @@ php artisan migrate
 
 The system includes the following main tables:
 - `users` - System users and authentication
-- `permits` - Temporary permit records
-- `monthly_permits` - Monthly permit records
-- `vehicles` - Vehicle master data
+- `temporary_permits` - Temporary permit records (TP type)
+- `monthly_permits` - Monthly permit records (MP type)
+- `vehicle_permits` - Vehicle permit records (VH type)
+- `vehicles` - Vehicle master data with rates
 - `companies` - Company master data
 - `designations` - Designation master data
 - `reasons` - Entry reason master data
-- `payments` - Payment transactions
+- `payments` - Payment transactions with invoice IDs
 - `payment_settings` - Payment configuration
-- `blacklists` - Blacklisted entities
-- `cancelled_permits` - Cancelled permit records
+- `blacklists` - Blacklisted entities with history
+- `blacklist_histories` - Blacklist history tracking
+- `cancelled_permits` - Cancelled permit records with soft deletes
 - `activity_logs` - System activity tracking
 
 ## 👥 User Roles
 
-The system supports three user roles with different permissions:
+The system supports user roles with different permissions:
 
-### 1. Super Admin
+### 1. super-admin
 - Full system access
 - User management
 - System configuration
 - All administrative functions
+- Master data management
 
-### 2. Admin
+### 2. admin
 - Permit management
 - Master data management
 - Blacklist management
 - Reports and analytics
 - Payment settings
+- Cancelled permits management
 
-### 3. Clerk/Staff
+### 3. clerk
 - Create and manage permits
 - Search permits
 - Print permits
 - View reports
+- Basic permit operations
+
+### 4. staff
+- Create permits
+- View permits
+- Print permits
+- Limited administrative access
 
 ## 📚 System Modules
 
@@ -325,10 +336,14 @@ The system supports three user roles with different permissions:
 ### First Time Login
 
 1. Access the application at `http://localhost:8000`
-2. Register a new account or use seeded credentials
-3. Default admin credentials (if seeded):
-   - Email: `admin@slpa.lk`
-   - Password: `password`
+2. Use seeded credentials or register a new account
+3. Default seeded credentials:
+   - **Super Admin:** `superadmin@slpa.lk` / `password`
+   - **Admin:** `admin@slpa.lk` / `password`
+   - **Clerk:** `clerk1@slpa.lk` / `password`
+   - **Staff:** `staff@slpa.lk` / `password`
+
+**Important:** Change these passwords immediately in production!
 
 ### Creating Permits
 
