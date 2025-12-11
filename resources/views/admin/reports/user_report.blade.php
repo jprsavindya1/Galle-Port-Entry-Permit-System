@@ -167,10 +167,10 @@
     @if(isset($permits) && $permits->isNotEmpty())
         <!-- Export Buttons -->
         <div class="mb-4 d-flex justify-content-end">
-            <a href="{{ route('reports.user.pdf', request()->query()) }}" class="btn btn-sm btn-danger me-2" target="_blank">
+            <a href="{{ route('reports.user.pdf', request()->query()) }}" class="btn btn-sm btn-danger me-2">
                 <i class="fas fa-file-pdf"></i> Export PDF
             </a>
-            <a href="{{ route('reports.user.csv', request()->query()) }}" class="btn btn-sm btn-success" target="_blank">
+            <a href="{{ route('reports.user.csv', request()->query()) }}" class="btn btn-sm btn-success">
                 <i class="fas fa-file-csv"></i> Export CSV
             </a>
         </div>
