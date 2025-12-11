@@ -231,36 +231,36 @@
         display: block !important;
     }
 
-    /* Optimize header for thermal paper */
+    /* Optimize header for dot-matrix paper */
     .invoice-title {
-        font-size: 12pt !important;
+        font-size: 16pt !important;
         text-align: center;
-        margin-bottom: 3mm !important;
+        margin-bottom: 5mm !important;
     }
 
     .mb-4 h6, .mb-4 p {
-        font-size: 8pt !important;
-        margin-bottom: 1mm !important;
-        line-height: 1.2 !important;
+        font-size: 10pt !important;
+        margin-bottom: 2mm !important;
+        line-height: 1.3 !important;
     }
 
     .badge-status {
-        font-size: 7pt !important;
-        padding: 1px 3px !important;
+        font-size: 9pt !important;
+        padding: 2px 5px !important;
     }
 
     .badge-free {
-        font-size: 7pt !important;
-        padding: 1px 3px !important;
+        font-size: 9pt !important;
+        padding: 2px 5px !important;
     }
 
-    /* Table optimized for 80mm paper */
+    /* Table optimized for 8.5 inch dot-matrix paper */
     table {
         width: 100% !important;
-        table-layout: auto !important; /* Auto layout works better for narrow paper */
+        table-layout: fixed !important; /* Fixed layout for consistent columns */
         border-collapse: collapse !important;
-        font-size: 4pt !important; /* Extra extra small font for 80mm paper */
-        margin: 2mm 0 !important;
+        font-size: 9pt !important; /* Readable font for dot-matrix paper */
+        margin: 3mm 0 !important;
     }
 
     /* Hide print status column when printing */
@@ -270,30 +270,29 @@
     }
 
     .invoice-table, .invoice-table tbody, .invoice-table tbody tr {
-        font-size: 4pt !important;
+        font-size: 9pt !important;
     }
 
     .invoice-table th, .invoice-table td {
         border: 1px solid #000 !important;
-        padding: 0.3mm !important; /* Ultra minimal padding */
+        padding: 1.5mm !important; /* Better padding for readability */
         text-align: left !important;
         background-color: transparent !important;
-        line-height: 0.9 !important; /* Super tight line height */
-        font-size: 4pt !important; /* Force small font on cells */
+        line-height: 1.2 !important; /* Comfortable line height */
+        font-size: 9pt !important; /* Readable font size */
         
-        /* Force text to wrap and fit */
+        /* Text wrapping */
         overflow: hidden;
         white-space: normal;
         word-wrap: break-word; 
         word-break: break-word;
-        max-width: 0; /* Forces equal distribution of columns */
     }
 
     .invoice-table th {
         background-color: #e0e0e0 !important;
         color: #000 !important;
         font-weight: bold !important;
-        font-size: 4pt !important; /* Match table font size */
+        font-size: 9pt !important; /* Match table font size */
     }
 
     /* Remove min-width constraints for thermal paper */
@@ -304,7 +303,7 @@
 
     /* Override inline styles */
     .invoice-table td[style] {
-        font-size: 4pt !important;
+        font-size: 9pt !important;
     }
 
     thead {
@@ -314,23 +313,23 @@
     /* Summary section optimization */
     .summary-card {
         border: 1px solid #000 !important;
-        padding: 2mm !important;
-        margin-top: 3mm !important;
+        padding: 4mm !important;
+        margin-top: 5mm !important;
     }
 
     .summary-card h5 {
-        font-size: 9pt !important;
-        margin-bottom: 2mm !important;
+        font-size: 11pt !important;
+        margin-bottom: 3mm !important;
     }
 
     .summary-card p {
-        font-size: 7pt !important;
-        margin-bottom: 1mm !important;
+        font-size: 10pt !important;
+        margin-bottom: 2mm !important;
     }
 
     .summary-card h4 {
-        font-size: 10pt !important;
-        margin-top: 2mm !important;
+        font-size: 12pt !important;
+        margin-top: 3mm !important;
     }
 
     html, body {
@@ -338,10 +337,10 @@
         overflow: visible;
     }
 
-    /* 80mm thermal paper size (80mm width x continuous length) */
+    /* 8.5 inch (216mm) continuous dot-matrix paper */
     @page {
-        size: 80mm auto; /* Width: 80mm, Height: auto (continuous) */
-        margin: 2mm; /* Minimal margins */
+        size: 216mm auto; /* Width: 8.5 inches (216mm), Height: auto (continuous) */
+        margin: 10mm 8mm; /* Standard margins for dot-matrix printing */
     }
 
 }
