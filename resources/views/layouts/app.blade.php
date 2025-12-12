@@ -333,7 +333,7 @@
               width="55"
               height="55"
               fetchpriority="high">
-            <span class="brand-text">SLPA Permit System</span>
+            <span class="brand-text">SLPA Permit System (Galle)</span>
         </a>
 
         <div class="ms-auto pe-4">
