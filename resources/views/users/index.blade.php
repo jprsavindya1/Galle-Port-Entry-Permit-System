@@ -120,6 +120,7 @@
                         <option value="super-admin" {{ request('role') == 'super-admin' ? 'selected' : '' }}>👑 Super Admin</option>
                         <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>🛡️ Admin</option>
                         <option value="clerk" {{ request('role') == 'clerk' ? 'selected' : '' }}>🗂️ Clerk</option>
+                        <option value="security" {{ request('role') == 'security' ? 'selected' : '' }}>🔒 Security</option>
                     </select>
                 </div>
             </div>

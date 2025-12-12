@@ -99,6 +99,7 @@
                     <span class="input-group-text bg-info text-white"><i class="bi bi-shield-lock"></i></span>
                     <select name="role" class="form-select" required style="font-weight:500;">
                         <option value="clerk" @selected(old('role', $user->role) === 'clerk')>🗂️ Clerk</option>
+                        <option value="security" @selected(old('role', $user->role) === 'security')>🔒 Security (Gate Personnel)</option>
                         @if(auth()->user()->role === 'super-admin' || auth()->user()->role === 'admin')
                             <option value="admin" @selected(old('role', $user->role) === 'admin')>🛡️ Admin</option>
                         @endif

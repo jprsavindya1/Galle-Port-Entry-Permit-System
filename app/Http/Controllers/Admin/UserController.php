@@ -42,12 +42,12 @@ class UserController extends Controller
 
 public function store(Request $request)
 {
-    $allowedRoles = ['clerk'];
+    $allowedRoles = ['clerk', 'security'];
 
     if (auth()->user()->role === 'super-admin') {
-        $allowedRoles = ['clerk', 'admin', 'super-admin'];
+        $allowedRoles = ['clerk', 'admin', 'super-admin', 'security'];
     } elseif (auth()->user()->role === 'admin') {
-        $allowedRoles = ['clerk'];
+        $allowedRoles = ['clerk', 'security'];
     }
 
     $validated = $request->validate([
@@ -75,12 +75,12 @@ public function store(Request $request)
 
     public function update(Request $request, User $user)
 {
-    $allowedRoles = ['clerk'];
+    $allowedRoles = ['clerk', 'security'];
 
     if (auth()->user()->role === 'super-admin') {
-        $allowedRoles = ['clerk', 'admin', 'super-admin'];
+        $allowedRoles = ['clerk', 'admin', 'super-admin', 'security'];
     } elseif (auth()->user()->role === 'admin') {
-        $allowedRoles = ['clerk'];
+        $allowedRoles = ['clerk', 'security'];
     }
 
     $validated = $request->validate([

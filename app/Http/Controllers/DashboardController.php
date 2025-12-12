@@ -12,6 +12,11 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
 {
+    // Redirect security role to their specific dashboard
+    if (auth()->check() && auth()->user()->role === 'security') {
+        return redirect()->route('security.dashboard');
+    }
+
     $year = date('Y');
     $month = $request->get('month', date('m'));
     $today = Carbon::today();

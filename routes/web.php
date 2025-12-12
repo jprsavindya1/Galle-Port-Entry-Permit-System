@@ -54,6 +54,16 @@ Route::get('/dashboard/data', [DashboardController::class, 'getMonthData'])
     ->name('dashboard.data');
 
 // ------------------------------
+// Security Routes (Gate Personnel)
+// ------------------------------
+use App\Http\Controllers\SecurityController;
+
+Route::middleware(['auth', 'role:security'])->prefix('security')->name('security.')->group(function () {
+    Route::get('/dashboard', [SecurityController::class, 'index'])->name('dashboard');
+    Route::post('/search', [SecurityController::class, 'searchPermit'])->name('search');
+});
+
+// ------------------------------
 //Admin Routes
 // ------------------------------
 Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
@@ -117,6 +127,11 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
 
 
 });
+
+// ------------------------------
+// Clerk and Admin Routes (NOT for security personnel)
+// ------------------------------
+Route::middleware(['auth', 'role:clerk,admin,super-admin'])->group(function () {
 
 // ------------------------------
 // invoice Routes
@@ -204,7 +219,7 @@ Route::get('/permits/search', [PermitController::class, 'search'])->name('permit
 // ------------------------------
 // Black list Management
 // ------------------------------
-Route::prefix('admin/blacklist')->middleware('auth')->name('blacklist.')->group(function () {
+Route::prefix('admin/blacklist')->name('blacklist.')->group(function () {
     Route::get('/', [BlacklistController::class, 'index'])->name('index');
     Route::get('/history', [BlacklistController::class, 'history'])->name('history');
     Route::get('/create', [BlacklistController::class, 'create'])->name('create');
@@ -227,7 +242,7 @@ Route::get('/permit/print/single/{type}/{id}', [PrintController::class, 'showSin
 
     // reports routes
 
-Route::prefix('reports')->middleware('auth')->group(function () {
+Route::prefix('reports')->group(function () {
 
     // User Activity Reports
     Route::get('/user', [ReportController::class, 'userReportForm'])->name('reports.user');
@@ -242,6 +257,8 @@ Route::prefix('reports')->middleware('auth')->group(function () {
     Route::get('/payment/export/csv', [ReportController::class, 'exportPaymentCsv'])->name('reports.payment.csv');
 
 });
+
+}); // End of clerk,admin,super-admin middleware group
 
 Route::middleware(['role:admin'])->group(function () {
     Route::get('/admin', function () {
