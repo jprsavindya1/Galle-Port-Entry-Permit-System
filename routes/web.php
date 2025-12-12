@@ -142,6 +142,7 @@ Route::prefix('temporary-permit')->controller(TemporaryPermitController::class)-
 
 Route::post('/permits/check-availability', [PermitController::class, 'checkAvailability'])->name('permit.checkAvailability');
 Route::post('/permits/fetch-person-details', [PermitController::class, 'fetchPersonDetails'])->name('permit.fetchPersonDetails');
+Route::post('/permits/check-blacklist', [PermitController::class, 'checkBlacklist'])->name('permit.checkBlacklist');
 
 // ------------------------------
 // Monthly Permit Routes

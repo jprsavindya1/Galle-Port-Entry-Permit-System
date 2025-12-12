@@ -347,6 +347,47 @@ public function edit($permitType, $permitId)
     /*
      ***********  blacklist check *********   
     */
+    
+    /**
+     * Check if a NIC/ID number or vehicle number is blacklisted (real-time check)
+     */
+    public function checkBlacklist(Request $request)
+    {
+        $nic = trim($request->input('nic_number', '') ?: $request->input('id_number', ''));
+        $vehicleNumber = trim($request->input('vehicle_number', ''));
+        
+        if (empty($nic) && empty($vehicleNumber)) {
+            return response()->json([
+                'blacklisted' => false,
+                'message' => ''
+            ]);
+        }
+
+        $query = Blacklist::query();
+        
+        if (!empty($nic)) {
+            $query->whereRaw('BINARY `nic` = ?', [$nic]);
+        }
+        
+        if (!empty($vehicleNumber)) {
+            $query->orWhere('vehicle_number', $vehicleNumber);
+        }
+        
+        $entry = $query->first();
+        
+        if ($entry) {
+            $reason = $entry->reason ?? 'This entry is blacklisted';
+            return response()->json([
+                'blacklisted' => true,
+                'message' => '⚠️ BLACKLISTED: ' . $reason
+            ]);
+        }
+        
+        return response()->json([
+            'blacklisted' => false,
+            'message' => '✓ Not blacklisted'
+        ]);
+    }
      
 protected function isBlacklisted(array $data, string $type = null): ?string
 {

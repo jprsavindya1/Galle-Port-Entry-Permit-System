@@ -378,10 +378,10 @@
     <div class="invoice-card">
         <div class="invoice-header">
             <div class="invoice-title">
-                <i class="bi bi-receipt-cutoff me-2"></i> Payment Invoice
+                <i class="bi bi-receipt-cutoff me-2"></i> Payment Receipt
             </div>
             <button onclick="enableBatchPrint(); window.print()" class="btn btn-primary btn-custom no-print">
-                <i class="bi bi-printer"></i> Print Invoice
+                <i class="bi bi-printer"></i> Print Receipt
             </button>
         </div>
 

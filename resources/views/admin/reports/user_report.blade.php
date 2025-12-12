@@ -140,7 +140,7 @@
 </style>
 
 <div class="container-fluid py-4">
-    <h4 class="mb-3">User / Entity Permit Report</h4>
+    <h4 class="mb-3">User / Company Permit Reports</h4>
 
     <!-- Filters -->
     <form method="GET" action="{{ route('reports.user') }}" class="row g-2 mb-3 align-items-end">

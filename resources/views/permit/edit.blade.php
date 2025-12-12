@@ -125,8 +125,11 @@
                     </div>
                     <div class="col-md-6">
                         <label for="id_number" class="form-label">ID Number</label>
-                        <input type="text" name="id_number" id="id_number" class="form-control" value="{{ old('id_number', $permit->id_number) }}" required oninput="this.value = this.value.toUpperCase(); updateIdValidation();">
-                        <span id="id_number_error" class="text-danger small"></span>
+                        <input type="text" name="id_number" id="id_number" class="form-control" value="{{ old('id_number', $permit->id_number) }}" required oninput="this.value = this.value.toUpperCase(); updateIdValidation(); checkBlacklistStatus();">
+                        <div style="min-height: 20px;">
+                            <span id="id_number_error" class="text-danger small d-block"></span>
+                            <span id="blacklist_msg" class="small d-block" style="font-weight: 500;"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -257,6 +260,62 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
+    // Store blacklist status
+    let isBlacklisted = false;
+
+    // Function to check blacklist status for ID number
+    window.checkBlacklistStatus = function() {
+        const idNumber = document.getElementById('id_number').value.trim();
+        const msgEl = document.getElementById('blacklist_msg');
+        
+        if (!idNumber) {
+            msgEl.textContent = '';
+            msgEl.style.color = '';
+            isBlacklisted = false;
+            return;
+        }
+
+        fetch("{{ route('permit.checkBlacklist') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ id_number: idNumber })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.blacklisted) {
+                msgEl.textContent = data.message;
+                msgEl.style.color = 'red';
+                isBlacklisted = true;
+                // Disable check availability button
+                const checkBtn = document.querySelector('button[onclick="checkPermitAvailability(true)"]');
+                if (checkBtn) {
+                    checkBtn.disabled = true;
+                    checkBtn.style.opacity = '0.6';
+                    checkBtn.style.cursor = 'not-allowed';
+                }
+            } else {
+                msgEl.textContent = data.message;
+                msgEl.style.color = 'green';
+                isBlacklisted = false;
+                // Enable check availability button
+                const checkBtn = document.querySelector('button[onclick="checkPermitAvailability(true)"]');
+                if (checkBtn) {
+                    checkBtn.disabled = false;
+                    checkBtn.style.opacity = '1';
+                    checkBtn.style.cursor = 'pointer';
+                }
+            }
+        })
+        .catch(error => {
+            console.error("Failed to check blacklist:", error);
+            msgEl.textContent = '';
+            isBlacklisted = false;
+        });
+    }
+
     // Initialize Select2 for better UX on dropdowns
     $(document).ready(function() {
         $('#designation').select2({
@@ -376,6 +435,13 @@
 
         const msg = document.getElementById('availability-msg');
         msg.innerText = '';
+
+        // Check if blacklisted first
+        if (isBlacklisted) {
+            msg.innerText = 'Cannot check availability: This ID is blacklisted.';
+            msg.style.color = 'red';
+            return;
+        }
 
         if (!idType || !idNumber || !fullName || !initials || !fromDate || !toDate) {
             msg.innerText = "Please fill in all required fields.";

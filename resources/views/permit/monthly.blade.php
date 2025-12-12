@@ -181,10 +181,11 @@
                 <div class="col-md-9">
                     <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
                     <input type="text" class="form-control" name="id_number" id="id_number" value="{{ old('id_number') }}" required
-                        oninput="this.value = this.value.toUpperCase(); handleIdNumberChange(); checkDuplicateInCart();"
+                        oninput="this.value = this.value.toUpperCase(); handleIdNumberChange(); checkDuplicateInCart(); checkBlacklistStatus();"
                         onblur="fetchPersonDetails();">
                     <div style="min-height: 20px;">
                         <span id="id_number_error" class="text-danger small d-block"></span>
+                        <span id="blacklist_msg" class="small d-block" style="font-weight: 500;"></span>
                         <span id="duplicate_error" class="text-danger small d-block"></span>
                     </div>
                 </div>
@@ -413,6 +414,70 @@
         let isIdValid = false;
         // Store the last fetched ID number to track changes
         let lastFetchedIdNumber = '';
+        // Store blacklist status
+        let isBlacklisted = false;
+
+        // Function to check blacklist status for ID number
+        window.checkBlacklistStatus = function() {
+            const idNumber = document.getElementById('id_number').value.trim();
+            const msgEl = document.getElementById('blacklist_msg');
+            
+            if (!idNumber) {
+                msgEl.textContent = '';
+                msgEl.style.color = '';
+                isBlacklisted = false;
+                return;
+            }
+
+            fetch("{{ route('permit.checkBlacklist') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ id_number: idNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.blacklisted) {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'red';
+                    isBlacklisted = true;
+                    // Disable add button
+                    const addBtn = document.getElementById('addToListBtn');
+                    if (addBtn) {
+                        addBtn.disabled = true;
+                        addBtn.style.opacity = '0.6';
+                        addBtn.style.cursor = 'not-allowed';
+                    }
+                    // Disable check availability button
+                    const checkBtn = document.querySelector('button[onclick="checkMonthlyAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = true;
+                        checkBtn.style.opacity = '0.6';
+                        checkBtn.style.cursor = 'not-allowed';
+                    }
+                } else {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'green';
+                    isBlacklisted = false;
+                    // Enable check availability button only if ID is valid
+                    if (isIdValid) {
+                        const checkBtn = document.querySelector('button[onclick="checkMonthlyAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Failed to check blacklist:", error);
+                msgEl.textContent = '';
+                isBlacklisted = false;
+            });
+        }
 
         // Function to handle ID number change - clear autofilled data when changed
         window.handleIdNumberChange = function() {
@@ -591,11 +656,27 @@
                     errorSpan.textContent = message;
                     idNumber.classList.add("is-invalid");
                     isIdValid = false;
+                    // Disable check availability button when ID is invalid
+                    const checkBtn = document.querySelector('button[onclick="checkMonthlyAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = true;
+                        checkBtn.style.opacity = '0.6';
+                        checkBtn.style.cursor = 'not-allowed';
+                    }
                     return false;
                 } else {
                     errorSpan.textContent = "";
                     idNumber.classList.remove("is-invalid");
                     isIdValid = (value !== "");
+                    // Re-enable check availability button if ID is valid and not blacklisted
+                    if (isIdValid && !isBlacklisted) {
+                        const checkBtn = document.querySelector('button[onclick="checkMonthlyAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
                     return true;
                 }
             }
@@ -703,6 +784,13 @@
             addBtn.disabled = true;
             addBtn.style.opacity = '0.6';
             addBtn.style.cursor = 'not-allowed';
+
+            // Check if blacklisted first
+            if (isBlacklisted) {
+                msg.innerText = 'Cannot check availability: This ID is blacklisted.';
+                msg.style.color = 'red';
+                return;
+            }
 
             // Check for duplicate error first
             const duplicateError = document.getElementById('duplicate_error');

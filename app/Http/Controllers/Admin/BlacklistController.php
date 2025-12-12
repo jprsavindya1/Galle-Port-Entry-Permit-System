@@ -77,13 +77,41 @@ class BlacklistController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'nic' => 'nullable|string',
+        // Convert to uppercase before validation
+        if ($request->has('nic') && !empty($request->nic)) {
+            $request->merge(['nic' => strtoupper($request->nic)]);
+        }
+        if ($request->has('vehicle_number') && !empty($request->vehicle_number)) {
+            $request->merge(['vehicle_number' => strtoupper($request->vehicle_number)]);
+        }
+        if ($request->has('full_name') && !empty($request->full_name)) {
+            $request->merge(['full_name' => strtoupper($request->full_name)]);
+        }
+        if ($request->has('company_name') && !empty($request->company_name)) {
+            $request->merge(['company_name' => strtoupper($request->company_name)]);
+        }
+
+        $request->validate([
+            'nic' => 'nullable|string|regex:/^[A-Z0-9]*$/',
             'full_name' => 'nullable|string',
             'company_name' => 'nullable|string',
-            'vehicle_number' => 'nullable|string',
+            'vehicle_number' => 'nullable|string|regex:/^[A-Z0-9\-]*$/',
             'reason' => 'required|string',
+        ], [
+            'nic.regex' => 'NIC must contain only letters and numbers.',
+            'vehicle_number.regex' => 'Vehicle Number must contain only letters, numbers, and hyphens.',
+            'reason.required' => 'Reason is required.',
         ]);
+
+        // Require at least NIC, vehicle number, or company name
+        if (empty($request->nic) && empty($request->vehicle_number) && empty($request->company_name)) {
+            return back()->withErrors([
+                'nic' => 'At least one of NIC, Vehicle Number, or Company Name must be provided.'
+            ])->withInput();
+        }
+
+        // Get data (already converted to uppercase)
+        $data = $request->only(['nic', 'full_name', 'company_name', 'vehicle_number', 'reason']);
 
         // Create and assign to variable
         $blacklist = Blacklist::create($data);
@@ -110,13 +138,41 @@ class BlacklistController extends Controller
 
     public function update(Request $request, Blacklist $blacklist)
     {
-        $data = $request->validate([
-            'nic' => 'nullable|string',
+        // Convert to uppercase before validation
+        if ($request->has('nic') && !empty($request->nic)) {
+            $request->merge(['nic' => strtoupper($request->nic)]);
+        }
+        if ($request->has('vehicle_number') && !empty($request->vehicle_number)) {
+            $request->merge(['vehicle_number' => strtoupper($request->vehicle_number)]);
+        }
+        if ($request->has('full_name') && !empty($request->full_name)) {
+            $request->merge(['full_name' => strtoupper($request->full_name)]);
+        }
+        if ($request->has('company_name') && !empty($request->company_name)) {
+            $request->merge(['company_name' => strtoupper($request->company_name)]);
+        }
+
+        $request->validate([
+            'nic' => 'nullable|string|regex:/^[A-Z0-9]*$/',
             'full_name' => 'nullable|string',
             'company_name' => 'nullable|string',
-            'vehicle_number' => 'nullable|string',
+            'vehicle_number' => 'nullable|string|regex:/^[A-Z0-9\-]*$/',
             'reason' => 'required|string',
+        ], [
+            'nic.regex' => 'NIC must contain only letters and numbers.',
+            'vehicle_number.regex' => 'Vehicle Number must contain only letters, numbers, and hyphens.',
+            'reason.required' => 'Reason is required.',
         ]);
+
+        // Require at least NIC, vehicle number, or company name
+        if (empty($request->nic) && empty($request->vehicle_number) && empty($request->company_name)) {
+            return back()->withErrors([
+                'nic' => 'At least one of NIC, Vehicle Number, or Company Name must be provided.'
+            ])->withInput();
+        }
+
+        // Get data (already converted to uppercase)
+        $data = $request->only(['nic', 'full_name', 'company_name', 'vehicle_number', 'reason']);
 
         $blacklist->update($data);
 

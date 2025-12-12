@@ -181,8 +181,11 @@
 
                 <div class="col-md-6">
                     <label for="vehicle_number" class="form-label"><i class="bi bi-hash me-1"></i> Vehicle Number</label>
-                    <input type="text" class="form-control" name="vehicle_number" id="vehicle_number" required value="{{ old('vehicle_number') }}" oninput="this.value = this.value.toUpperCase(); handleVehicleNumberChange(); checkDuplicateInCart();" onblur="fetchVehicleDetails();">
-                    <span id="duplicate_error" class="text-danger small d-block"></span>
+                    <input type="text" class="form-control" name="vehicle_number" id="vehicle_number" required value="{{ old('vehicle_number') }}" oninput="this.value = this.value.toUpperCase(); handleVehicleNumberChange(); checkDuplicateInCart(); checkBlacklistStatusVehicle();" onblur="fetchVehicleDetails();">
+                    <div style="min-height: 20px;">
+                        <span id="vehicle_blacklist_msg" class="small d-block" style="font-weight: 500;"></span>
+                        <span id="duplicate_error" class="text-danger small d-block"></span>
+                    </div>
                 </div>
             </div>
 
@@ -193,8 +196,11 @@
                 </div>
                 <div class="col-md-6">
                     <label for="nic_number" class="form-label"><i class="bi bi-card-text me-1"></i> NIC Number <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="nic_number" id="nic_number" required value="{{ old('nic_number') }}" oninput="this.value = this.value.toUpperCase(); validateNicNumber(); checkDuplicateInCart();" placeholder="">
-                    <span id="nic_number_error" class="text-danger small"></span>
+                    <input type="text" class="form-control" name="nic_number" id="nic_number" required value="{{ old('nic_number') }}" oninput="this.value = this.value.toUpperCase(); validateNicNumber(); checkDuplicateInCart(); checkBlacklistStatusNic();" placeholder="">
+                    <div style="min-height: 20px;">
+                        <span id="nic_number_error" class="text-danger small d-block"></span>
+                        <span id="nic_blacklist_msg" class="small d-block" style="font-weight: 500;"></span>
+                    </div>
                 </div>
             </div>
 
@@ -364,6 +370,133 @@
     <script>
         // Store NIC validation state globally
         let isNicValid = false; // Required field so default to false
+        // Store blacklist status
+        let isVehicleBlacklisted = false;
+        let isNicBlacklisted = false;
+        
+        // Function to check blacklist status for vehicle number
+        window.checkBlacklistStatusVehicle = function() {
+            const vehicleNumber = document.getElementById('vehicle_number').value.trim();
+            const msgEl = document.getElementById('vehicle_blacklist_msg');
+            
+            if (!vehicleNumber) {
+                msgEl.textContent = '';
+                msgEl.style.color = '';
+                isVehicleBlacklisted = false;
+                return;
+            }
+
+            fetch("{{ route('permit.checkBlacklist') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ vehicle_number: vehicleNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.blacklisted) {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'red';
+                    isVehicleBlacklisted = true;
+                    // Disable add button
+                    const addBtn = document.getElementById('addToListBtn');
+                    if (addBtn) {
+                        addBtn.disabled = true;
+                        addBtn.style.opacity = '0.6';
+                        addBtn.style.cursor = 'not-allowed';
+                    }
+                    // Disable check availability button
+                    const checkBtn = document.querySelector('button[onclick="checkVehicleAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = true;
+                        checkBtn.style.opacity = '0.6';
+                        checkBtn.style.cursor = 'not-allowed';
+                    }
+                } else {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'green';
+                    isVehicleBlacklisted = false;
+                    // Enable check availability button only if NIC is not blacklisted AND NIC is valid
+                    if (!isNicBlacklisted && isNicValid) {
+                        const checkBtn = document.querySelector('button[onclick="checkVehicleAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Failed to check blacklist:", error);
+                msgEl.textContent = '';
+                isVehicleBlacklisted = false;
+            });
+        }
+
+        // Function to check blacklist status for NIC number
+        window.checkBlacklistStatusNic = function() {
+            const nicNumber = document.getElementById('nic_number').value.trim();
+            const msgEl = document.getElementById('nic_blacklist_msg');
+            
+            if (!nicNumber) {
+                msgEl.textContent = '';
+                msgEl.style.color = '';
+                isNicBlacklisted = false;
+                return;
+            }
+
+            fetch("{{ route('permit.checkBlacklist') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ nic_number: nicNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.blacklisted) {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'red';
+                    isNicBlacklisted = true;
+                    // Disable add button
+                    const addBtn = document.getElementById('addToListBtn');
+                    if (addBtn) {
+                        addBtn.disabled = true;
+                        addBtn.style.opacity = '0.6';
+                        addBtn.style.cursor = 'not-allowed';
+                    }
+                    // Disable check availability button
+                    const checkBtn = document.querySelector('button[onclick="checkVehicleAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = true;
+                        checkBtn.style.opacity = '0.6';
+                        checkBtn.style.cursor = 'not-allowed';
+                    }
+                } else {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'green';
+                    isNicBlacklisted = false;
+                    // Enable check availability button if vehicle is also not blacklisted
+                    if (!isVehicleBlacklisted) {
+                        const checkBtn = document.querySelector('button[onclick="checkVehicleAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Failed to check blacklist:", error);
+                msgEl.textContent = '';
+                isNicBlacklisted = false;
+            });
+        }
         
         // Function to handle vehicle number change - clear autofilled data when changed
         window.handleVehicleNumberChange = function() {
@@ -392,6 +525,13 @@
                 nicError.textContent = 'NIC Number is required.';
                 nicInput.classList.add('is-invalid');
                 isNicValid = false;
+                // Disable check availability button when NIC is required but empty
+                const checkBtn = document.querySelector('button[onclick="checkVehicleAvailability()"]');
+                if (checkBtn) {
+                    checkBtn.disabled = true;
+                    checkBtn.style.opacity = '0.6';
+                    checkBtn.style.cursor = 'not-allowed';
+                }
                 return false;
             }
             
@@ -402,11 +542,27 @@
                 nicError.textContent = 'Enter a valid NIC number (9 digits + V for old format or 12 digits for new format)';
                 nicInput.classList.add('is-invalid');
                 isNicValid = false;
+                // Disable check availability button when NIC is invalid
+                const checkBtn = document.querySelector('button[onclick="checkVehicleAvailability()"]');
+                if (checkBtn) {
+                    checkBtn.disabled = true;
+                    checkBtn.style.opacity = '0.6';
+                    checkBtn.style.cursor = 'not-allowed';
+                }
                 return false;
             } else {
                 nicError.textContent = '';
                 nicInput.classList.remove('is-invalid');
                 isNicValid = true;
+                // Re-enable check availability button only if vehicle is not blacklisted
+                if (!isVehicleBlacklisted) {
+                    const checkBtn = document.querySelector('button[onclick="checkVehicleAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = false;
+                        checkBtn.style.opacity = '1';
+                        checkBtn.style.cursor = 'pointer';
+                    }
+                }
                 return true;
             }
         };
@@ -607,6 +763,13 @@
             addBtn.disabled = true;
             addBtn.style.opacity = '0.6';
             addBtn.style.cursor = 'not-allowed';
+
+            // Check if blacklisted first
+            if (isVehicleBlacklisted || isNicBlacklisted) {
+                msg.innerText = 'Cannot check availability: This vehicle or NIC is blacklisted.';
+                msg.style.color = 'red';
+                return;
+            }
 
     // Check for duplicate error first
     const duplicateError = document.getElementById('duplicate_error');

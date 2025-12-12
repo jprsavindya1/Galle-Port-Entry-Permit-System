@@ -198,10 +198,11 @@
                     <label for="id_number" class="form-label"><i class="bi bi-hash me-1"></i> ID Number</label>
                     <input type="text" name="id_number" id="id_number" 
                             value="{{ old('id_number') }}" class="form-control" required
-                            oninput="this.value = this.value.toUpperCase(); handleIdNumberChange(); checkDuplicateInCart();"
+                            oninput="this.value = this.value.toUpperCase(); handleIdNumberChange(); checkDuplicateInCart(); checkBlacklistStatus();"
                             onblur="fetchPersonDetails();">
                     <div style="min-height: 20px;">
                         <span id="id_number_error" class="text-danger small d-block"></span>
+                        <span id="blacklist_msg" class="small d-block" style="font-weight: 500;"></span>
                         <span id="duplicate_error" class="text-danger small d-block"></span>
                     </div>
                 </div>
@@ -227,9 +228,12 @@
                     <label for="nic_number" id="nic_label" class="form-label"><i class="bi bi-card-text me-1"></i> NIC Number (Optional)</label>
                     <input type="text" name="nic_number" id="nic_number" 
                             value="{{ old('nic_number') }}" class="form-control"
-                            oninput="this.value = this.value.toUpperCase(); validateNicNumber(); checkDuplicateInCart();"
+                            oninput="this.value = this.value.toUpperCase(); validateNicNumber(); checkDuplicateInCart(); checkBlacklistStatusNic();"
                             placeholder="Enter NIC number on the Identification document">
-                    <span id="nic_number_error" class="text-danger small"></span>
+                    <div style="min-height: 20px;">
+                        <span id="nic_number_error" class="text-danger small d-block"></span>
+                        <span id="nic_blacklist_msg" class="small d-block" style="font-weight: 500;"></span>
+                    </div>
                 </div>
             </div>
 
@@ -445,6 +449,128 @@
         let isNicValid = true; // Default to true since NIC is optional
         // Store the last fetched ID number to track changes
         let lastFetchedIdNumber = '';
+        // Store blacklist status
+        let isBlacklisted = false;
+
+        // Function to check blacklist status for ID number
+        window.checkBlacklistStatus = function() {
+            const idNumber = document.getElementById('id_number').value.trim();
+            const msgEl = document.getElementById('blacklist_msg');
+            
+            if (!idNumber) {
+                msgEl.textContent = '';
+                msgEl.style.color = '';
+                isBlacklisted = false;
+                return;
+            }
+
+            fetch("{{ route('permit.checkBlacklist') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ id_number: idNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.blacklisted) {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'red';
+                    isBlacklisted = true;
+                    // Disable add button
+                    const addBtn = document.getElementById('addToListBtn');
+                    if (addBtn) {
+                        addBtn.disabled = true;
+                        addBtn.style.opacity = '0.6';
+                        addBtn.style.cursor = 'not-allowed';
+                    }
+                    // Disable check availability button
+                    const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = true;
+                        checkBtn.style.opacity = '0.6';
+                        checkBtn.style.cursor = 'not-allowed';
+                    }
+                } else {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'green';
+                    isBlacklisted = false;
+                    // Enable check availability button only if ID is valid and NIC is valid
+                    if (isIdValid && isNicValid) {
+                        const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Failed to check blacklist:", error);
+                msgEl.textContent = '';
+                isBlacklisted = false;
+            });
+        }
+
+        // Function to check blacklist status for NIC number field
+        window.checkBlacklistStatusNic = function() {
+            const nicNumber = document.getElementById('nic_number').value.trim();
+            const msgEl = document.getElementById('nic_blacklist_msg');
+            
+            if (!nicNumber) {
+                msgEl.textContent = '';
+                msgEl.style.color = '';
+                return;
+            }
+
+            fetch("{{ route('permit.checkBlacklist') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ nic_number: nicNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.blacklisted) {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'red';
+                    // Disable add button
+                    const addBtn = document.getElementById('addToListBtn');
+                    if (addBtn) {
+                        addBtn.disabled = true;
+                        addBtn.style.opacity = '0.6';
+                        addBtn.style.cursor = 'not-allowed';
+                    }
+                    // Disable check availability button
+                    const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = true;
+                        checkBtn.style.opacity = '0.6';
+                        checkBtn.style.cursor = 'not-allowed';
+                    }
+                } else {
+                    msgEl.textContent = data.message;
+                    msgEl.style.color = 'green';
+                    // Enable check availability button only if ID is not blacklisted AND NIC is valid
+                    if (!isBlacklisted && isNicValid) {
+                        const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Failed to check blacklist:", error);
+                msgEl.textContent = '';
+            });
+        }
 
         // Function to handle ID number change - clear autofilled data when changed
         window.handleIdNumberChange = function() {
@@ -461,6 +587,22 @@
                 
                 // Reset the last fetched ID number
                 lastFetchedIdNumber = '';
+            }
+            
+            // Clear blacklist message when ID number changes
+            const blacklistMsg = document.getElementById('blacklist_msg');
+            if (blacklistMsg && !currentIdNumber) {
+                blacklistMsg.textContent = '';
+                blacklistMsg.style.color = '';
+                isBlacklisted = false;
+                
+                // Re-enable check availability button if no ID number
+                const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                if (checkBtn && !currentIdNumber) {
+                    checkBtn.disabled = false;
+                    checkBtn.style.opacity = '1';
+                    checkBtn.style.cursor = 'pointer';
+                }
             }
         }
 
@@ -483,9 +625,35 @@
                     // User is changing document type - clear ID number and related fields
                     idNumberInput.value = '';
                     idNumberError.textContent = '';
+                    idNumberInput.classList.remove('is-invalid');
                     duplicateError.textContent = '';
                     availabilityMsg.innerText = '';
                     isIdValid = false;
+                    
+                    // Clear NIC field and related messages
+                    const nicInput = document.getElementById('nic_number');
+                    const nicError = document.getElementById('nic_number_error');
+                    if (nicInput) {
+                        nicInput.value = '';
+                        nicInput.classList.remove('is-invalid');
+                    }
+                    if (nicError) {
+                        nicError.textContent = '';
+                    }
+                    isNicValid = true;
+                    
+                    // Clear blacklist messages and reset status
+                    const blacklistMsg = document.getElementById('blacklist_msg');
+                    if (blacklistMsg) {
+                        blacklistMsg.textContent = '';
+                        blacklistMsg.style.color = '';
+                    }
+                    const nicBlacklistMsg = document.getElementById('nic_blacklist_msg');
+                    if (nicBlacklistMsg) {
+                        nicBlacklistMsg.textContent = '';
+                        nicBlacklistMsg.style.color = '';
+                    }
+                    isBlacklisted = false;
                     
                     // Disable add button and reset checked form data
                     addBtn.disabled = true;
@@ -494,6 +662,14 @@
                     addBtn.style.opacity = '0.65';
                     addBtn.style.cursor = 'not-allowed';
                     checkedFormData = null;
+                    
+                    // Re-enable check availability button
+                    const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = false;
+                        checkBtn.style.opacity = '1';
+                        checkBtn.style.cursor = 'pointer';
+                    }
                 }
                 
                 // Uncheck other document checkboxes
@@ -506,6 +682,23 @@
                 
                 // Update the identification type dropdown
                 idTypeDropdown.value = idType;
+                
+                // Clear NIC field and error messages when switching document types
+                const nicInput = document.getElementById('nic_number');
+                const nicError = document.getElementById('nic_number_error');
+                const nicBlacklistMsg = document.getElementById('nic_blacklist_msg');
+                if (nicInput && nicInput.value) {
+                    nicInput.value = '';
+                    if (nicError) {
+                        nicError.textContent = '';
+                    }
+                    nicInput.classList.remove('is-invalid');
+                    if (nicBlacklistMsg) {
+                        nicBlacklistMsg.textContent = '';
+                        nicBlacklistMsg.style.color = '';
+                    }
+                    isNicValid = true;
+                }
                 
                 // If Passport selected, set default to local passport
                 if (idType === 'Passport') {
@@ -540,9 +733,37 @@
                     // Clear ID number and all related fields
                     idNumberInput.value = '';
                     idNumberError.textContent = '';
+                    idNumberInput.classList.remove('is-invalid');
                     duplicateError.textContent = '';
                     availabilityMsg.innerText = '';
                     isIdValid = false;
+                    
+                    // Clear NIC field and related messages
+                    const nicInput = document.getElementById('nic_number');
+                    const nicError = document.getElementById('nic_number_error');
+                    if (nicInput) {
+                        nicInput.value = '';
+                    }
+                    if (nicError) {
+                        nicError.textContent = '';
+                    }
+                    if (nicInput) {
+                        nicInput.classList.remove('is-invalid');
+                    }
+                    isNicValid = true;
+                    
+                    // Clear blacklist messages and reset status
+                    const blacklistMsg = document.getElementById('blacklist_msg');
+                    if (blacklistMsg) {
+                        blacklistMsg.textContent = '';
+                        blacklistMsg.style.color = '';
+                    }
+                    const nicBlacklistMsg = document.getElementById('nic_blacklist_msg');
+                    if (nicBlacklistMsg) {
+                        nicBlacklistMsg.textContent = '';
+                        nicBlacklistMsg.style.color = '';
+                    }
+                    isBlacklisted = false;
                     
                     // Disable add button and reset checked form data
                     addBtn.disabled = true;
@@ -551,6 +772,14 @@
                     addBtn.style.opacity = '0.65';
                     addBtn.style.cursor = 'not-allowed';
                     checkedFormData = null;
+                    
+                    // Re-enable check availability button
+                    const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = false;
+                        checkBtn.style.opacity = '1';
+                        checkBtn.style.cursor = 'pointer';
+                    }
                 }
             }
         }
@@ -698,6 +927,8 @@
                 const idType = document.getElementById('id_type').value;
                 const nicInput = document.getElementById('nic_number');
                 const nicLabel = document.getElementById('nic_label');
+                const nicError = document.getElementById('nic_number_error');
+                const nicBlacklistMsg = document.getElementById('nic_blacklist_msg');
                 
                 if (idType === 'Passport') {
                     $('#passport_type_row').show();
@@ -712,11 +943,27 @@
                         $('#nic_number_row').hide();
                         nicInput.value = '';
                         nicInput.required = false;
+                        // Clear error and blacklist messages
+                        nicError.textContent = '';
+                        nicInput.classList.remove('is-invalid');
+                        if (nicBlacklistMsg) {
+                            nicBlacklistMsg.textContent = '';
+                            nicBlacklistMsg.style.color = '';
+                        }
+                        isNicValid = true;
                     } else {
                         // No radio selected, hide nic
                         $('#nic_number_row').hide();
                         nicInput.value = '';
                         nicInput.required = false;
+                        // Clear error and blacklist messages
+                        nicError.textContent = '';
+                        nicInput.classList.remove('is-invalid');
+                        if (nicBlacklistMsg) {
+                            nicBlacklistMsg.textContent = '';
+                            nicBlacklistMsg.style.color = '';
+                        }
+                        isNicValid = true;
                     }
                 } else if (idType === 'Driving License') {
                     $('#passport_type_row').hide();
@@ -728,6 +975,26 @@
                     $('#nic_number_row').hide();
                     nicInput.value = '';
                     nicInput.required = false;
+                    // Clear error and blacklist messages
+                    nicError.textContent = '';
+                    nicInput.classList.remove('is-invalid');
+                    if (nicBlacklistMsg) {
+                        nicBlacklistMsg.textContent = '';
+                        nicBlacklistMsg.style.color = '';
+                    }
+                    isNicValid = true;
+                }
+                
+                // Re-enable check availability button if appropriate
+                if (!nicInput.required || nicInput.value.trim() === '') {
+                    if (!isBlacklisted) {
+                        const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
                 }
             }
 
@@ -740,6 +1007,23 @@
                 const nicInput = document.getElementById('nic_number');
                 const nicError = document.getElementById('nic_number_error');
                 const value = nicInput.value.trim();
+                
+                // Clear blacklist message when NIC number is cleared
+                const nicBlacklistMsg = document.getElementById('nic_blacklist_msg');
+                if (nicBlacklistMsg && value === '') {
+                    nicBlacklistMsg.textContent = '';
+                    nicBlacklistMsg.style.color = '';
+                    
+                    // Re-enable check availability button if ID is not blacklisted
+                    if (!isBlacklisted) {
+                        const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
+                }
                 
                 // If empty and not required, it's valid
                 if (value === '' && !nicInput.required) {
@@ -754,6 +1038,13 @@
                     nicError.textContent = 'NIC Number is required.';
                     nicInput.classList.add('is-invalid');
                     isNicValid = false;
+                    // Disable check availability button when NIC is required but empty
+                    const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = true;
+                        checkBtn.style.opacity = '0.6';
+                        checkBtn.style.cursor = 'not-allowed';
+                    }
                     return false;
                 }
                 
@@ -764,11 +1055,27 @@
                     nicError.textContent = 'Enter a valid NIC number (9 digits + V for old format or 12 digits for new format)';
                     nicInput.classList.add('is-invalid');
                     isNicValid = false;
+                    // Disable check availability button when NIC is invalid
+                    const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = true;
+                        checkBtn.style.opacity = '0.6';
+                        checkBtn.style.cursor = 'not-allowed';
+                    }
                     return false;
                 } else {
                     nicError.textContent = '';
                     nicInput.classList.remove('is-invalid');
                     isNicValid = true;
+                    // Re-enable check availability button only if ID is not blacklisted
+                    if (!isBlacklisted) {
+                        const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
                     return true;
                 }
             };
@@ -808,11 +1115,27 @@
                     errorSpan.textContent = message;
                     idNumber.classList.add("is-invalid");
                     isIdValid = false;
+                    // Disable check availability button when ID is invalid
+                    const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                    if (checkBtn) {
+                        checkBtn.disabled = true;
+                        checkBtn.style.opacity = '0.6';
+                        checkBtn.style.cursor = 'not-allowed';
+                    }
                     return false;
                 } else {
                     errorSpan.textContent = "";
                     idNumber.classList.remove("is-invalid");
                     isIdValid = (value !== "");
+                    // Re-enable check availability button if ID is valid and not blacklisted
+                    if (isIdValid && !isBlacklisted && isNicValid) {
+                        const checkBtn = document.querySelector('button[onclick="checkAvailability()"]');
+                        if (checkBtn) {
+                            checkBtn.disabled = false;
+                            checkBtn.style.opacity = '1';
+                            checkBtn.style.cursor = 'pointer';
+                        }
+                    }
                     return true;
                 }
             }
@@ -877,6 +1200,13 @@
             addBtn.disabled = true;
             addBtn.style.opacity = '0.6';
             addBtn.style.cursor = 'not-allowed';
+
+            // Check if blacklisted first
+            if (isBlacklisted) {
+                msg.innerText = 'Cannot check availability: This ID is blacklisted.';
+                msg.style.color = 'red';
+                return;
+            }
 
             // Check for duplicate error first
             const duplicateError = document.getElementById('duplicate_error');
