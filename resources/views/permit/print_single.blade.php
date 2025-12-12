@@ -7,36 +7,48 @@
         nav.navbar, .sidebar-slpa-logo { display: none !important; }
         main { padding: 0 !important; margin: 0 !important; }
         #printControls { display: none !important; }
-        body { margin: 0; }
+        html, body { margin: 0 !important; padding: 0 !important; }
         .permit-container { page-break-after: always; }
+    }
+
+    @page {
+        size: letter portrait;
+        margin: 0;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
     }
 
     .permit-container {
         position: relative;
-        width: 1120px;
-        height: 792px;
+        width: 719px; /* 19cm at 96 DPI */
+        height: 340px; /* 9cm at 96 DPI */
         background-image: url('{{ asset('images/permit_background.png') }}');
         background-size: cover;
         background-repeat: no-repeat;
         page-break-after: always;
         font-family: 'Arial', sans-serif;
+        margin-top: -30px;
+        margin-left: -80px;
     }
     .field { position: absolute; font-size: 16px; font-weight: bold; }
 
-    .temporary-permit { top: 60px; left: 100px; }
-    .person-label { top: 20px; left: 500px; }
-    .permit-title { top: 60px; left: 400px; font-size: 20px; }
-    .permit-number { top: 20px; right: 100px; }
-    .name { top: 110px; left: 100px; }
-    .designation { top: 110px; left: 500px; }
-    .company_name { top: 160px; left: 100px; }
-    .from-date { top: 70px; left: 900px; }
-    .reason { top: 210px; left: 100px; }
-    .to-date { top: 110px; left: 900px; }
-    .id-type { top: 160px; left: 900px; }
-    .total-amount { top: 210px; left: 600px; }
-    .time { top: 200px; left: 900px; }
-    .pass-type { top: 240px; left: 500px; }
+    .temporary-permit { top: 87px; left: 151px; } /* 2.3cm top, 4cm left */
+    .person-label { top: 38px; left: 341px; } /* 1cm top, 9cm left */
+    .permit-title { top: 87px; left: 359px; font-size: 20px; } /* 2.3cm top, 9.5cm left */
+    .permit-number { top: 38px; left: 605px; } /* 1cm top, 16cm left */
+    .name { top: 132px; left: 151px; } /* 3.5cm top, 4cm left */
+    .designation { top: 132px; left: 416px; } /* 3.5cm top, 11cm left */
+    .company_name { top: 170px; left: 151px; } /* 4.5cm top, 4cm left */
+    .from-date { top: 95px; left: 605px; } /* 2.5cm top, 16cm left */
+    .reason { top: 215px; left: 151px; } /* 5.7cm top, 4cm left */
+    .to-date { top: 132px; left: 605px; } /* 3.5cm top, 16cm left */
+    .id-type { top: 170px; left: 605px; } /* 4.5cm top, 16cm left */
+    .total-amount { top: 219px; left: 416px; } /* 5.8cm top, 11cm left */
+    .time { top: 208px; left: 605px; font-size: 12px; } /* 5.5cm top, 16cm left */
+    .pass-type { top: 253px; left: 321px; } /* 6.7cm top, 8.5cm left */
     .permit-type { top: 250px; left: 420px; font-size: 20px; font-weight: bold; }
 
     @media print { #printControls { display: none !important; } body { margin: 0; } }
@@ -112,21 +124,21 @@
         <div class="field name">Owner: {{ $permit->owner_name }}</div>
         <!--<div class="field designation">Address: {{ $permit->owner_address }}</div>-->
         <div class="field company_name">{{ $permit->company_name }}</div>
-        <div class="field from-date">From: {{ $permit->from_date }}</div>
+        <div class="field from-date">From: {{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</div>
         <div class="field id-type">Vehicle No: {{ $permit->vehicle_number }}</div>
-        <div class="field to-date">To: {{ $permit->to_date }}</div>
+        <div class="field to-date">To: {{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}</div>
         <div class="field reason">Reason: {{ $permit->reason }}</div> <!-- display reason -->
     @else
         <div class="field name">{{ $permit->full_name }}</div>
         <div class="field designation">{{ $permit->designation }}</div>
         <div class="field company_name">{{ $permit->company_name ?? '' }}</div>
-        <div class="field from-date">From: {{ $permit->from_date }}</div>
+        <div class="field from-date">{{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</div>
         <div class="field reason">{{ $permit->reason }}</div>
-        <div class="field to-date">To: {{ $permit->to_date }}</div>
-        <div class="field id-type">{{ $permit->id_type }} - {{ $permit->id_number }}</div>
+        <div class="field to-date">{{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}</div>
+        <div class="field id-type">{{ $permit->id_number }}</div>
     @endif
 
-    <div class="field time">Time: {{ \Carbon\Carbon::parse($permit->entry_time ?? now())->format('H:i') }}</div>
+    <div class="field time">{{ \Carbon\Carbon::parse($permit->entry_time ?? now())->format('Y-m-d H:i') }}</div>
     <div class="field total-amount">{{ number_format($payment->amount_total ?? 0, 2) }}</div>
     <div class="field pass-type">{{ strtoupper($permit->pass_type ?? '') }}</div>
 

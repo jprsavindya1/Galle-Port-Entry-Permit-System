@@ -236,22 +236,37 @@
         font-size: 16pt !important;
         text-align: center;
         margin-bottom: 5mm !important;
+        color: #000 !important;
     }
 
     .mb-4 h6, .mb-4 p {
         font-size: 10pt !important;
         margin-bottom: 2mm !important;
         line-height: 1.3 !important;
+        color: #000 !important;
+        font-weight: bold !important;
     }
 
     .badge-status {
         font-size: 9pt !important;
         padding: 2px 5px !important;
+        background: #fff !important;
+        color: #000 !important;
+        border: 2px solid #000 !important;
+        font-weight: bold !important;
     }
 
     .badge-free {
         font-size: 9pt !important;
         padding: 2px 5px !important;
+        background: #fff !important;
+        color: #000 !important;
+        border: 2px solid #000 !important;
+        font-weight: bold !important;
+    }
+    
+    .bi-credit-card-fill, .bi-check-circle-fill {
+        color: #000 !important;
     }
 
     /* Table optimized for 8.5 inch dot-matrix paper */
@@ -277,9 +292,11 @@
         border: 1px solid #000 !important;
         padding: 1.5mm !important; /* Better padding for readability */
         text-align: left !important;
-        background-color: transparent !important;
+        background-color: #fff !important;
         line-height: 1.2 !important; /* Comfortable line height */
         font-size: 9pt !important; /* Readable font size */
+        color: #000 !important;
+        font-weight: bold !important;
         
         /* Text wrapping */
         overflow: hidden;
@@ -289,7 +306,7 @@
     }
 
     .invoice-table th {
-        background-color: #e0e0e0 !important;
+        background-color: #fff !important;
         color: #000 !important;
         font-weight: bold !important;
         font-size: 9pt !important; /* Match table font size */
@@ -312,24 +329,35 @@
 
     /* Summary section optimization */
     .summary-card {
-        border: 1px solid #000 !important;
+        border: 2px solid #000 !important;
         padding: 4mm !important;
         margin-top: 5mm !important;
+        background: #fff !important;
     }
 
     .summary-card h5 {
         font-size: 11pt !important;
         margin-bottom: 3mm !important;
+        color: #000 !important;
+        font-weight: bold !important;
     }
 
     .summary-card p {
         font-size: 10pt !important;
         margin-bottom: 2mm !important;
+        color: #000 !important;
+        font-weight: bold !important;
     }
 
     .summary-card h4 {
         font-size: 12pt !important;
         margin-top: 3mm !important;
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+    
+    .summary-card .bi {
+        color: #000 !important;
     }
 
     html, body {
@@ -340,7 +368,7 @@
     /* 8.5 inch (216mm) continuous dot-matrix paper */
     @page {
         size: 216mm auto; /* Width: 8.5 inches (216mm), Height: auto (continuous) */
-        margin: 10mm 8mm; /* Standard margins for dot-matrix printing */
+        margin: 0; /* No margins */
     }
 
 }
