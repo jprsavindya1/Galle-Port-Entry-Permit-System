@@ -89,6 +89,33 @@
     font-weight: 600;
     border-radius: 8px;
     cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+#printControls button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+#printControls .btn-print {
+    background-color: #1976d2;
+    color: white;
+}
+#printControls .btn-print:hover {
+    background-color: #1565c0;
+}
+#printControls .btn-back {
+    background-color: #4fc3f7;
+    color: white;
+}
+#printControls .btn-back:hover {
+    background-color: #29b6f6;
+}
+#printControls .btn-home {
+    background-color: #90a4ae;
+    color: white;
+}
+#printControls .btn-home:hover {
+    background-color: #78909c;
 }
 </style>
 
@@ -103,8 +130,22 @@
             break;
 
         case 'VH':
-            $title_en = 'Temporary Permit';
-            $title_si = 'තාවකාලික බලපත්‍රය';
+            // Check vehicle type field (e.g., "Car - Daily", "Motorcycle - Monthly")
+            $vehicleTypeLower = strtolower($permit->vehicle_type ?? '');
+            
+            if (stripos($vehicleTypeLower, 'daily') !== false) {
+                $title_en = 'Temporary Permit';
+                $title_si = 'තාවකාලික බලපත්‍රය';
+            } elseif (stripos($vehicleTypeLower, 'monthly') !== false) {
+                $title_en = 'Monthly Permit';
+                $title_si = 'මාසික බලපත්‍රය';
+            } elseif (stripos($vehicleTypeLower, 'annual') !== false) {
+                $title_en = 'Annual Permit';
+                $title_si = 'වාර්ෂික බලපත්‍රය';
+            } else {
+                $title_en = 'Temporary Permit';
+                $title_si = 'තාවකාලික බලපත්‍රය';
+            }
             $person_label = 'Vehicle රථවාහන';
             break;
 
@@ -126,13 +167,13 @@
         <div class="field name">Owner: {{ $permit->owner_name }}</div>
         <div class="field company_name">{{ $permit->company_name }}</div>
         <div class="field from-date">
-            From: {{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}
+            {{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}
         </div>
         <div class="field id-type">
-            Vehicle No: {{ $permit->vehicle_number }}
+            {{ $permit->vehicle_number }}
         </div>
         <div class="field to-date">
-            To: {{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}
+            {{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}
         </div>
         <div class="field reason">
             Reason: {{ $permit->reason }}
@@ -171,14 +212,16 @@
      SCREEN CONTROLS
      ============================ -->
 <div id="printControls">
-    <button onclick="window.print()">Print Again</button>
-
-    <button onclick="window.location.href='{{ route('payment.invoice', ['submission_id' => $submission_id]) }}'">
-        Back to Invoice
+    <button class="btn-print" onclick="window.print()">
+        <i class="bi bi-printer-fill"></i> Print Again
     </button>
 
-    <button onclick="window.location.href='{{ route('dashboard') }}'">
-        Home
+    <button class="btn-back" onclick="window.history.back()">
+        <i class="bi bi-arrow-left-circle-fill"></i> Back
+    </button>
+
+    <button class="btn-home" onclick="window.location.href='{{ route('dashboard') }}'">
+        <i class="bi bi-house-fill"></i> Home
     </button>
 </div>
 
