@@ -46,10 +46,9 @@ php artisan serve
 
 Visit: `http://localhost:8000`
 
-**Login Credentials:**
-- Super Admin: `superadmin@slpa.lk` / `password`
-- Admin: `admin@slpa.lk` / `password`
-- Clerk: `clerk1@slpa.lk` / `password`
+**Login Credentials for first time login only. make changes immediately for security reasons:**
+Email: admin@slpa.lk 
+Password: Admin123
 
 
 **⚠️ Important:** Change all default passwords before production deployment!
