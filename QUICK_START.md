@@ -50,7 +50,7 @@ Visit: `http://localhost:8000`
 - Super Admin: `superadmin@slpa.lk` / `password`
 - Admin: `admin@slpa.lk` / `password`
 - Clerk: `clerk1@slpa.lk` / `password`
-- Staff: `staff@slpa.lk` / `password`
+
 
 **⚠️ Important:** Change all default passwords before production deployment!
 

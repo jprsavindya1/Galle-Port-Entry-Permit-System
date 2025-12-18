@@ -2,124 +2,94 @@
 
 @section('content')
 <style>
-    /* Hide nav and sidebar during print */
-    @media print {
-        nav.navbar, .sidebar-slpa-logo { display: none !important; }
-        main { padding: 0 !important; margin: 0 !important; }
-        #printControls { display: none !important; }
-        html, body { margin: 0 !important; padding: 0 !important; }
-        .permit-container { page-break-after: always; }
-    }
+/* =====================================================
+   CONTINUOUS DOT-MATRIX BATCH PRINT
+   BASED ON WORKING SINGLE PERMIT PAGE
+   ===================================================== */
 
-    @page {
-        size: letter portrait;
-        margin: 0;
-    }
-
-    html, body {
-        margin: 0;
-        padding: 0;
-    }
-
-    .permit-container {
-        position: relative;
-        width: 719px; /* 19cm at 96 DPI */
-        height: 340px; /* 9cm at 96 DPI */
-        background-image: url('{{ asset('images/permit_background.png') }}');
-        background-size: cover;
-        background-repeat: no-repeat;
-        page-break-after: always; /*continuous printing, one permit per "page" */
-        font-family: 'Arial', sans-serif;
-        margin-top: -30px;
-        margin-left: -80px;
-    }
-
-    .field {
-        position: absolute;
-        font-size: 16px;
-        font-weight: bold;
-    }
-
-    .temporary-permit { top: 87px; left: 151px; } /* 2.3cm top, 4cm left */
-    .person-label { top: 38px; left: 341px; } /* 1cm top, 9cm left */
-    .permit-title { top: 87px; left: 359px; font-size: 20px; } /* 2.3cm top, 9.5cm left */
-    .permit-number { top: 38px; left: 605px; } /* 1cm top, 16cm left */
-
-    .name { top: 132px; left: 151px; } /* 3.5cm top, 4cm left */
-    .designation { top: 132px; left: 416px; } /* 3.5cm top, 11cm left */
-
-    .company_name { top: 170px; left: 151px; } /* 4.5cm top, 4cm left */
-    .from-date { top: 95px; left: 605px; } /* 2.5cm top, 16cm left */
-
-    .reason { top: 215px; left: 151px; } /* 5.7cm top, 4cm left */
-    .to-date { top: 132px; left: 605px; } /* 3.5cm top, 16cm left */
-
-    .id-type { top: 170px; left: 605px; } /* 4.5cm top, 16cm left */
-
-    .total-amount { top: 219px; left: 416px; } /* 5.8cm top, 11cm left */
-    .time { top: 208px; left: 605px; font-size: 12px; } /* 5.5cm top, 16cm left */
-
-    .pass-type { top: 253px; left: 321px; } /* 6.7cm top, 8.5cm left */
-
-    .permit-type { top: 250px; left: 420px; font-size: 20px; font-weight: bold; }
-
-    @media print {
-        #printControls { display: none !important; }
-        body { margin: 0; }
-        .permit-container { page-break-after: always; }
-    }
-
+/* Hide UI during print */
+@media print {
+    nav.navbar,
+    .sidebar-slpa-logo,
     #printControls {
-        margin: 20px;
-        text-align: center;
+        display: none !important;
     }
-    #printControls button {
-        margin: 0 10px;
-        padding: 12px 24px;
-        font-size: 16px;
-        font-weight: 600;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    html, body, main {
+        margin: 0 !important;
+        padding: 0 !important;
     }
-    #printControls button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-    #printControls button:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    #btnPrintAgain {
-        background-color: #3b82f6;
-        color: white;
-    }
-    #btnPrintAgain:hover {
-        background-color: #2563eb;
-    }
-    #btnBackInvoice {
-        background-color: #0ea5e9;
-        color: white;
-    }
-    #btnBackInvoice:hover {
-        background-color: #0284c7;
-    }
-    #btnBack {
-        background-color: #06b6d4;
-        color: white;
-    }
-    #btnBack:hover {
-        background-color: #0891b2;
-    }
-    #btnHome {
-        background-color: #1e40af;
-        color: white;
-    }
-    #btnHome:hover {
-        background-color: #1e3a8a;
-    }
+}
+
+/* ❌ NO @page size — continuous tractor feed */
+
+/* =====================================================
+   PERMIT CONTAINER (UNCHANGED FROM SINGLE PRINT)
+   ===================================================== */
+.permit-container {
+    position: relative;
+    width: 719px;   /* 19cm @ 96 DPI */
+    height: 340px;  /* 9cm @ 96 DPI */
+
+    background-image: url('{{ asset('images/permit_background.png') }}');
+    background-size: cover;
+    background-repeat: no-repeat;
+
+    font-family: Arial, sans-serif;
+
+    /* 🔑 CRITICAL — keep these offsets */
+    margin-top: -30px;
+    margin-left: -80px;
+}
+
+/* =====================================================
+   FIELD STYLES (UNCHANGED)
+   ===================================================== */
+.field {
+    position: absolute;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* =====================================================
+   FIELD POSITIONS (UNCHANGED PX VALUES)
+   ===================================================== */
+.temporary-permit { top: 87px; left: 151px; }
+.person-label     { top: 38px; left: 341px; }
+.permit-title     { top: 87px; left: 359px; font-size: 20px; }
+.permit-number    { top: 38px; left: 605px; }
+
+.name             { top: 132px; left: 151px; }
+.designation      { top: 132px; left: 416px; }
+
+.company_name     { top: 170px; left: 151px; }
+.from-date        { top: 95px;  left: 605px; }
+
+.reason           { top: 215px; left: 151px; }
+.to-date          { top: 132px; left: 605px; }
+
+.id-type          { top: 170px; left: 605px; }
+
+.total-amount     { top: 219px; left: 416px; }
+.time             { top: 208px; left: 605px; font-size: 12px; }
+
+.pass-type        { top: 253px; left: 321px; }
+
+/* =====================================================
+   SCREEN CONTROLS
+   ===================================================== */
+#printControls {
+    margin: 20px;
+    text-align: center;
+}
+#printControls button {
+    margin: 0 10px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+}
 </style>
 
 @foreach ($permits as $permit)
@@ -127,118 +97,94 @@
 @php
     switch ($permit->type) {
         case 'MP':
-            $title_en = "Monthly Permit";
-            $title_si = "මාසික බලපත්‍රය";
-            $person_label = "Person පුද්ගල";
+            $title_en = 'Monthly Permit';
+            $title_si = 'මාසික බලපත්‍රය';
+            $person_label = 'Person පුද්ගල';
             break;
 
         case 'VH':
-            if (str_contains(strtolower($permit->vehicle_type ?? ''), 'monthly')) {
-                $title_en = "Monthly Permit";
-                $title_si = "මාසික බලපත්‍රය";
-            } else {
-                $title_en = "Temporary Permit";
-                $title_si = "තාවකාලික බලපත්‍රය";
-            }
-            $person_label = "Vehicle රථවාහන";
+            $title_en = 'Temporary Permit';
+            $title_si = 'තාවකාලික බලපත්‍රය';
+            $person_label = 'Vehicle රථවාහන';
             break;
 
-        default: // TP
-            $title_en = "Temporary Permit";
-            $title_si = "තාවකාලික බලපත්‍රය";
-            $person_label = "Person පුද්ගල";
-            break;
+        default:
+            $title_en = 'Temporary Permit';
+            $title_si = 'තාවකාලික බලපත්‍රය';
+            $person_label = 'Person පුද්ගල';
     }
 @endphp
 
 <div class="permit-container">
+
     <div class="field temporary-permit">{{ $title_en }}</div>
     <div class="field person-label">{{ $person_label }}</div>
     <div class="field permit-title">{{ $title_si }}</div>
     <div class="field permit-number">{{ $permit->permit_id }}</div>
 
     @if($permit->type === 'VH')
-    <!-- Vehicle Permit Layout -->
-    <div class="field name">{{ $permit->owner_name }}</div>
-    <!--<div class="field designation">Address: {{ $permit->owner_address }}</div>-->
-
-    <div class="field company_name">{{ $permit->company_name }}</div>
-    <div class="field from-date">From: {{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</div>
-
-    <div class="field id-type">Vehicle No: {{ $permit->vehicle_number }}</div>
-    <div class="field to-date">To: {{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}</div>
-
-    <div class="field reason">{{ $permit->reason }}</div> <!-- added reason -->
-@else
-    <!-- Person-Oriented Layout (TP / MP) -->
-    <div class="field name">{{ $permit->full_name }}</div>
-    <div class="field designation">{{ $permit->designation }}</div>
-
-    <div class="field company_name">{{ $permit->company_name ?? '' }}</div>
-    <div class="field from-date">{{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</div>
-
-    <div class="field reason">{{ $permit->reason }}</div>
-    <div class="field to-date">{{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}</div>
-
-    <div class="field id-type"> {{ $permit->id_number }}</div>
-@endif
-
+        <div class="field name">Owner: {{ $permit->owner_name }}</div>
+        <div class="field company_name">{{ $permit->company_name }}</div>
+        <div class="field from-date">
+            From: {{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}
+        </div>
+        <div class="field id-type">
+            Vehicle No: {{ $permit->vehicle_number }}
+        </div>
+        <div class="field to-date">
+            To: {{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}
+        </div>
+        <div class="field reason">
+            Reason: {{ $permit->reason }}
+        </div>
+    @else
+        <div class="field name">{{ $permit->full_name }}</div>
+        <div class="field designation">{{ $permit->designation }}</div>
+        <div class="field company_name">{{ $permit->company_name }}</div>
+        <div class="field from-date">
+            {{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}
+        </div>
+        <div class="field to-date">
+            {{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}
+        </div>
+        <div class="field id-type">{{ $permit->id_number }}</div>
+        <div class="field reason">{{ $permit->reason }}</div>
+    @endif
 
     <div class="field time">
         {{ \Carbon\Carbon::parse($permit->entry_time ?? now())->format('Y-m-d H:i') }}
     </div>
 
-   <div class="field total-amount">{{ number_format($permit->total ?? 0, 2) }}</div>
+    <div class="field total-amount">
+        {{ number_format($payment->amount_total ?? 0, 2) }}
+    </div>
 
-   <div class="field pass-type">{{ strtoupper($permit->pass_type ?? '') }}</div>
-
-
-
+    <div class="field pass-type">
+        {{ strtoupper($permit->pass_type ?? '') }}
+    </div>
 
 </div>
 
 @endforeach
 
-<!-- Print Controls -->
+<!-- ============================
+     SCREEN CONTROLS
+     ============================ -->
 <div id="printControls">
-    <button id="btnPrintAgain">Print Again</button>
-    <button id="btnBackInvoice">Back to Invoice</button>
+    <button onclick="window.print()">Print Again</button>
 
-    @if($payment->permit_type === 'TP')
-        <button id="btnBack">Back to Temporary Permit</button>
-    @elseif($payment->permit_type === 'MP')
-        <button id="btnBack">Back to Monthly Permit</button>
-    @elseif($payment->permit_type === 'VH')
-        <button id="btnBack">Back to Vehicle Permit</button>
-    @else
-        <button id="btnBack">Back</button>
-    @endif
-    <button id="btnHome">Home</button>
+    <button onclick="window.location.href='{{ route('payment.invoice', ['submission_id' => $submission_id]) }}'">
+        Back to Invoice
+    </button>
+
+    <button onclick="window.location.href='{{ route('dashboard') }}'">
+        Home
+    </button>
 </div>
 
 <script>
-    window.onload = function() { window.print(); };
-
-    document.getElementById('btnPrintAgain').addEventListener('click', function() {
-        window.print();
-    });
-
-    document.getElementById('btnBack').addEventListener('click', function() {
-        @if($payment->permit_type === 'TP')
-            window.location.href = "{{ route('permit.temporary') }}";
-        @elseif($payment->permit_type === 'MP')
-            window.location.href = "{{ route('permit.monthly') }}";
-        @else
-            window.location.href = "{{ url()->previous() }}";
-        @endif
-    });
-
-    document.getElementById('btnBackInvoice').addEventListener('click', function() {
-        window.location.href = "{{ route('payment.invoice', ['submission_id' => $submission_id]) }}";
-    });
-
-    document.getElementById('btnHome').addEventListener('click', function() {
-        window.location.href = "{{ route('dashboard') }}";
-    });
+window.onload = function () {
+    window.print();
+};
 </script>
 @endsection
