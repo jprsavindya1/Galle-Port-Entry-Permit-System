@@ -147,7 +147,7 @@ For testing and local demonstration, use these default credentials (change immed
 
 ## ⚓ Galle Port Enhancements (Phase A)
 
-The codebase has been extended with Galle Port-specific implementations and analytical roadmaps (see [GALLE_PORT_REPORT.md](file:///d:/New-GllePermitSystem/port-entry-permit/port-entry-permit/GALLE_PORT_REPORT.md) for details):
+The codebase has been extended with Galle Port-specific implementations and analytical roadmaps (see [GALLE_PORT_REPORT.md](file:///d:/New-GllePermitSystem/port-entry-permit/port-entry-permit/docs/GALLE_PORT_REPORT.md) for details):
 * **Phase A Database Extensions:** Support for applicant photos (`photo_path`), scanned credentials (`scanned_nic`), and Yacht crew entry details.
 * **Modernized Gate UI:** Enhanced dashboards designed for quick validation and multilingual support.
 * **Batch Printing:** Continuous dot-matrix print receipt adjustments.
