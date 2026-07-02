@@ -528,11 +528,26 @@ php artisan optimize:clear
 
 This project is licensed under the MIT License.
 
-## 👨‍💻 Developer
+## 👨‍💻 Developers & Contributors
 
-Developed for Sri Lanka Ports Authority (SLPA)  
-**Repository:** [github.com/sahanSS98/SLPA-Permit_System](https://github.com/sahanSS98/SLPA-Permit_System)  
-**Owner:** sahanSS98
+This project was originally developed by **sahanSS98** and subsequently enhanced and maintained by **Rashini Savindya**.
+
+### 🌟 Enhancements & Upgrades by Rashini Savindya (July 2026)
+*   **Galle Port Gap Analysis & Roadmap**: Authored [GALLE_PORT_REPORT.md](file:///d:/New-GllePermitSystem/port-entry-permit/port-entry-permit/GALLE_PORT_REPORT.md) outlining the security and permit lifecycle gaps for Galle Port.
+*   **Database Schema Extensions**: Implemented migration `2026_06_28_143500_add_phase_a_columns_to_permits_tables.php` to add support for:
+    *   Applicant profile photograph paths (`photo_path`)
+    *   Scanned identity and validation documents (`scanned_nic`, `scanned_police_report`)
+    *   Yacht crew and international tourist fields (`yacht_name`, `yacht_agent`, `passport_country`, `visa_expiry`)
+*   **UI/UX Modernization**:
+    *   Re-designed the main Dashboard and Security Verification Dashboard with high-fidelity controls.
+    *   Redesigned Authentication interfaces (Login and Forgot Password screens).
+    *   Upgraded application layouts (authenticated and guest views) with a new Galle Lighthouse sidebar and custom branding.
+    *   Reconstructed Permit Edit and Batch Edit interfaces.
+*   **Printing & Invoicing Refinements**: Polished payment receipt previews, batch permit submittal reviews, and invoice layouts.
+*   **Controller Improvements**: Refined the data handling pipelines across controllers to support Phase A fields and dashboard enhancements.
+
+**Repository:** [github.com/jprsavindya1/Galle-Port-Entry-Permit-System](https://github.com/jprsavindya1/Galle-Port-Entry-Permit-System)  
+**Maintainer:** Rashini Savindya
 
 ## 📞 Support
 
@@ -549,6 +564,6 @@ For technical support or inquiries:
 
 ---
 
-**Version:** 1.0  
-**Last Updated:** October 2025  
-**Status:** Production Ready
+**Version:** 1.1 (Enhanced)  
+**Last Updated:** July 2026  
+**Status:** Feature Enhanced & Stable Ready
