@@ -132,16 +132,12 @@ Ensure you have the following installed:
 
 ---
 
-## 🔑 Usage & Seeded Accounts
+## 🔑 Usage & Local Testing
 
-For testing and local demonstration, use these default credentials (change immediately in production):
+For testing and local demonstration, you can run the database seeders. The default seeded development accounts (with their roles and permissions) are defined in [UserSeeder.php](file:///d:/New-GllePermitSystem/port-entry-permit/port-entry-permit/database/seeders/UserSeeder.php).
 
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Super Admin** | `superadmin@slpa.lk` | `password` |
-| **Admin** | `admin@slpa.lk` | `password` |
-| **Clerk** | `clerk1@slpa.lk` | `password` |
-| **Staff** | `staff@slpa.lk` | `password` |
+> [!WARNING]
+> Do not use seeded development credentials in production. Ensure you configure unique, secure passwords for all administrative users immediately upon deployment.
 
 ---
 
