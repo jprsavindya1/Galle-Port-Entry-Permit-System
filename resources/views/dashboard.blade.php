@@ -87,25 +87,15 @@
 </style>
 
 <div class="container">
-    <div class="row align-items-center mb-4 pb-3" style="border-bottom: 3px solid #002B5C;">
-        <div class="col-md-6">
-            <h2 class="mb-0" style="font-weight: 700; color: #002B5C;">Dashboard</h2>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1 text-[#13314C]" style="font-weight: 700; font-size: 1.75rem;">Welcome back, {{ Auth::user()->name }}! 👋</h2>
+            <p class="text-muted mb-0" style="font-size: 0.9rem; font-weight: 500;">Here's what's happening with your permits today.</p>
         </div>
-        @auth
-            <div class="col-md-6">
-                <div class="d-flex align-items-center justify-content-md-end gap-3">
-                    <div class="text-end">
-                        <div style="font-size: 0.7rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Current User</div>
-                        <div style="font-size: 1.1rem; font-weight: 700; color: #002B5C;">{{ Auth::user()->name }}</div>
-                    </div>
-                    <div class="vr" style="height: 40px; opacity: 0.3;"></div>
-                    <div class="px-4 py-2 rounded" style="background-color: #002B5C; border-left: 4px solid #FFC107;">
-                        <div style="font-size: 0.65rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 2px;">Role</div>
-                        <div style="font-size: 0.95rem; font-weight: 700; color: #FFC107; text-transform: uppercase; letter-spacing: 0.5px;">{{ Auth::user()->role }}</div>
-                    </div>
-                </div>
-            </div>
-        @endauth
+        <div class="d-flex align-items-center bg-white border border-gray-200 rounded-3 px-3 py-2 shadow-sm text-[#13314C]" style="font-weight: 600; font-size: 0.9rem; gap: 8px;">
+            <i class="bi bi-calendar3 text-[#0b5ed7]"></i>
+            <span>{{ now()->format('d F Y') }}</span>
+        </div>
     </div>
 
    <!-- --- Summary Cards Row --- -->
@@ -154,16 +144,37 @@
 
     <!-- --- Charts Row --- -->
     <div class="row mb-4">
+        <!-- Permits by Company (Bar Chart) -->
         <div class="col-md-6 mb-2">
-            <div class="card shadow-sm rounded-3 p-2">
-                <h5 class="mb-2">Permits by Company</h5>
-                <canvas id="companyBarChart"></canvas>
+            <div class="card shadow-sm rounded-3 p-3 h-100 border-0 bg-white" style="box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;">
+                <h5 class="mb-3 text-[#13314C] font-semibold" style="font-size: 1.1rem; font-family: 'Outfit', sans-serif;">Permits by Company</h5>
+                <div style="height: 220px; position: relative;">
+                    <canvas id="companyBarChart"></canvas>
+                </div>
             </div>
         </div>
+
+        <!-- Permit Revenue Insights (Doughnut Chart) -->
         <div class="col-md-6 mb-2">
-            <div class="card shadow-sm rounded-3 p-2">
-                <h5 class="mb-2">Permit Revenue Insights</h5>
-                <canvas id="permitPieChart"></canvas>
+            <div class="card shadow-sm rounded-3 p-3 h-100 border-0 bg-white" style="box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;">
+                <h5 class="mb-3 text-[#13314C] font-semibold" style="font-size: 1.1rem; font-family: 'Outfit', sans-serif;">Permit Revenue Insights</h5>
+                <div class="d-flex align-items-center justify-content-between gap-2" style="height: 220px; width: 100%;">
+                    <!-- Doughnut Canvas -->
+                    <div class="position-relative" style="width: 200px; height: 200px; flex-shrink: 0;">
+                        <canvas id="permitPieChart" style="position: relative; z-index: 5; background: transparent;"></canvas>
+                        <!-- Centered circle container -->
+                        <div class="position-absolute bg-white rounded-circle shadow-sm d-flex flex-column align-items-center justify-content-center" 
+                             style="width: 138px; height: 138px; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px solid rgba(0,0,0,0.03); pointer-events: none; z-index: 2; box-shadow: 0 8px 24px rgba(19, 49, 76, 0.06) !important;">
+                            <span class="text-uppercase tracking-wider font-semibold text-center text-muted" style="font-size: 0.55rem; line-height: 1.25; font-family: 'Outfit', sans-serif;">TOTAL REVENUE<br><span style="font-size: 0.48rem; opacity: 0.8;">COLLECTION TOTAL</span></span>
+                            <span id="doughnutCenterText" class="text-[#13314C]" style="font-weight: 700; font-size: 1.15rem; font-family: 'Outfit', sans-serif; margin-top: 4px; line-height: 1;">LKR {{ number_format($totalRevenue ?? 0, 0) }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Legend on the Right -->
+                    <div id="customLegendContainer" class="d-flex flex-column gap-2 ps-2 flex-grow-1" style="font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 600;">
+                        <!-- Legends will be generated dynamically here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -291,17 +302,45 @@
 
     let companyChart, permitChart;
 
+    // --- Custom inline plugin to draw bar value labels next to horizontal bars ---
+    const drawValuesPlugin = {
+        id: 'drawValues',
+        afterDatasetsDraw(chart, args, options) {
+            const { ctx, data } = chart;
+            ctx.save();
+            ctx.font = "bold 11px 'Outfit', sans-serif";
+            ctx.fillStyle = "#13314c";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            
+            const dataset = data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+            
+            meta.data.forEach((bar, index) => {
+                const val = Number(dataset.data[index]).toFixed(0);
+                const xPos = bar.x + 8; // 8px spacing to the right of the bar
+                const yPos = bar.y;
+                ctx.fillText(val, xPos, yPos);
+            });
+            ctx.restore();
+        }
+    };
+
     // --- Chart Rendering Function ---
     function renderCharts(companies, counts, types, revenues) {
         // Destroy old charts
         if (companyChart) companyChart.destroy();
         if (permitChart) permitChart.destroy();
 
+        // Calculate dynamic max for X axis to prevent label clipping
+        const maxVal = counts.length > 0 ? Math.max(...counts) : 0;
+        const xMax = maxVal > 0 ? maxVal + 1 : 4;
+
         // --- Bar Chart (Permits by Company) ---
         const ctxBar = document.getElementById('companyBarChart').getContext('2d');
-        const gradient = ctxBar.createLinearGradient(0, 0, 0, 250);
-        gradient.addColorStop(0, '#6a9ed5ff');
-        gradient.addColorStop(1, '#1e3c72ff');
+        const gradient = ctxBar.createLinearGradient(0, 0, 320, 0); // Horizontal gradient
+        gradient.addColorStop(0, '#2d56ff'); // Mockup Blue
+        gradient.addColorStop(1, '#00f2fe'); // Mockup Cyan
 
         companyChart = new Chart(ctxBar, {
             type: 'bar',
@@ -311,42 +350,116 @@
                     label: 'Number of Permits',
                     data: counts,
                     backgroundColor: gradient,
-                    borderRadius: 8,
-                    barThickness: 30
+                    hoverBackgroundColor: '#00f2fe',
+                    borderRadius: 20, // Capsule look on both sides
+                    borderSkipped: false, // Apply border radius to all corners
+                    barThickness: 16
                 }]
             },
+            plugins: [drawValuesPlugin],
             options: {
+                indexAxis: 'y', // Makes the bar chart horizontal
                 responsive: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#13314c',
+                        titleFont: { family: "'Outfit', sans-serif", weight: 'bold' },
+                        bodyFont: { family: "'Outfit', sans-serif" },
+                        padding: 10,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function (ctx) {
+                                return ' Permits: ' + Number(ctx.raw).toFixed(0);
+                            }
+                        }
+                    }
+                },
+                scales: { 
+                    x: {
+                        max: xMax,
+                        grid: {
+                            color: '#f1f5f9',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            stepSize: 1,
+                            color: '#94a3b8',
+                            font: { family: "'Outfit', sans-serif", size: 10 }
+                        }
+                    },
+                    y: { 
+                        grid: { display: false },
+                        ticks: { 
+                            color: '#475569',
+                            font: { family: "'Outfit', sans-serif", size: 10, weight: '500' }
+                        } 
+                    } 
+                }
             }
         });
 
-        // --- Pie Chart (Revenue by Type) ---
+        // --- Doughnut Chart (Revenue by Type) ---
         const ctxPie = document.getElementById('permitPieChart').getContext('2d');
         permitChart = new Chart(ctxPie, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: types,
                 datasets: [{
                     data: revenues,
-                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
-                    hoverOffset: 10
+                    backgroundColor: ['#ff6384', '#0b5ed7', '#f6ba18'], // Premium Coral, Navy Blue, SLPA Gold
+                    borderWidth: 0, // No border lines to allow perfect rounded ends
+                    hoverOffset: 4,
+                    borderRadius: 15, // Perfect rounded caps for slice ends
+                    spacing: 4 // Space between segments
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                cutout: '80%', // Sleek mockup cutout ring
                 plugins: {
+                    legend: { display: false }, // Use custom HTML legend on the right
                     tooltip: {
+                        enabled: true,
+                        backgroundColor: '#13314c',
+                        titleFont: { family: "'Outfit', sans-serif", weight: 'bold' },
+                        bodyFont: { family: "'Outfit', sans-serif" },
+                        padding: 10,
+                        cornerRadius: 8,
                         callbacks: {
                             label: function (ctx) {
-                                return ctx.label + ': LKR ' + ctx.raw.toLocaleString();
+                                const val = Number(ctx.raw);
+                                const total = ctx.dataset.data.reduce((a, b) => Number(a) + Number(b), 0);
+                                const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                                return ' ' + ctx.label + ': LKR ' + val.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' (' + pct + '%)';
                             }
                         }
                     }
                 }
             }
         });
+
+        // --- Render Custom HTML Legend on the Right ---
+        const total = revenues.reduce((a, b) => Number(a) + Number(b), 0);
+        const colors = ['#ff6384', '#0b5ed7', '#f6ba18'];
+        let legendHtml = '';
+        
+        for (let i = 0; i < types.length; i++) {
+            const val = Number(revenues[i]);
+            const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+            const color = colors[i];
+            legendHtml += `
+                <div class="d-flex align-items-center text-[#13314C] py-1">
+                    <span class="rounded-circle me-2" style="width: 8px; height: 8px; background-color: ${color}; display: inline-block; flex-shrink: 0;"></span>
+                    <span style="font-weight: 500; font-size: 0.8rem; color: #475569;">
+                        <strong style="color: #1e293b; font-weight: 700;">${types[i]}</strong> - LKR ${val.toLocaleString(undefined, { maximumFractionDigits: 0 })} (${pct}%)
+                    </span>
+                </div>
+            `;
+        }
+        $('#customLegendContainer').html(legendHtml);
     }
 
     // --- Initial Render ---
@@ -354,31 +467,37 @@
 
     // --- Month Filter Change Handler ---
     $('#monthFilterSelect').on('change', function() {
-    const month = $(this).val();
-    $.get('{{ route("dashboard.data") }}', { month: month }, function(res) {
+        const month = $(this).val();
+        $.get('{{ route("dashboard.data") }}', { month: month }, function(res) {
 
-        // Update Total Cards
-        const cards = $('.summary-card h3');
-        cards.eq(0).text(res.dailyPermitsAll); // Daily Permits
-        cards.eq(1).text('LKR ' + Number(res.dailyRevenue).toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        })); // Daily Revenue
-        cards.eq(2).text('LKR ' + Number(res.totalRevenue).toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        })); // Monthly Revenue
+            // Update Total Cards
+            const cards = $('.summary-card h3');
+            cards.eq(0).text(res.dailyPermitsAll); // Daily Permits
+            cards.eq(1).text('LKR ' + Number(res.dailyRevenue).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })); // Daily Revenue
+            cards.eq(2).text('LKR ' + Number(res.totalRevenue).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })); // Monthly Revenue
 
-        // Update Breakdown
-        const breakdown = $('.summary-breakdown div');
-        breakdown.eq(0).html('TP<br>' + res.dailyPermits.TP);
-        breakdown.eq(1).html('MP<br>' + res.dailyPermits.MP);
-        breakdown.eq(2).html('VH<br>' + res.dailyPermits.VH);
+            // Update Doughnut Center Total
+            $('#doughnutCenterText').text('LKR ' + Number(res.totalRevenue).toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }));
 
-        // Update Charts
-        renderCharts(res.companies, res.permitCounts, ['TP','MP','VH'], res.permitRevenue);
+            // Update Breakdown
+            const breakdown = $('.summary-breakdown div');
+            breakdown.eq(0).html('TP<br>' + res.dailyPermits.TP);
+            breakdown.eq(1).html('MP<br>' + res.dailyPermits.MP);
+            breakdown.eq(2).html('VH<br>' + res.dailyPermits.VH);
+
+            // Update Charts
+            renderCharts(res.companies, res.permitCounts, ['TP','MP','VH'], res.permitRevenue);
+        });
     });
-});
 
 </script>
 @endsection

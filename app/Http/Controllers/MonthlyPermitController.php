@@ -59,32 +59,65 @@ class MonthlyPermitController extends PermitController
             'police_expire_date' => 'required|date|after:police_issue_date',
             'doc_nic' => 'nullable|boolean',
             'doc_police_report' => 'nullable|boolean',
+
+            // Photo & Document uploads
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'doc_nic_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'doc_police_report_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
         
         // Convert checkbox values (checkboxes only send value if checked, otherwise null)
         $validated['doc_nic'] = $request->has('doc_nic') ? 1 : 0;
         $validated['doc_police_report'] = $request->has('doc_police_report') ? 1 : 0;
 
+        // Uploads handling (move to temp storage)
+        if ($request->hasFile('photo')) {
+            $photoFile = $request->file('photo');
+            $photoName = 'photo_' . time() . '_' . Str::random(10) . '.' . $photoFile->getClientOriginalExtension();
+            $photoFile->storeAs('temp', $photoName, 'public');
+            $validated['photo_path'] = 'temp/' . $photoName;
+        } else {
+            $validated['photo_path'] = null;
+        }
+
+        if ($request->hasFile('doc_nic_file')) {
+            $nicFile = $request->file('doc_nic_file');
+            $nicName = 'doc_nic_' . time() . '_' . Str::random(10) . '.' . $nicFile->getClientOriginalExtension();
+            $nicFile->storeAs('temp', $nicName, 'public');
+            $validated['doc_nic_path'] = 'temp/' . $nicName;
+        } else {
+            $validated['doc_nic_path'] = null;
+        }
+
+        if ($request->hasFile('doc_police_report_file')) {
+            $prFile = $request->file('doc_police_report_file');
+            $prName = 'doc_police_' . time() . '_' . Str::random(10) . '.' . $prFile->getClientOriginalExtension();
+            $prFile->storeAs('temp', $prName, 'public');
+            $validated['doc_police_report_path'] = 'temp/' . $prName;
+        } else {
+            $validated['doc_police_report_path'] = null;
+        }
+
         $cart = session()->get('monthly_permit_cart', []);
 
          // If company info already stored in session, enforce consistency across entries
 
-    $sessionCompanyName = strtolower(trim(session('monthly_company_name')));
-    $sessionCompanyAddress = strtolower(trim(session('monthly_company_address') ?? ''));
+        $sessionCompanyName = strtolower(trim(session('monthly_company_name')));
+        $sessionCompanyAddress = strtolower(trim(session('monthly_company_address') ?? ''));
 
-    $newCompanyName = strtolower(trim($validated['company_name']));
-    $newCompanyAddress = strtolower(trim($validated['company_address'] ?? ''));
+        $newCompanyName = strtolower(trim($validated['company_name']));
+        $newCompanyAddress = strtolower(trim($validated['company_address'] ?? ''));
 
-if (session()->has('monthly_company_name')) {
-    if ($newCompanyName !== $sessionCompanyName || $newCompanyAddress !== $sessionCompanyAddress) {
-        return redirect()->route('permit.monthly')
-            ->withErrors(['company_name' => 'All entries must have the same company name and address.'])
-            ->withInput();
-    }
-} else {
-    session(['monthly_company_name' => $validated['company_name']]);
-    session(['monthly_company_address' => $validated['company_address']]);
-}
+        if (session()->has('monthly_company_name')) {
+            if ($newCompanyName !== $sessionCompanyName || $newCompanyAddress !== $sessionCompanyAddress) {
+                return redirect()->route('permit.monthly')
+                    ->withErrors(['company_name' => 'All entries must have the same company name and address.'])
+                    ->withInput();
+            }
+        } else {
+            session(['monthly_company_name' => $validated['company_name']]);
+            session(['monthly_company_address' => $validated['company_address']]);
+        }
 
         // Check for duplicate NIC in session cart
         foreach ($cart as $existingEntry) {
@@ -98,7 +131,10 @@ if (session()->has('monthly_company_name')) {
         // Convert pass_type array to comma-separated string for storage
         $validated['pass_type'] = implode(',', $validated['pass_type']);
 
-        // Application number will be generated on submission (no gaps for abandoned carts)
+        // Remove UploadedFile objects before saving to session to prevent serialization exception
+        unset($validated['photo']);
+        unset($validated['doc_nic_file']);
+        unset($validated['doc_police_report_file']);
 
         // Add the validated permit entry to session cart
         $cart[] = $validated;
@@ -369,6 +405,11 @@ public function updateMonthlySessionEntry(Request $request, $index)
         'police_expire_date' => 'required|date|after:police_issue_date',
         'doc_nic' => 'nullable|boolean',
         'doc_police_report' => 'nullable|boolean',
+
+        // Photo & Document uploads
+        'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'doc_nic_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        'doc_police_report_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
     ]);
     
     // Convert checkbox values (checkboxes only send value if checked, otherwise null)
@@ -379,6 +420,36 @@ public function updateMonthlySessionEntry(Request $request, $index)
 
     if (!isset($cart[$index])) {
         return redirect()->route('permit.monthly')->with('error', 'Permit entry not found.');
+    }
+
+    $existing = $cart[$index];
+
+    // Uploads handling (move to temp storage, retain old if not provided)
+    if ($request->hasFile('photo')) {
+        $photoFile = $request->file('photo');
+        $photoName = 'photo_' . time() . '_' . Str::random(10) . '.' . $photoFile->getClientOriginalExtension();
+        $photoFile->storeAs('temp', $photoName, 'public');
+        $validated['photo_path'] = 'temp/' . $photoName;
+    } else {
+        $validated['photo_path'] = $existing['photo_path'] ?? null;
+    }
+
+    if ($request->hasFile('doc_nic_file')) {
+        $nicFile = $request->file('doc_nic_file');
+        $nicName = 'doc_nic_' . time() . '_' . Str::random(10) . '.' . $nicFile->getClientOriginalExtension();
+        $nicFile->storeAs('temp', $nicName, 'public');
+        $validated['doc_nic_path'] = 'temp/' . $nicName;
+    } else {
+        $validated['doc_nic_path'] = $existing['doc_nic_path'] ?? null;
+    }
+
+    if ($request->hasFile('doc_police_report_file')) {
+        $prFile = $request->file('doc_police_report_file');
+        $prName = 'doc_police_' . time() . '_' . Str::random(10) . '.' . $prFile->getClientOriginalExtension();
+        $prFile->storeAs('temp', $prName, 'public');
+        $validated['doc_police_report_path'] = 'temp/' . $prName;
+    } else {
+        $validated['doc_police_report_path'] = $existing['doc_police_report_path'] ?? null;
     }
 
     // Only check company consistency if NOT editing in-session

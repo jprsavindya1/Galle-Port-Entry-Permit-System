@@ -150,6 +150,25 @@ class PaymentController extends Controller
 foreach ($cart as $entry) {
     $entry['permit_id'] = $this->generatePermitId($entry['type']);
 
+    // Move files from temp to permanent storage
+    $fileFields = ['photo_path', 'doc_nic_path', 'doc_passport_path', 'doc_driving_licence_path', 'doc_police_report_path'];
+    foreach ($fileFields as $field) {
+        if (isset($entry[$field]) && !empty($entry[$field]) && strpos($entry[$field], 'temp/') === 0) {
+            $tempPath = $entry[$field];
+            $filename = basename($tempPath);
+            
+            // Determine permanent folder name based on field
+            $subFolder = ($field === 'photo_path') ? 'photos' : 'docs';
+            $permanentPath = "permits/{$subFolder}/{$filename}";
+            
+            // Move file using Storage facade on the 'public' disk
+            if (\Storage::disk('public')->exists($tempPath)) {
+                \Storage::disk('public')->move($tempPath, $permanentPath);
+                $entry[$field] = $permanentPath;
+            }
+        }
+    }
+
     // Safely handle pass_type: only for TP/MP
     if (isset($entry['pass_type'])) {
         $entry['pass_type'] = is_array($entry['pass_type']) ? implode(',', $entry['pass_type']) : $entry['pass_type'];

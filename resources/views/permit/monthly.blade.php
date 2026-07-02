@@ -149,7 +149,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('permit.monthly.addMonthlyToSession') }}">
+        <form method="POST" action="{{ route('permit.monthly.addMonthlyToSession') }}" enctype="multipart/form-data">
             @csrf
 
             {{-- DOCUMENTS ATTACHED SECTION --}}
@@ -200,6 +200,25 @@
                     <label for="to_date" class="form-label"><i class="bi bi-calendar-range me-1"></i> To Date</label>
                     {{-- To Date will be auto-calculated to 30 days from from_date, so it is made readonly --}}
                     <input type="date" class="form-control" name="to_date" id="to_date" value="{{ old('to_date') }}" min="{{ date('Y-m-d') }}" required readonly>
+                </div>
+            </div>
+
+            {{-- Document Scan Uploads & Photo --}}
+            <div class="row mb-3" id="doc_uploads_row">
+                <div class="col-md-4 mb-2">
+                    <label for="photo" class="form-label fw-bold"><i class="bi bi-camera me-1"></i> Profile Photo (Optional)</label>
+                    <input type="file" name="photo" id="photo" class="form-control" accept="image/*" onchange="previewImage(this)">
+                    <div class="mt-2" id="photo_preview_container" style="display:none;">
+                        <img id="photo_preview" src="#" alt="Photo Preview" class="img-thumbnail" style="max-height: 120px;">
+                    </div>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label for="doc_nic_file" class="form-label fw-bold"><i class="bi bi-file-earmark-pdf me-1"></i> Upload NIC Scan (Optional)</label>
+                    <input type="file" name="doc_nic_file" id="doc_nic_file" class="form-control" accept="image/*,application/pdf">
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label for="doc_police_report_file" class="form-label fw-bold"><i class="bi bi-file-earmark-pdf me-1"></i> Upload Police Report (Optional)</label>
+                    <input type="file" name="doc_police_report_file" id="doc_police_report_file" class="form-control" accept="image/*,application/pdf">
                 </div>
             </div>
 
@@ -541,8 +560,8 @@
         }
 
         // Function to fetch person details from database
-        window.fetchPersonDetails = function() {
-            const idNumber = document.getElementById('id_number').value.trim();
+        window.fetchPersonDetails = function(customValue = null) {
+            const idNumber = customValue || document.getElementById('id_number').value.trim();
             
             if (!idNumber) {
                 return;
@@ -569,6 +588,45 @@
                     }
                     
                     document.getElementById('residence_address').value = data.data.residence_address || '';
+                    
+                    // Autofill dates, company details, reason, pass_type, issue_type
+                    if (data.data.company_name) {
+                        const companyDropdown = $('#company_name');
+                        const isCurrentlyDisabled = companyDropdown.prop('disabled');
+                        if (isCurrentlyDisabled) {
+                            companyDropdown.prop('disabled', false);
+                        }
+                        companyDropdown.val(data.data.company_name.trim()).trigger('change');
+                        if (isCurrentlyDisabled) {
+                            companyDropdown.prop('disabled', true);
+                        }
+                    }
+                    if (data.data.company_address) {
+                        document.getElementById('company_address').value = data.data.company_address;
+                    }
+                    if (data.data.from_date) {
+                        const fromInput = document.getElementById('from_date');
+                        if (fromInput.min && data.data.from_date < fromInput.min) {
+                            fromInput.min = data.data.from_date;
+                        }
+                        fromInput.value = data.data.from_date;
+                        autoFillToDate();
+                    }
+                    if (data.data.reason) {
+                        document.getElementById('reason').value = data.data.reason;
+                    }
+                    if (data.data.pass_type) {
+                        const passTypes = data.data.pass_type.split(',');
+                        document.querySelectorAll('input[name="pass_type[]"]').forEach(cb => {
+                            cb.checked = passTypes.includes(cb.value);
+                        });
+                    }
+                    if (data.data.issue_type) {
+                        const radio = document.querySelector(`input[name="issue_type"][value="${data.data.issue_type}"]`);
+                        if (radio) {
+                            radio.checked = true;
+                        }
+                    }
                     
                     // Store the fetched ID number
                     lastFetchedIdNumber = idNumber;
@@ -747,7 +805,11 @@
             let day = toDate.getDate().toString().padStart(2, '0');
             let year = toDate.getFullYear();
 
-            toInput.value = `${year}-${month}-${day}`;
+            const calculatedToDate = `${year}-${month}-${day}`;
+            if (toInput.min && calculatedToDate < toInput.min) {
+                toInput.min = calculatedToDate;
+            }
+            toInput.value = calculatedToDate;
         }
         
         // Listen for changes on from_date to auto-fill to_date
@@ -1102,6 +1164,25 @@
                 }
             } catch (error) {
                 console.error('Error in clearForm:', error);
+            }
+        }
+
+        window.previewImage = function(input) {
+            const previewContainer = document.getElementById('photo_preview_container');
+            const preview = document.getElementById('photo_preview');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = '#';
+                previewContainer.style.display = 'none';
             }
         }
 

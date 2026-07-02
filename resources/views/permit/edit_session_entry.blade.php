@@ -216,6 +216,7 @@
                         <input type="text" name="nic_number" id="nic_number" 
                                value="{{ old('nic_number', $permit['nic_number'] ?? '') }}" class="form-control"
                                oninput="this.value = this.value.toUpperCase(); validateNicNumber(); checkDuplicateInCart(); checkBlacklistStatusNic();"
+                               onblur="fetchPersonDetails(this.value.trim());"
                                placeholder="Enter NIC number to connect with other IDs">
                         <div style="min-height: 20px;">
                             <span id="nic_number_error" class="text-danger small d-block"></span>
@@ -510,8 +511,8 @@
         }
 
         // Function to fetch person details from database
-        window.fetchPersonDetails = function() {
-            const idNumber = document.getElementById('id_number').value.trim();
+        window.fetchPersonDetails = function(customValue = null) {
+            const idNumber = customValue || document.getElementById('id_number').value.trim();
             
             if (!idNumber) {
                 return;
@@ -538,6 +539,40 @@
                     }
                     
                     document.getElementById('residence_address').value = data.data.residence_address || '';
+                    
+                    // Autofill dates, reason, pass_type, issue_type
+                    if (data.data.from_date) {
+                        const fromInput = document.getElementById('from_date');
+                        if (fromInput.min && data.data.from_date < fromInput.min) {
+                            fromInput.min = data.data.from_date;
+                        }
+                        fromInput.value = data.data.from_date;
+                    }
+                    if (data.data.to_date) {
+                        const toInput = document.getElementById('to_date');
+                        if (toInput.min && data.data.to_date < toInput.min) {
+                            toInput.min = data.data.to_date;
+                        }
+                        toInput.value = data.data.to_date;
+                    }
+                    if (typeof setMaxToDate === 'function') {
+                        setMaxToDate();
+                    }
+                    if (data.data.reason) {
+                        document.getElementById('reason').value = data.data.reason;
+                    }
+                    if (data.data.pass_type) {
+                        const passTypes = data.data.pass_type.split(',');
+                        document.querySelectorAll('input[name="pass_type[]"]').forEach(cb => {
+                            cb.checked = passTypes.includes(cb.value);
+                        });
+                    }
+                    if (data.data.issue_type) {
+                        const radio = document.querySelector(`input[name="issue_type"][value="${data.data.issue_type}"]`);
+                        if (radio) {
+                            radio.checked = true;
+                        }
+                    }
                     
                     // Store the fetched ID number
                     lastFetchedIdNumber = idNumber;
@@ -815,16 +850,16 @@
                     errorMessage = 'Invalid NIC format. Use 9 digits + V or 12 digits';
                     break;
                 case 'Passport':
-                    // Starts with P, OL, or D followed by numbers
-                    const passportPattern = /^(?:P|OL|D)\d+$/i;
+                    // 1-2 letters followed by 6-7 digits
+                    const passportPattern = /^[A-Z]{1,2}\d{6,7}$/i;
                     valid = passportPattern.test(idNumber);
-                    errorMessage = 'Invalid Passport format. Must start with P, OL, or D followed by numbers';
+                    errorMessage = 'Invalid Passport format. Use 1-2 letters followed by 6-7 digits';
                     break;
                 case 'License':
-                    // Letter followed by 9 digits
-                    const licensePattern = /^[A-Z]\d{9}$/i;
+                    // All Sri Lankan Driving License formats
+                    const licensePattern = /^(?:\d{7,8}|[A-Z]\d{6,8}|\d{9}[VXvx]|\d{12})$/;
                     valid = licensePattern.test(idNumber);
-                    errorMessage = 'Invalid License format. Must be a letter followed by 9 digits';
+                    errorMessage = 'Invalid License format';
                     break;
                 default:
                     errorMessage = 'Please select an ID type';

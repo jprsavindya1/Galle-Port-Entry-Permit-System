@@ -39,6 +39,15 @@ class TemporaryPermit extends Model
         'is_printed',
         'printed_at',
         'printed_by',
+        'photo_path',
+        'doc_nic_path',
+        'doc_passport_path',
+        'doc_driving_licence_path',
+        'yacht_name',
+        'yacht_agent',
+        'passport_country',
+        'visa_expiry',
+        'customs_clearance',
     ];
 
     protected $casts = [
@@ -53,6 +62,8 @@ class TemporaryPermit extends Model
         'total' => 'decimal:2',
         'is_printed' => 'boolean',
         'printed_at' => 'datetime',
+        'visa_expiry' => 'date',
+        'customs_clearance' => 'boolean',
     ];
 
     public function payment()

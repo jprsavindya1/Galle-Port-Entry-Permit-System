@@ -39,6 +39,9 @@ class MonthlyPermit extends Model
         'is_printed',
         'printed_at',
         'printed_by',
+        'photo_path',
+        'doc_nic_path',
+        'doc_police_report_path',
     ];
 
     protected $casts = [

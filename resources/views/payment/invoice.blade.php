@@ -507,9 +507,36 @@
                                 <td>{{ $permit->vehicle_number ?? '-' }}</td>
                                 <td>{{ $permit->revenue_license_number ?? '-' }}</td>
                             @else
-                                <td style="text-align: left;">{{ $permit->full_name ?? '-' }}</td>
+                                <td style="text-align: left;">
+                                    <div class="d-flex align-items-center justify-content-start">
+                                        @if($permit->photo_path)
+                                            <img src="{{ asset('storage/' . $permit->photo_path) }}" alt="Photo" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover; border: 1px solid #bbdefb;">
+                                        @else
+                                            <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; background: #90caf9; color: #fff; border-radius: 50%;">
+                                                {{ strtoupper(substr($permit->full_name, 0, 1)) }}
+                                            </div>
+                                        @endif
+                                        <span>{{ $permit->full_name ?? '-' }}</span>
+                                    </div>
+                                </td>
                                 <td>{{ $permit->id_type ?? '-' }}</td>
-                                <td>{{ $permit->id_number ?? '-' }}</td>
+                                <td>
+                                    <div>{{ $permit->id_number ?? '-' }}</div>
+                                    <div class="mt-1 no-print">
+                                        @if($permit->doc_nic_path)
+                                            <a href="{{ asset('storage/' . $permit->doc_nic_path) }}" target="_blank" class="text-primary me-2 small fw-bold" style="text-decoration:none;"><i class="bi bi-file-earmark-pdf-fill text-primary me-1"></i>NIC</a>
+                                        @endif
+                                        @if($permit->type === 'TP' && $permit->doc_passport_path)
+                                            <a href="{{ asset('storage/' . $permit->doc_passport_path) }}" target="_blank" class="text-primary me-2 small fw-bold" style="text-decoration:none;"><i class="bi bi-file-earmark-pdf-fill text-primary me-1"></i>Passport</a>
+                                        @endif
+                                        @if($permit->type === 'TP' && $permit->doc_driving_licence_path)
+                                            <a href="{{ asset('storage/' . $permit->doc_driving_licence_path) }}" target="_blank" class="text-primary small fw-bold" style="text-decoration:none;"><i class="bi bi-file-earmark-pdf-fill text-primary me-1"></i>DL</a>
+                                        @endif
+                                        @if($permit->type === 'MP' && $permit->doc_police_report_path)
+                                            <a href="{{ asset('storage/' . $permit->doc_police_report_path) }}" target="_blank" class="text-primary small fw-bold" style="text-decoration:none;"><i class="bi bi-file-earmark-pdf-fill text-primary me-1"></i>Police</a>
+                                        @endif
+                                    </div>
+                                </td>
                             @endif
                             <td style="text-align: left;">{{ $permit->company_name ?? '-' }}</td>
                             <td>{{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</td>

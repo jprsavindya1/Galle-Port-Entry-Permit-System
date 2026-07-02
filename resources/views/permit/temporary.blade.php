@@ -153,7 +153,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('permit.addToSession') }}">
+        <form method="POST" action="{{ route('permit.addToSession') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="type" value="temporary">
             
@@ -210,15 +210,19 @@
 
             {{-- Passport Type Selection --}}
             <div class="row mb-3" id="passport_type_row" style="display: none;">
-                <div class="col-md-12">
-                    <label class="form-label"><i class="bi bi-flag me-1"></i> Passport Type</label><br>
-                    <div class="form-check form-check-inline">
+                <div class="col-md-12 d-flex align-items-center flex-wrap">
+                    <label class="form-label mb-0 me-3"><i class="bi bi-flag me-1"></i> Passport Type</label>
+                    <div class="form-check form-check-inline mb-0">
                         <input type="radio" name="passport_type" id="local_passport" value="local" class="form-check-input" {{ old('passport_type', 'local') == 'local' ? 'checked' : '' }} onchange="toggleNicField()">
                         <label class="form-check-label" for="local_passport">Local Passport</label>
                     </div>
-                    <div class="form-check form-check-inline">
+                    <div class="form-check form-check-inline mb-0">
                         <input type="radio" name="passport_type" id="foreigner_passport" value="foreigner" class="form-check-input" {{ old('passport_type') == 'foreigner' ? 'checked' : '' }} onchange="toggleNicField()">
                         <label class="form-check-label" for="foreigner_passport">Foreigner Passport</label>
+                    </div>
+                    <div class="form-check form-check-inline mb-0 ms-3" id="yacht_crew_toggle_group" style="display: none;">
+                        <input type="checkbox" name="yacht_crew_checkbox" id="yacht_crew_checkbox" value="1" class="form-check-input" onchange="toggleYachtCrew()">
+                        <label class="form-check-label text-warning-dark fw-bold" for="yacht_crew_checkbox"><i class="bi bi-ship-fill text-warning me-1"></i>Foreign Yacht Crew / Tourist</label>
                     </div>
                 </div>
             </div>
@@ -229,10 +233,75 @@
                     <input type="text" name="nic_number" id="nic_number" 
                             value="{{ old('nic_number') }}" class="form-control"
                             oninput="this.value = this.value.toUpperCase(); validateNicNumber(); checkDuplicateInCart(); checkBlacklistStatusNic();"
+                            onblur="fetchPersonDetails(this.value.trim());"
                             placeholder="Enter NIC number on the Identification document">
                     <div style="min-height: 20px;">
                         <span id="nic_number_error" class="text-danger small d-block"></span>
                         <span id="nic_blacklist_msg" class="small d-block" style="font-weight: 500;"></span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Document Scan Uploads & Photo --}}
+            <div class="row mb-3" id="doc_uploads_row">
+                <div class="col-md-6 mb-2" id="photo_upload_group">
+                    <label for="photo" class="form-label fw-bold"><i class="bi bi-camera me-1"></i> Applicant Profile Photo (Optional)</label>
+                    <input type="file" name="photo" id="photo" class="form-control" accept="image/*" onchange="previewImage(this)">
+                    <div class="mt-2" id="photo_preview_container" style="display:none;">
+                        <img id="photo_preview" src="#" alt="Photo Preview" class="img-thumbnail" style="max-height: 120px;">
+                    </div>
+                </div>
+                <div class="col-md-6 mb-2" id="nic_upload_group" style="display:none;">
+                    <label for="doc_nic_file" class="form-label fw-bold"><i class="bi bi-file-earmark-pdf me-1"></i> Upload NIC Scan (Optional)</label>
+                    <input type="file" name="doc_nic_file" id="doc_nic_file" class="form-control" accept="image/*,application/pdf">
+                </div>
+                <div class="col-md-6 mb-2" id="passport_upload_group" style="display:none;">
+                    <label for="doc_passport_file" class="form-label fw-bold"><i class="bi bi-file-earmark-pdf me-1"></i> Upload Passport Scan (Optional)</label>
+                    <input type="file" name="doc_passport_file" id="doc_passport_file" class="form-control" accept="image/*,application/pdf">
+                </div>
+                <div class="col-md-6 mb-2" id="dl_upload_group" style="display:none;">
+                    <label for="doc_driving_licence_file" class="form-label fw-bold"><i class="bi bi-file-earmark-pdf me-1"></i> Upload DL Scan (Optional)</label>
+                    <input type="file" name="doc_driving_licence_file" id="doc_driving_licence_file" class="form-control" accept="image/*,application/pdf">
+                </div>
+            </div>
+
+            {{-- Yacht Crew Details (Shown only for Foreign Yacht Crew) --}}
+            <div id="yacht_crew_section" class="card p-3 mb-3" style="display: none; background: #fffde7; border: 1px solid #fff59d; border-radius: 0.5rem;">
+                <h5 class="text-warning-dark border-bottom pb-2 mb-3 fw-bold"><i class="bi bi-ship-fill text-warning me-1"></i> Yacht Marina Crew Details</h5>
+                <input type="hidden" name="is_yacht_crew" id="is_yacht_crew" value="0">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="yacht_name" class="form-label fw-bold">Yacht/Vessel Name <span class="text-danger">*</span></label>
+                        <input type="text" name="yacht_name" id="yacht_name" class="form-control" placeholder="e.g. Blue Lagoon" oninput="this.value = this.value.toUpperCase();">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="yacht_agent" class="form-label fw-bold">Yacht Agent</label>
+                        <select name="yacht_agent" id="yacht_agent" class="form-select">
+                            <option value="">-- Select Agent --</option>
+                            @foreach($companies as $company)
+                                <option value="{{ $company->name }}">{{ $company->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="passport_country" class="form-label fw-bold">Passport Country <span class="text-danger">*</span></label>
+                        <input type="text" name="passport_country" id="passport_country" class="form-control" placeholder="e.g. United Kingdom" oninput="this.value = this.value.toUpperCase();">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="visa_expiry" class="form-label fw-bold">Visa Expiry Date <span class="text-danger">*</span></label>
+                        <input type="date" name="visa_expiry" id="visa_expiry" class="form-control" min="{{ date('Y-m-d') }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input type="checkbox" name="customs_clearance" id="customs_clearance" value="1" class="form-check-input">
+                            <label class="form-check-label fw-bold text-success" for="customs_clearance">
+                                <i class="bi bi-shield-check me-1"></i> Customs & Immigration Cleared
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -869,8 +938,8 @@
         }
 
         // Function to fetch person details from database
-        window.fetchPersonDetails = function() {
-            const idNumber = document.getElementById('id_number').value.trim();
+        window.fetchPersonDetails = function(customValue = null) {
+            const idNumber = customValue || document.getElementById('id_number').value.trim();
             
             if (!idNumber) {
                 return;
@@ -897,6 +966,54 @@
                     }
                     
                     document.getElementById('residence_address').value = data.data.residence_address || '';
+                    
+                    // Autofill dates, company details, reason, pass_type, issue_type
+                    if (data.data.company_name) {
+                        const companyDropdown = $('#company_name');
+                        const isCurrentlyDisabled = companyDropdown.prop('disabled');
+                        if (isCurrentlyDisabled) {
+                            companyDropdown.prop('disabled', false);
+                        }
+                        companyDropdown.val(data.data.company_name.trim()).trigger('change');
+                        if (isCurrentlyDisabled) {
+                            companyDropdown.prop('disabled', true);
+                        }
+                    }
+                    if (data.data.company_address) {
+                        document.getElementById('company_address').value = data.data.company_address;
+                    }
+                    if (data.data.from_date) {
+                        const fromInput = document.getElementById('from_date');
+                        if (fromInput.min && data.data.from_date < fromInput.min) {
+                            fromInput.min = data.data.from_date;
+                        }
+                        fromInput.value = data.data.from_date;
+                    }
+                    if (data.data.to_date) {
+                        const toInput = document.getElementById('to_date');
+                        if (toInput.min && data.data.to_date < toInput.min) {
+                            toInput.min = data.data.to_date;
+                        }
+                        toInput.value = data.data.to_date;
+                    }
+                    if (typeof setMaxToDate === 'function') {
+                        setMaxToDate();
+                    }
+                    if (data.data.reason) {
+                        document.getElementById('reason').value = data.data.reason;
+                    }
+                    if (data.data.pass_type) {
+                        const passTypes = data.data.pass_type.split(',');
+                        document.querySelectorAll('input[name="pass_type[]"]').forEach(cb => {
+                            cb.checked = passTypes.includes(cb.value);
+                        });
+                    }
+                    if (data.data.issue_type) {
+                        const radio = document.querySelector(`input[name="issue_type"][value="${data.data.issue_type}"]`);
+                        if (radio) {
+                            radio.checked = true;
+                        }
+                    }
                     
                     // Store the fetched ID number
                     lastFetchedIdNumber = idNumber;
@@ -930,8 +1047,30 @@
                 const nicError = document.getElementById('nic_number_error');
                 const nicBlacklistMsg = document.getElementById('nic_blacklist_msg');
                 
+                // Hide all document upload sections first
+                $('#nic_upload_group').hide();
+                $('#passport_upload_group').hide();
+                $('#dl_upload_group').hide();
+
+                if (idType === 'NIC') {
+                    $('#nic_upload_group').show();
+                    document.getElementById('doc_nic_file').required = false;
+                } else {
+                    document.getElementById('doc_nic_file').required = false;
+                }
+
+                if (idType === 'Driving License') {
+                    $('#dl_upload_group').show();
+                    document.getElementById('doc_driving_licence_file').required = false;
+                } else {
+                    document.getElementById('doc_driving_licence_file').required = false;
+                }
+                
                 if (idType === 'Passport') {
                     $('#passport_type_row').show();
+                    $('#passport_upload_group').show();
+                    document.getElementById('doc_passport_file').required = false;
+                    
                     const localPassport = document.getElementById('local_passport').checked;
                     const foreignerPassport = document.getElementById('foreigner_passport').checked;
                     
@@ -939,6 +1078,9 @@
                         $('#nic_number_row').show();
                         nicLabel.textContent = 'NIC Number (Required)';
                         nicInput.required = true;
+                        $('#yacht_crew_toggle_group').hide();
+                        document.getElementById('yacht_crew_checkbox').checked = false;
+                        toggleYachtCrew();
                     } else if (foreignerPassport) {
                         $('#nic_number_row').hide();
                         nicInput.value = '';
@@ -951,6 +1093,7 @@
                             nicBlacklistMsg.style.color = '';
                         }
                         isNicValid = true;
+                        $('#yacht_crew_toggle_group').show();
                     } else {
                         // No radio selected, hide nic
                         $('#nic_number_row').hide();
@@ -964,12 +1107,19 @@
                             nicBlacklistMsg.style.color = '';
                         }
                         isNicValid = true;
+                        $('#yacht_crew_toggle_group').hide();
+                        document.getElementById('yacht_crew_checkbox').checked = false;
+                        toggleYachtCrew();
                     }
                 } else if (idType === 'Driving License') {
                     $('#passport_type_row').hide();
                     $('#nic_number_row').show();
                     nicLabel.textContent = 'NIC Number (Required)';
                     nicInput.required = true;
+                    $('#yacht_crew_toggle_group').hide();
+                    document.getElementById('yacht_crew_checkbox').checked = false;
+                    toggleYachtCrew();
+                    document.getElementById('doc_passport_file').required = false;
                 } else {
                     $('#passport_type_row').hide();
                     $('#nic_number_row').hide();
@@ -983,6 +1133,10 @@
                         nicBlacklistMsg.style.color = '';
                     }
                     isNicValid = true;
+                    $('#yacht_crew_toggle_group').hide();
+                    document.getElementById('yacht_crew_checkbox').checked = false;
+                    toggleYachtCrew();
+                    document.getElementById('doc_passport_file').required = false;
                 }
                 
                 // Re-enable check availability button if appropriate
@@ -995,6 +1149,51 @@
                             checkBtn.style.cursor = 'pointer';
                         }
                     }
+                }
+            }
+
+            window.toggleYachtCrew = function() {
+                const isChecked = document.getElementById('yacht_crew_checkbox').checked;
+                const yachtSection = document.getElementById('yacht_crew_section');
+                const isYachtInput = document.getElementById('is_yacht_crew');
+                
+                if (isChecked) {
+                    $('#yacht_crew_section').slideDown();
+                    isYachtInput.value = '1';
+                    document.getElementById('yacht_name').required = true;
+                    document.getElementById('passport_country').required = true;
+                    document.getElementById('visa_expiry').required = true;
+                } else {
+                    $('#yacht_crew_section').slideUp();
+                    isYachtInput.value = '0';
+                    document.getElementById('yacht_name').required = false;
+                    document.getElementById('passport_country').required = false;
+                    document.getElementById('visa_expiry').required = false;
+                    // Clear inputs
+                    document.getElementById('yacht_name').value = '';
+                    document.getElementById('yacht_agent').value = '';
+                    document.getElementById('passport_country').value = '';
+                    document.getElementById('visa_expiry').value = '';
+                    document.getElementById('customs_clearance').checked = false;
+                }
+            }
+
+            window.previewImage = function(input) {
+                const previewContainer = document.getElementById('photo_preview_container');
+                const preview = document.getElementById('photo_preview');
+                
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        preview.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                    }
+                    
+                    reader.readAsDataURL(input.files[0]);
+                } else {
+                    preview.src = '#';
+                    previewContainer.style.display = 'none';
                 }
             }
 
@@ -1102,13 +1301,13 @@
                     regex = /^(?:\d{9}[Vv]|\d{12})$/;
                     message = "Enter a valid NIC number (9 digits + V for old format or 12 digits for new format).";
                 } else if (type === "Passport") {
-                    // Starts with P, OL, or D followed by numbers
-                    regex = /^(?:P|OL|D)\d+$/i;
-                    message = "Enter a valid Passport Number (starts with P, OL, or D followed by numbers, e.g., P1234567).";
+                    // 1-2 letters followed by 6-7 digits
+                    regex = /^[A-Z]{1,2}\d{6,7}$/i;
+                    message = "Enter a valid Passport Number (1-2 letters followed by 6-7 digits, e.g., N1234567).";
                 } else if (type === "Driving License") {
-                    // 10-digit code: first character is a letter followed by 9 digits
-                    regex = /^[A-Z]\d{9}$/i;
-                    message = "Enter a valid Driving License Number (1 letter followed by 9 digits, e.g., A123456789).";
+                    // All Sri Lankan Driving License formats
+                    regex = /^(?:\d{7,8}|[A-Z]\d{6,8}|\d{9}[VXvx]|\d{12})$/;
+                    message = "Enter a valid Driving License Number.";
                 }
 
                 if (!regex.test(value) && value !== "") {

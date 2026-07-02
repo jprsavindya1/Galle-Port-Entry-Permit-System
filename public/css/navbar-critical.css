@@ -2,11 +2,12 @@
 /* This file loads synchronously before any other CSS to prevent navbar glitches */
 
 nav.navbar.navbar-slpa-logo {
-    background-color: #002B5C !important;
+    background-color: #13314C !important;
     min-height: 70px !important;
     max-height: 70px !important;
     height: 70px !important;
-    border-bottom: 3px solid #FFC107 !important;
+    border-bottom: none !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
     padding: 0.75rem 1rem !important;
 }
 
@@ -28,7 +29,7 @@ nav.navbar.navbar-slpa-logo .navbar-brand img {
     max-height: 55px !important;
     display: block !important;
     object-fit: contain !important;
-    background: #002B5C !important;
+    background: #13314C !important;
     flex-shrink: 0 !important;
     opacity: 1 !important;
     visibility: visible !important;
@@ -37,11 +38,11 @@ nav.navbar.navbar-slpa-logo .navbar-brand img {
 
 /* Reserve space with solid background until image loads */
 nav.navbar.navbar-slpa-logo .navbar-brand img[src*="Sri_Lanka_Ports_Authority_logo.png"] {
-    background: #002B5C !important;
+    background: #13314C !important;
 }
 
 nav.navbar.navbar-slpa-logo .brand-text {
-    color: #FFC107 !important;
+    color: #F6BA18 !important;
     font-size: 1.5rem !important;
     font-weight: 700 !important;
     white-space: nowrap !important;
@@ -54,9 +55,9 @@ nav.navbar.navbar-slpa-logo .btn-slpa-logout,
 nav.navbar.navbar-slpa-logo button.btn-slpa-logout,
 nav.navbar.navbar-slpa-logo .btn.btn-slpa-logout,
 nav.navbar.navbar-slpa-logo .btn.btn-sm.btn-slpa-logout {
-    background-color: #FFC107 !important;
-    border-color: #FFC107 !important;
-    color: #002B5C !important;
+    background-color: #F6BA18 !important;
+    border-color: #F6BA18 !important;
+    color: #13314C !important;
     font-weight: 600 !important;
     padding: 0.375rem 1rem !important;
     border-radius: 0.25rem !important;
@@ -67,8 +68,8 @@ nav.navbar.navbar-slpa-logo .btn.btn-sm.btn-slpa-logout {
 nav.navbar.navbar-slpa-logo .btn-slpa-logout:hover,
 nav.navbar.navbar-slpa-logo .btn-slpa-logout:focus,
 nav.navbar.navbar-slpa-logo .btn-slpa-logout:active {
-    background-color: #E5AD00 !important;
-    border-color: #E5AD00 !important;
+    background-color: #DCA20D !important;
+    border-color: #DCA20D !important;
     color: #FFFFFF !important;
     transform: none !important;
     box-shadow: none !important;

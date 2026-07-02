@@ -57,6 +57,13 @@ class PermitController extends Controller
         'temporary_permits.is_printed',
         'temporary_permits.printed_at',
         'temporary_permits.printed_by',
+        // Uploads & Yacht Marina
+        'temporary_permits.photo_path',
+        'temporary_permits.doc_nic_path',
+        'temporary_permits.doc_passport_path',
+        'temporary_permits.doc_driving_licence_path',
+        \DB::raw('NULL as doc_police_report_path'),
+        \DB::raw("IF(temporary_permits.yacht_name IS NOT NULL AND temporary_permits.yacht_name != '', 1, 0) as is_yacht_crew"),
     ];
     
     $temporaryQuery = TemporaryPermit::select($selectColumns)
@@ -98,6 +105,13 @@ class PermitController extends Controller
         'monthly_permits.is_printed',
         'monthly_permits.printed_at',
         'monthly_permits.printed_by',
+        // Uploads & Yacht Marina
+        'monthly_permits.photo_path',
+        'monthly_permits.doc_nic_path',
+        \DB::raw('NULL as doc_passport_path'),
+        \DB::raw('NULL as doc_driving_licence_path'),
+        'monthly_permits.doc_police_report_path',
+        \DB::raw('0 as is_yacht_crew'),
     ])
     ->whereDoesntHave('cancelledPermitTrashed');
     
@@ -137,6 +151,13 @@ class PermitController extends Controller
         'vehicle_permits.is_printed',
         'vehicle_permits.printed_at',
         'vehicle_permits.printed_by',
+        // Uploads & Yacht Marina
+        \DB::raw('NULL as photo_path'),
+        \DB::raw('NULL as doc_nic_path'),
+        \DB::raw('NULL as doc_passport_path'),
+        \DB::raw('NULL as doc_driving_licence_path'),
+        \DB::raw('NULL as doc_police_report_path'),
+        \DB::raw('0 as is_yacht_crew'),
     ])
     ->whereDoesntHave('cancelledPermitTrashed');
 
@@ -238,6 +259,7 @@ public function edit($permitType, $permitId)
     $designations = Designation::orderBy('name')->get();
     $reasons = Reason::orderBy('name')->get();
     $companies = Company::orderBy('name')->get();
+    $vehicles = \App\Models\Vehicle::orderBy('name')->get();
 
     // preselect company name & address based on current permit
     $companyName = $permit->company_name ?? '';
@@ -249,6 +271,7 @@ public function edit($permitType, $permitId)
         'designations',
         'reasons',
         'companies',
+        'vehicles',
         'companyName',
         'companyAddress'
     ));
@@ -275,25 +298,54 @@ public function edit($permitType, $permitId)
             abort(404, 'Invalid permit type');
     }
     
-    $validated = $request->validate([
-        'id_type' => 'required|string',
-        'id_number' => 'required|string',
-        'from_date' => 'required|date',
-        'to_date' => 'required|date|after_or_equal:from_date',
-        'full_name' => 'required|string',
-        'initials' => 'required|string',
-        'designation' => 'nullable|string',
-        'company_name' => 'required|string',
-        'company_address' => 'nullable|string',
-        'residence_address' => 'nullable|string',
-        'pass_type' => 'required|array',          
-        'pass_type.*' => 'in:onboard,afloat,ashore', 
-        'issue_type' => 'required|string|in:free,payment',
-        'reason' => 'required|string',
-    ]);
+    if ($permitType === 'vehicle') {
+        $validated = $request->validate([
+            'vehicle_type' => 'required|string',
+            'vehicle_number' => 'required|string',
+            'nic_number' => 'required|string',
+            'revenue_license_number' => 'required|string',
+            'insurance_number' => 'nullable|string',
+            'owner_name' => 'required|string',
+            'owner_address' => 'nullable|string',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+            'company_name' => 'required|string',
+            'issue_type' => 'required|string|in:free,payment',
+            'reason' => 'required|string',
+            'remarks' => 'nullable|string',
+            'doc_revenue_licence' => 'nullable|boolean',
+            'doc_insurance' => 'nullable|boolean',
+        ]);
 
-   
-    $validated['pass_type'] = implode(',', $validated['pass_type']);
+        $validated['doc_revenue_licence'] = $request->has('doc_revenue_licence') ? 1 : 0;
+        $validated['doc_insurance'] = $request->has('doc_insurance') ? 1 : 0;
+        
+    } else {
+        $rules = [
+            'id_type' => 'required|string',
+            'id_number' => 'required|string',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+            'full_name' => 'required|string',
+            'initials' => 'required|string',
+            'designation' => 'nullable|string',
+            'company_name' => 'required|string',
+            'company_address' => 'nullable|string',
+            'residence_address' => 'nullable|string',
+            'pass_type' => 'required|array',          
+            'pass_type.*' => 'in:onboard,afloat,ashore', 
+            'issue_type' => 'required|string|in:free,payment',
+            'reason' => 'required|string',
+        ];
+
+        if ($permitType === 'monthly') {
+            $rules['police_issue_date'] = 'required|date';
+            $rules['police_expire_date'] = 'required|date|after_or_equal:police_issue_date';
+        }
+
+        $validated = $request->validate($rules);
+        $validated['pass_type'] = implode(',', $validated['pass_type']);
+    }
 
     $permit->update($validated);
 
@@ -695,10 +747,13 @@ public function fetchPersonDetails(Request $request)
             ]);
         }
 
-        // Try to find in TemporaryPermit first
-        $permit = TemporaryPermit::where('id_number', $idNumber)
-            ->orderBy('created_at', 'desc')
-            ->first();
+        // Try to find in TemporaryPermit first (checking both id_number and nic_number)
+        $permit = TemporaryPermit::where(function($query) use ($idNumber) {
+            $query->where('id_number', $idNumber)
+                  ->orWhere('nic_number', $idNumber);
+        })
+        ->orderBy('created_at', 'desc')
+        ->first();
 
         // If not found, try MonthlyPermit
         if (!$permit) {
@@ -715,6 +770,13 @@ public function fetchPersonDetails(Request $request)
                     'initials' => $permit->initials,
                     'designation' => $permit->designation ?? null,
                     'residence_address' => $permit->residence_address ?? null,
+                    'company_name' => $permit->company_name ?? null,
+                    'company_address' => $permit->company_address ?? null,
+                    'from_date' => $permit->from_date ? $permit->from_date->format('Y-m-d') : null,
+                    'to_date' => $permit->to_date ? $permit->to_date->format('Y-m-d') : null,
+                    'reason' => $permit->reason ?? null,
+                    'pass_type' => $permit->pass_type ?? null,
+                    'issue_type' => $permit->issue_type ?? null,
                 ]
             ]);
         }

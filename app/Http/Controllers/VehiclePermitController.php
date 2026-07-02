@@ -331,21 +331,27 @@ public function checkVehicleAvailability(Request $request)
         'from_date' => 'required|date',
         'to_date' => 'required|date|after_or_equal:from_date',
         'company_name' => 'nullable|string',
+        'current_permit_id' => 'nullable|integer',
     ]);
 
     if ($reason = $this->isBlacklisted($data)) {
         return response()->json(['available' => false, 'message' => "Blacklisted: $reason"]);
     }
 
-    $conflict = VehiclePermit::where('status', 'active')
-        ->where('vehicle_number', $data['vehicle_number'])
-        ->where(function ($query) use ($data) {
-            $query->whereBetween('from_date', [$data['from_date'], $data['to_date']])
-                  ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
-                  ->orWhere(function ($q) use ($data) {
-                      $q->where('from_date', '<=', $data['from_date'])
-                        ->where('to_date', '>=', $data['to_date']);
-                  });
+    $query = VehiclePermit::where('status', 'active')
+        ->where('vehicle_number', $data['vehicle_number']);
+
+    if (!empty($data['current_permit_id'])) {
+        $query->where('id', '!=', $data['current_permit_id']);
+    }
+
+    $conflict = $query->where(function ($q) use ($data) {
+            $q->whereBetween('from_date', [$data['from_date'], $data['to_date']])
+              ->orWhereBetween('to_date', [$data['from_date'], $data['to_date']])
+              ->orWhere(function ($subQ) use ($data) {
+                  $subQ->where('from_date', '<=', $data['from_date'])
+                       ->where('to_date', '>=', $data['to_date']);
+              });
         })
         ->first();
 

@@ -332,78 +332,116 @@
         <!-- Result Card -->
         <div id="resultCard" class="result-card">
             <!-- Status Badge -->
-            <div id="statusBadge" class="status-badge"></div>
+            <div id="statusBadge" class="status-badge mb-4"></div>
             
-            <!-- Permit Details -->
-            <div id="permitDetails">
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-card-text"></i> Permit ID
+            <!-- Permit Details Container (Grid) -->
+            <div class="row">
+                <div class="col-md-4 text-center mb-3 mb-md-0">
+                    <div id="photoContainer" class="d-inline-block p-1 bg-white border rounded shadow-sm">
+                        <img id="displayPhoto" src="" alt="Profile Photo" class="img-thumbnail" style="max-height: 220px; max-width: 180px; object-fit: cover; display: none;">
+                        <div id="noPhotoPlaceholder" class="d-flex align-items-center justify-content-center bg-light rounded mx-auto" style="height: 220px; width: 180px; font-size: 4rem; color: #ccc;">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
                     </div>
-                    <div class="info-value" id="displayPermitId"></div>
                 </div>
-                
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-person-fill"></i> Full Name
+                <div class="col-md-8 text-start">
+                    <div id="permitDetails">
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-card-text"></i> Permit ID
+                            </div>
+                            <div class="info-value" id="displayPermitId"></div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-person-fill"></i> Full Name
+                            </div>
+                            <div class="info-value" id="displayFullName"></div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-credit-card-2-front"></i> ID Type
+                            </div>
+                            <div class="info-value" id="displayIdType"></div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-123"></i> ID Number
+                            </div>
+                            <div class="info-value" id="displayIdNumber"></div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-calendar-check"></i> Valid From
+                            </div>
+                            <div class="info-value" id="displayFromDate"></div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-calendar-x"></i> Valid Until
+                            </div>
+                            <div class="info-value" id="displayToDate"></div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-car-front"></i> Vehicle Number
+                            </div>
+                            <div class="info-value" id="displayVehicleNumber"></div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-truck"></i> Vehicle Type
+                            </div>
+                            <div class="info-value" id="displayVehicleType"></div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-building"></i> Company Name
+                            </div>
+                            <div class="info-value" id="displayCompanyName"></div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-tag"></i> Permit Type
+                            </div>
+                            <div class="info-value" id="displayPermitType"></div>
+                        </div>
                     </div>
-                    <div class="info-value" id="displayFullName"></div>
                 </div>
-                
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-credit-card-2-front"></i> ID Type
+            </div>
+
+            <!-- Yacht Details Section -->
+            <div id="yachtDetailsContainer" class="mt-4 p-3 bg-light rounded border shadow-sm" style="display: none; border-color: #ffd54f !important;">
+                <h5 class="text-dark border-bottom pb-2 mb-3 fw-bold"><i class="bi bi-ship-fill text-warning me-2"></i> Yacht Marina Crew Details</h5>
+                <div class="row text-start">
+                    <div class="col-md-6 mb-3">
+                        <span class="text-muted d-block small fw-bold">Yacht/Vessel Name</span>
+                        <span id="displayYachtName" class="fs-5 fw-bold text-primary"></span>
                     </div>
-                    <div class="info-value" id="displayIdType"></div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-123"></i> ID Number
+                    <div class="col-md-6 mb-3">
+                        <span class="text-muted d-block small fw-bold">Yacht Agent</span>
+                        <span id="displayYachtAgent" class="fs-5 fw-bold"></span>
                     </div>
-                    <div class="info-value" id="displayIdNumber"></div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-calendar-check"></i> Valid From
+                    <div class="col-md-6 mb-3">
+                        <span class="text-muted d-block small fw-bold">Passport Nationality</span>
+                        <span id="displayYachtCountry" class="fs-5 fw-bold"></span>
                     </div>
-                    <div class="info-value" id="displayFromDate"></div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-calendar-x"></i> Valid Until
+                    <div class="col-md-6 mb-3">
+                        <span class="text-muted d-block small fw-bold">Visa Expiry Date</span>
+                        <span id="displayYachtVisa" class="fs-5 fw-bold"></span>
                     </div>
-                    <div class="info-value" id="displayToDate"></div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-car-front"></i> Vehicle Number
+                    <div class="col-12 mt-2">
+                        <span id="displayCustomsClearance" class="badge p-2 fs-6"></span>
                     </div>
-                    <div class="info-value" id="displayVehicleNumber"></div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-truck"></i> Vehicle Type
-                    </div>
-                    <div class="info-value" id="displayVehicleType"></div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-building"></i> Company Name
-                    </div>
-                    <div class="info-value" id="displayCompanyName"></div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">
-                        <i class="bi bi-tag"></i> Permit Type
-                    </div>
-                    <div class="info-value" id="displayPermitType"></div>
                 </div>
             </div>
         </div>
@@ -486,6 +524,19 @@
                 statusBadge.className = `status-badge ${statusClass}`;
                 statusBadge.innerHTML = `<i class="bi ${statusIcon}"></i> ${permit.validity_message}`;
 
+                // Handle Profile Photo display
+                const displayPhoto = document.getElementById('displayPhoto');
+                const noPhotoPlaceholder = document.getElementById('noPhotoPlaceholder');
+                
+                if (permit.photo_path) {
+                    displayPhoto.src = permit.photo_path;
+                    displayPhoto.style.display = 'block';
+                    noPhotoPlaceholder.style.display = 'none';
+                } else {
+                    displayPhoto.style.display = 'none';
+                    noPhotoPlaceholder.style.display = 'flex';
+                }
+
                 // Fill in details
                 document.getElementById('displayPermitId').textContent = permit.permit_id || 'N/A';
                 document.getElementById('displayFullName').textContent = permit.full_name || 'N/A';
@@ -497,6 +548,27 @@
                 document.getElementById('displayVehicleType').textContent = permit.vehicle_type || 'N/A';
                 document.getElementById('displayCompanyName').textContent = permit.company_name || 'N/A';
                 document.getElementById('displayPermitType').textContent = permit.type || 'N/A';
+
+                // Handle Yacht Marina details
+                const yachtContainer = document.getElementById('yachtDetailsContainer');
+                if (permit.yacht_details) {
+                    document.getElementById('displayYachtName').textContent = permit.yacht_details.yacht_name || 'N/A';
+                    document.getElementById('displayYachtAgent').textContent = permit.yacht_details.yacht_agent || 'N/A';
+                    document.getElementById('displayYachtCountry').textContent = permit.yacht_details.passport_country || 'N/A';
+                    document.getElementById('displayYachtVisa').textContent = permit.yacht_details.visa_expiry || 'N/A';
+                    
+                    const customsBadge = document.getElementById('displayCustomsClearance');
+                    if (permit.yacht_details.customs_clearance) {
+                        customsBadge.className = 'badge bg-success p-2 fs-6';
+                        customsBadge.innerHTML = '<i class="bi bi-shield-fill-check me-1"></i> Customs & Immigration Cleared';
+                    } else {
+                        customsBadge.className = 'badge bg-danger p-2 fs-6';
+                        customsBadge.innerHTML = '<i class="bi bi-shield-fill-x me-1"></i> Customs Clearance Pending';
+                    }
+                    yachtContainer.style.display = 'block';
+                } else {
+                    yachtContainer.style.display = 'none';
+                }
 
                 resultCard.classList.add('show');
             }

@@ -404,40 +404,40 @@
                             <table class="table table-bordered table-hover m-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Application No.</th>
+                                        <th style="min-width: 140px;">Application No.</th>
                                         @if($group->first()->type === 'VH')
-                                            <th>Vehicle Number</th>
-                                            <th>Owner's Name</th>
-                                            <th>Revenue License No.</th>
-                                            <th>Insurance Number</th>
-                                            <th>Company Name</th>
-                                            <th>Issue Type</th>
-                                            <th>From Date</th>
-                                            <th>To Date</th>
+                                            <th style="min-width: 140px;">Vehicle Number</th>
+                                            <th style="min-width: 180px;">Owner's Name</th>
+                                            <th style="min-width: 180px;">Revenue License No.</th>
+                                            <th style="min-width: 160px;">Insurance Number</th>
+                                            <th style="min-width: 180px;">Company Name</th>
+                                            <th style="min-width: 110px;">Issue Type</th>
+                                            <th style="min-width: 120px;">From Date</th>
+                                            <th style="min-width: 120px;">To Date</th>
                                         @elseif($group->first()->type === 'MP')
-                                            <th>ID Type</th>
-                                            <th>ID Number</th>
-                                            <th>Full Name</th>
-                                            <th>Company Name</th>
-                                            <th>Pass Type</th>
-                                            <th>From Date</th>
-                                            <th>To Date</th>
-                                            <th>Issue Type</th>
-                                            <th>Police Report Issue Date</th>
+                                            <th style="min-width: 90px;">ID Type</th>
+                                            <th style="min-width: 150px;">ID Number</th>
+                                            <th style="min-width: 220px;">Full Name</th>
+                                            <th style="min-width: 180px;">Company Name</th>
+                                            <th style="min-width: 110px;">Pass Type</th>
+                                            <th style="min-width: 120px;">From Date</th>
+                                            <th style="min-width: 120px;">To Date</th>
+                                            <th style="min-width: 110px;">Issue Type</th>
+                                            <th style="min-width: 180px;">Police Report Issue Date</th>
                                             {{-- <th>Police Report Expire Date</th> --}}
                                         @else {{-- TP or other --}}
-                                            <th>ID Type</th>
-                                            <th>ID Number</th>
-                                            <th>Full Name</th>
-                                            <th>Company Name</th>
-                                            <th>Pass Type</th>
-                                            <th>From Date</th>
-                                            <th>To Date</th>
-                                            <th>Issue Type</th>
+                                            <th style="min-width: 90px;">ID Type</th>
+                                            <th style="min-width: 150px;">ID Number</th>
+                                            <th style="min-width: 220px;">Full Name</th>
+                                            <th style="min-width: 180px;">Company Name</th>
+                                            <th style="min-width: 110px;">Pass Type</th>
+                                            <th style="min-width: 120px;">From Date</th>
+                                            <th style="min-width: 120px;">To Date</th>
+                                            <th style="min-width: 110px;">Issue Type</th>
                                         @endif
 
                                         <th class="sticky-col status-col" style="width:120px;">Status</th>
-                                        {{-- <th class="sticky-col actions-col" style="width:120px;">Actions</th> --}}
+                                        <th class="sticky-col actions-col" style="width:120px;">Actions</th>
                                         <th class="sticky-col view-col" style="width:120px;">View</th>
                                         <th style="width:150px;">Print Status</th>
                                     </tr>
@@ -459,8 +459,29 @@
 
                                             @elseif($permit->type === 'MP')
                                                 <td>{{ $permit->id_type }}</td>
-                                                <td>{{ $permit->id_number }}</td>
-                                                <td>{{ $permit->full_name }}</td>
+                                                <td>
+                                                    <div>{{ $permit->id_number }}</div>
+                                                    <div class="mt-1">
+                                                        @if($permit->doc_nic_path)
+                                                            <a href="{{ asset('storage/' . $permit->doc_nic_path) }}" target="_blank" class="text-primary me-2 small fw-bold" style="text-decoration:none;"><i class="bi bi-file-earmark-pdf-fill text-primary me-1"></i>NIC</a>
+                                                        @endif
+                                                        @if($permit->doc_police_report_path)
+                                                            <a href="{{ asset('storage/' . $permit->doc_police_report_path) }}" target="_blank" class="text-primary small fw-bold" style="text-decoration:none;"><i class="bi bi-file-earmark-pdf-fill text-primary me-1"></i>Police</a>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        @if($permit->photo_path)
+                                                            <img src="{{ asset('storage/' . $permit->photo_path) }}" alt="Photo" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover; border: 1px solid #bbdefb;">
+                                                        @else
+                                                            <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 0.9rem; margin-right: 0.5rem; display: flex; align-items: center; justify-content: center; background: #90caf9; color: #fff; border-radius: 50%;">
+                                                                {{ strtoupper(substr($permit->full_name, 0, 1)) }}
+                                                            </div>
+                                                        @endif
+                                                        <span>{{ $permit->full_name }}</span>
+                                                    </div>
+                                                </td>
                                                 <td>{{ $permit->company_name }}</td>
                                                 <td>{{ $permit->pass_type }}</td>
                                                 <td>{{ $permit->from_date }}</td>
@@ -471,8 +492,37 @@
 
                                             @else {{-- TP or other --}}
                                                 <td>{{ $permit->id_type }}</td>
-                                                <td>{{ $permit->id_number }}</td>
-                                                <td>{{ $permit->full_name }}</td>
+                                                <td>
+                                                    <div>{{ $permit->id_number }}</div>
+                                                    <div class="mt-1">
+                                                        @if($permit->doc_nic_path)
+                                                            <a href="{{ asset('storage/' . $permit->doc_nic_path) }}" target="_blank" class="text-primary me-2 small fw-bold" style="text-decoration:none;"><i class="bi bi-file-earmark-pdf-fill text-primary me-1"></i>NIC</a>
+                                                        @endif
+                                                        @if($permit->doc_passport_path)
+                                                            <a href="{{ asset('storage/' . $permit->doc_passport_path) }}" target="_blank" class="text-primary me-2 small fw-bold" style="text-decoration:none;"><i class="bi bi-file-earmark-pdf-fill text-primary me-1"></i>Passport</a>
+                                                        @endif
+                                                        @if($permit->doc_driving_licence_path)
+                                                            <a href="{{ asset('storage/' . $permit->doc_driving_licence_path) }}" target="_blank" class="text-primary small fw-bold" style="text-decoration:none;"><i class="bi bi-file-earmark-pdf-fill text-primary me-1"></i>DL</a>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        @if($permit->photo_path)
+                                                            <img src="{{ asset('storage/' . $permit->photo_path) }}" alt="Photo" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover; border: 1px solid #bbdefb;">
+                                                        @else
+                                                            <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 0.9rem; margin-right: 0.5rem; display: flex; align-items: center; justify-content: center; background: #90caf9; color: #fff; border-radius: 50%;">
+                                                                {{ strtoupper(substr($permit->full_name, 0, 1)) }}
+                                                            </div>
+                                                        @endif
+                                                        <div>
+                                                            <div>{{ $permit->full_name }}</div>
+                                                            @if($permit->is_yacht_crew)
+                                                                <span class="badge bg-warning text-dark small" style="font-size: 0.75rem;"><i class="bi bi-ship-fill me-1"></i>Yacht Crew ({{ $permit->yacht_name }})</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </td>
                                                 <td>{{ $permit->company_name }}</td>
                                                 <td>{{ $permit->pass_type }}</td>
                                                 <td>{{ $permit->from_date }}</td>
@@ -541,13 +591,16 @@
                                                 @endif
                                             </td>
 
-                                            {{-- <td class="sticky-col actions-col">
-                                                <a href="{{ route('permits.edit', $permit) }}"
+                                            <td class="sticky-col actions-col">
+                                                @php
+                                                    $permitTypeSlug = $permit->type === 'VH' ? 'vehicle' : ($permit->type === 'MP' ? 'monthly' : 'temporary');
+                                                @endphp
+                                                <a href="{{ route('permits.edit', [$permitTypeSlug, $permit->id]) }}"
                                                    class="btn btn-sm {{ $permit->status === 'cancelled' ? 'btn-secondary' : 'btn-warning' }} w-100 mb-1"
                                                    @if($permit->status === 'cancelled') style="pointer-events: none; opacity: 0.5;" aria-disabled="true" @endif>
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
-                                            </td> --}}
+                                            </td>
 
                                             <td class="sticky-col view-col">
                                                 <a href="{{ route('payment.invoice', $permit->submission_id) }}"
@@ -624,8 +677,8 @@ main .sticky-col {
     border-right: 1px solid #dee2e6;
 }
 main .status-col { left: 0; }
-/* main .actions-col { left: 120px; } */
-main .view-col { left: 120px; } /* Changed from 240px to 120px since actions column is hidden */
+main .actions-col { left: 120px; }
+main .view-col { left: 240px; }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 @endpush

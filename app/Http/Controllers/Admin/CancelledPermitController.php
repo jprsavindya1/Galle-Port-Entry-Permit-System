@@ -120,11 +120,18 @@ class CancelledPermitController extends Controller
         // Delete related payment
         Payment::where('submission_id', $cancelled->submission_id)->delete();
 
-        // Delete original permit
-        $mainPermit = Permit::where('permit_id', $cancelled->permit_id)->first();
-        if ($mainPermit) {
-            $mainPermit->delete(); // or ->forceDelete() if Permit uses SoftDeletes
+        // Delete original permit from new tables
+        $type = $cancelled->type; // 'TP', 'MP', 'VH'
+        if ($type === 'TP') {
+            \App\Models\TemporaryPermit::where('permit_id', $cancelled->permit_id)->forceDelete();
+        } elseif ($type === 'MP') {
+            \App\Models\MonthlyPermit::where('permit_id', $cancelled->permit_id)->forceDelete();
+        } elseif ($type === 'VH') {
+            \App\Models\VehiclePermit::where('permit_id', $cancelled->permit_id)->forceDelete();
         }
+
+        // Also delete from old permits table if it exists
+        Permit::where('permit_id', $cancelled->permit_id)->delete();
 
         // Finally delete from cancelled_permits
         $cancelled->forceDelete();
@@ -210,25 +217,48 @@ class CancelledPermitController extends Controller
     // Cancel a permit (AJAX)
     public function cancel(Request $request, $permitId)
     {
-        $permit = Permit::findOrFail($permitId);
+        // First try to find the permit in new models
+        $permit = \App\Models\TemporaryPermit::find($permitId);
+        $type = 'TP';
+        
+        if (!$permit) {
+            $permit = \App\Models\MonthlyPermit::find($permitId);
+            $type = 'MP';
+        }
+        
+        if (!$permit) {
+            $permit = \App\Models\VehiclePermit::find($permitId);
+            $type = 'VH';
+        }
+        
+        // Fallback to legacy Permit if still not found
+        if (!$permit) {
+            $permit = Permit::findOrFail($permitId);
+            $type = $permit->type ?? 'TP';
+        }
 
         // Update permit status
         $permit->status = 'cancelled';
         $permit->save();
 
+        // Also update old permits table if it exists
+        Permit::where('permit_id', $permit->permit_id)
+            ->update(['status' => 'cancelled']);
+
         // Update or create cancelled permit (avoid duplicates)
         $cancelled = CancelledPermit::updateOrCreate(
             ['permit_id' => $permit->permit_id],
             [
-                'invoice_id'    => $permit->invoice_id ?? null,
-                'submission_id' => $permit->submission_id,
+                'invoice_id'    => $permit->submission_id ?? ($permit->invoice_id ?? null),
+                'submission_id' => $permit->submission_id ?? ($permit->invoice_id ?? null),
+                'type'          => $type,
                 'id_number'     => $permit->id_number ?? null,
                 'full_name'     => $permit->full_name ?? null,
                 'company_name'  => $permit->company_name ?? null,
                 'vehicle_number'=> $permit->vehicle_number ?? null,
                 'cancel_reason' => $request->cancel_reason_other ?: $request->cancel_reason_select,
                 'cancelled_at'  => now(),
-                'cancelled_by'  => auth()->user()->name,
+                'cancelled_by'  => auth()->user()->name ?? 'System',
             ]
         );
 
@@ -249,12 +279,33 @@ class CancelledPermitController extends Controller
     // Activate a cancelled permit (AJAX) without adding to trash
     public function activate(Request $request, $permitId)
     {
-        $permit = Permit::findOrFail($permitId);
+        // First try to find the permit in new models
+        $permit = \App\Models\TemporaryPermit::find($permitId);
+        
+        if (!$permit) {
+            $permit = \App\Models\MonthlyPermit::find($permitId);
+        }
+        
+        if (!$permit) {
+            $permit = \App\Models\VehiclePermit::find($permitId);
+        }
+        
+        // Fallback to legacy Permit if still not found
+        if (!$permit) {
+            $permit = Permit::findOrFail($permitId);
+        }
 
         // Update permit status to active
         $permit->status = 'active';
         $permit->cancel_reason = null;
         $permit->save();
+
+        // Also update old permits table if it exists
+        Permit::where('permit_id', $permit->permit_id)
+            ->update([
+                'status' => 'active',
+                'cancel_reason' => null
+            ]);
 
         // Permanently remove the cancelled permit entry (no soft delete)
         $cancelled = CancelledPermit::where('permit_id', $permit->permit_id)->first();

@@ -384,8 +384,8 @@ window.handleIdNumberChange = function() {
 }
 
 // Function to fetch person details from database
-window.fetchPersonDetails = function() {
-    const idNumber = document.getElementById('id_number').value.trim();
+window.fetchPersonDetails = function(customValue = null) {
+    const idNumber = customValue || document.getElementById('id_number').value.trim();
     
     if (!idNumber) {
         return;
@@ -415,6 +415,31 @@ window.fetchPersonDetails = function() {
             }
             
             document.getElementById('residence_address').value = data.data.residence_address || '';
+            
+            // Autofill dates, reason, pass_type, issue_type
+            if (data.data.from_date) {
+                const fromInput = document.getElementById('from_date');
+                if (fromInput.min && data.data.from_date < fromInput.min) {
+                    fromInput.min = data.data.from_date;
+                }
+                fromInput.value = data.data.from_date;
+                autoFillToDate();
+            }
+            if (data.data.reason) {
+                document.getElementById('reason').value = data.data.reason;
+            }
+            if (data.data.pass_type) {
+                const passTypes = data.data.pass_type.split(',');
+                document.querySelectorAll('input[name="pass_type[]"]').forEach(cb => {
+                    cb.checked = passTypes.includes(cb.value);
+                });
+            }
+            if (data.data.issue_type) {
+                const radio = document.querySelector(`input[name="issue_type"][value="${data.data.issue_type}"]`);
+                if (radio) {
+                    radio.checked = true;
+                }
+            }
             
             // Store the fetched ID number
             lastFetchedIdNumber = idNumber;
@@ -620,7 +645,11 @@ function autoFillToDate() {
     const mm = String(toDate.getMonth() + 1).padStart(2, '0');
     const dd = String(toDate.getDate()).padStart(2, '0');
     
-    toDateInput.value = `${yyyy}-${mm}-${dd}`;
+    const calculatedToDate = `${yyyy}-${mm}-${dd}`;
+    if (toDateInput.min && calculatedToDate < toDateInput.min) {
+        toDateInput.min = calculatedToDate;
+    }
+    toDateInput.value = calculatedToDate;
 }
 
 /**

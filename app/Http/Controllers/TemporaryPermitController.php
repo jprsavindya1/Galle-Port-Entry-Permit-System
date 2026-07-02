@@ -62,7 +62,30 @@ class TemporaryPermitController extends PermitController
             'doc_nic' => 'nullable|boolean',
             'doc_passport' => 'nullable|boolean',
             'doc_driving_licence' => 'nullable|boolean',
+            
+            // Photo & Document uploads
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'doc_nic_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'doc_passport_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'doc_driving_licence_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+
+            // Yacht fields
+            'is_yacht_crew' => 'nullable|boolean',
+            'yacht_name' => 'nullable|string',
+            'yacht_agent' => 'nullable|string',
+            'passport_country' => 'nullable|string',
+            'visa_expiry' => 'nullable|date',
+            'customs_clearance' => 'nullable|boolean',
         ]);
+
+        // Yacht crew validation
+        if ($request->has('is_yacht_crew') && $request->is_yacht_crew) {
+            $request->validate([
+                'yacht_name' => 'required|string',
+                'passport_country' => 'required|string',
+                'visa_expiry' => 'required|date',
+            ]);
+        }
         
         // Additional validation for NIC number based on ID type and passport type
         if ($validated['id_type'] === 'Driving License' || ($validated['id_type'] === 'Passport' && ($validated['passport_type'] ?? 'local') === 'local')) {
@@ -77,27 +100,65 @@ class TemporaryPermitController extends PermitController
         $validated['doc_nic'] = $request->has('doc_nic') ? 1 : 0;
         $validated['doc_passport'] = $request->has('doc_passport') ? 1 : 0;
         $validated['doc_driving_licence'] = $request->has('doc_driving_licence') ? 1 : 0;
+        $validated['customs_clearance'] = $request->has('customs_clearance') ? 1 : 0;
+
+        // Uploads handling (move to temp storage)
+        if ($request->hasFile('photo')) {
+            $photoFile = $request->file('photo');
+            $photoName = 'photo_' . time() . '_' . Str::random(10) . '.' . $photoFile->getClientOriginalExtension();
+            $photoFile->storeAs('temp', $photoName, 'public');
+            $validated['photo_path'] = 'temp/' . $photoName;
+        } else {
+            $validated['photo_path'] = null;
+        }
+
+        if ($request->hasFile('doc_nic_file')) {
+            $nicFile = $request->file('doc_nic_file');
+            $nicName = 'doc_nic_' . time() . '_' . Str::random(10) . '.' . $nicFile->getClientOriginalExtension();
+            $nicFile->storeAs('temp', $nicName, 'public');
+            $validated['doc_nic_path'] = 'temp/' . $nicName;
+        } else {
+            $validated['doc_nic_path'] = null;
+        }
+
+        if ($request->hasFile('doc_passport_file')) {
+            $passportFile = $request->file('doc_passport_file');
+            $passportName = 'doc_passport_' . time() . '_' . Str::random(10) . '.' . $passportFile->getClientOriginalExtension();
+            $passportFile->storeAs('temp', $passportName, 'public');
+            $validated['doc_passport_path'] = 'temp/' . $passportName;
+        } else {
+            $validated['doc_passport_path'] = null;
+        }
+
+        if ($request->hasFile('doc_driving_licence_file')) {
+            $dlFile = $request->file('doc_driving_licence_file');
+            $dlName = 'doc_dl_' . time() . '_' . Str::random(10) . '.' . $dlFile->getClientOriginalExtension();
+            $dlFile->storeAs('temp', $dlName, 'public');
+            $validated['doc_driving_licence_path'] = 'temp/' . $dlName;
+        } else {
+            $validated['doc_driving_licence_path'] = null;
+        }
 
         $cart = session()->get('temporary_permit_cart', []);
 
         // If company info already stored in session, enforce consistency across entries
 
-    $sessionCompanyName = strtolower(trim(session('temporary_company_name')));
-    $sessionCompanyAddress = strtolower(trim(session('temporary_company_address') ?? ''));
+        $sessionCompanyName = strtolower(trim(session('temporary_company_name')));
+        $sessionCompanyAddress = strtolower(trim(session('temporary_company_address') ?? ''));
 
-    $newCompanyName = strtolower(trim($validated['company_name']));
-    $newCompanyAddress = strtolower(trim($validated['company_address'] ?? ''));
+        $newCompanyName = strtolower(trim($validated['company_name']));
+        $newCompanyAddress = strtolower(trim($validated['company_address'] ?? ''));
 
-if (session()->has('temporary_company_name')) {
-    if ($newCompanyName !== $sessionCompanyName || $newCompanyAddress !== $sessionCompanyAddress) {
-        return redirect()->route('permit.temporary')
-            ->withErrors(['company_name' => 'All entries must have the same company name and address.'])
-            ->withInput();
-    }
-} else {
-    session(['temporary_company_name' => $validated['company_name']]);
-    session(['temporary_company_address' => $validated['company_address']]);
-}
+        if (session()->has('temporary_company_name')) {
+            if ($newCompanyName !== $sessionCompanyName || $newCompanyAddress !== $sessionCompanyAddress) {
+                return redirect()->route('permit.temporary')
+                    ->withErrors(['company_name' => 'All entries must have the same company name and address.'])
+                    ->withInput();
+            }
+        } else {
+            session(['temporary_company_name' => $validated['company_name']]);
+            session(['temporary_company_address' => $validated['company_address']]);
+        }
 
         // Check for duplicate connected IDs in session cart
         $newIdNumber = strtolower(trim($validated['id_number']));
@@ -133,7 +194,11 @@ if (session()->has('temporary_company_name')) {
         // Convert pass_type array to comma-separated string for storage
         $validated['pass_type'] = implode(',', $validated['pass_type']);
 
-        // Application number will be generated on submission (no gaps for abandoned carts)
+        // Remove UploadedFile objects before saving to session to prevent serialization exception
+        unset($validated['photo']);
+        unset($validated['doc_nic_file']);
+        unset($validated['doc_passport_file']);
+        unset($validated['doc_driving_licence_file']);
 
         // Add the validated permit entry to session cart
         $cart[] = $validated;
@@ -445,7 +510,33 @@ public function editSessionEntry($index)
         'pass_type.*' => 'in:onboard,afloat,ashore',
         'issue_type' => 'required|string|in:free,payment',
         'reason' => 'required|string',
+        'doc_nic' => 'nullable|boolean',
+        'doc_passport' => 'nullable|boolean',
+        'doc_driving_licence' => 'nullable|boolean',
+
+        // Photo & Document uploads
+        'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'doc_nic_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        'doc_passport_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        'doc_driving_licence_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+
+        // Yacht fields
+        'is_yacht_crew' => 'nullable|boolean',
+        'yacht_name' => 'nullable|string',
+        'yacht_agent' => 'nullable|string',
+        'passport_country' => 'nullable|string',
+        'visa_expiry' => 'nullable|date',
+        'customs_clearance' => 'nullable|boolean',
     ]);
+
+    // Yacht crew validation
+    if ($request->has('is_yacht_crew') && $request->is_yacht_crew) {
+        $request->validate([
+            'yacht_name' => 'required|string',
+            'passport_country' => 'required|string',
+            'visa_expiry' => 'required|date',
+        ]);
+    }
 
     // Additional validation for NIC number based on ID type and passport type
     if ($validated['id_type'] === 'Driving License' || ($validated['id_type'] === 'Passport' && ($validated['passport_type'] ?? 'local') === 'local')) {
@@ -460,6 +551,51 @@ public function editSessionEntry($index)
 
     if (!isset($cart[$index])) {
         return redirect()->route('permit.temporary')->with('error', 'Permit entry not found.');
+    }
+
+    $existing = $cart[$index];
+
+    // Convert checkbox values
+    $validated['doc_nic'] = $request->has('doc_nic') ? 1 : 0;
+    $validated['doc_passport'] = $request->has('doc_passport') ? 1 : 0;
+    $validated['doc_driving_licence'] = $request->has('doc_driving_licence') ? 1 : 0;
+    $validated['customs_clearance'] = $request->has('customs_clearance') ? 1 : 0;
+
+    // Uploads handling (move to temp storage, retain old if not provided)
+    if ($request->hasFile('photo')) {
+        $photoFile = $request->file('photo');
+        $photoName = 'photo_' . time() . '_' . Str::random(10) . '.' . $photoFile->getClientOriginalExtension();
+        $photoFile->storeAs('temp', $photoName, 'public');
+        $validated['photo_path'] = 'temp/' . $photoName;
+    } else {
+        $validated['photo_path'] = $existing['photo_path'] ?? null;
+    }
+
+    if ($request->hasFile('doc_nic_file')) {
+        $nicFile = $request->file('doc_nic_file');
+        $nicName = 'doc_nic_' . time() . '_' . Str::random(10) . '.' . $nicFile->getClientOriginalExtension();
+        $nicFile->storeAs('temp', $nicName, 'public');
+        $validated['doc_nic_path'] = 'temp/' . $nicName;
+    } else {
+        $validated['doc_nic_path'] = $existing['doc_nic_path'] ?? null;
+    }
+
+    if ($request->hasFile('doc_passport_file')) {
+        $passportFile = $request->file('doc_passport_file');
+        $passportName = 'doc_passport_' . time() . '_' . Str::random(10) . '.' . $passportFile->getClientOriginalExtension();
+        $passportFile->storeAs('temp', $passportName, 'public');
+        $validated['doc_passport_path'] = 'temp/' . $passportName;
+    } else {
+        $validated['doc_passport_path'] = $existing['doc_passport_path'] ?? null;
+    }
+
+    if ($request->hasFile('doc_driving_licence_file')) {
+        $dlFile = $request->file('doc_driving_licence_file');
+        $dlName = 'doc_dl_' . time() . '_' . Str::random(10) . '.' . $dlFile->getClientOriginalExtension();
+        $dlFile->storeAs('temp', $dlName, 'public');
+        $validated['doc_driving_licence_path'] = 'temp/' . $dlName;
+    } else {
+        $validated['doc_driving_licence_path'] = $existing['doc_driving_licence_path'] ?? null;
     }
 
     // Check for duplicate connected IDs in session cart (excluding current entry)
@@ -507,6 +643,12 @@ public function editSessionEntry($index)
 
     // Implode pass_type array to string
     $validated['pass_type'] = implode(',', $validated['pass_type']);
+
+    // Remove UploadedFile objects before saving to session to prevent serialization exception
+    unset($validated['photo']);
+    unset($validated['doc_nic_file']);
+    unset($validated['doc_passport_file']);
+    unset($validated['doc_driving_licence_file']);
 
     // Update the session entry
     $cart[$index] = $validated;

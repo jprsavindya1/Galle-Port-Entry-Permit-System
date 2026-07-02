@@ -63,6 +63,31 @@ class SecurityController extends Controller
             $validityMessage = 'INACTIVE - Permit status: ' . ucfirst($permit->status);
         }
 
+        // Fetch photo path and yacht details for display if available
+        $photoPath = null;
+        $yachtDetails = null;
+
+        if ($permit->type === 'TP') {
+            $tp = \App\Models\TemporaryPermit::where('permit_id', $permitId)->first();
+            if ($tp) {
+                $photoPath = $tp->photo_path;
+                if ($tp->is_yacht_crew) {
+                    $yachtDetails = [
+                        'yacht_name' => $tp->yacht_name,
+                        'yacht_agent' => $tp->yacht_agent,
+                        'passport_country' => $tp->passport_country,
+                        'visa_expiry' => $tp->visa_expiry ? date('d M Y', strtotime($tp->visa_expiry)) : null,
+                        'customs_clearance' => (bool)$tp->customs_clearance,
+                    ];
+                }
+            }
+        } elseif ($permit->type === 'MP') {
+            $mp = \App\Models\MonthlyPermit::where('permit_id', $permitId)->first();
+            if ($mp) {
+                $photoPath = $mp->photo_path;
+            }
+        }
+
         return response()->json([
             'success' => true,
             'permit' => [
@@ -79,6 +104,8 @@ class SecurityController extends Controller
                 'vehicle_type' => $permit->vehicle_type,
                 'company_name' => $permit->company_name,
                 'type' => ucfirst($permit->type),
+                'photo_path' => $photoPath ? asset('storage/' . $photoPath) : null,
+                'yacht_details' => $yachtDetails,
             ]
         ]);
     }
