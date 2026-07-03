@@ -156,13 +156,14 @@
             min-height: 70px !important;
         }
 
-        /* Sidebar - Deep Navy Blue */
+        /* Sidebar - Deep Navy Blue with Premium Gradient */
         .sidebar-slpa-logo {
             min-width: 250px;
             width: 250px;
             height: calc(100vh - 70px); /* Full height minus navbar */
-            background-color: var(--slpa-logo-blue); 
+            background: linear-gradient(180deg, #13314C 0%, #0d2235 100%); 
             box-shadow: 3px 0 10px rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
             padding-top: 10px;
             position: fixed;
             top: 70px; /* Below navbar */
@@ -171,7 +172,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            overflow: hidden; /* Prevent background image from scrolling */
+            overflow: hidden;
         }
         .sidebar-nav-content {
             overflow-y: auto;
@@ -191,40 +192,6 @@
         }
         .sidebar-nav-content::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .sidebar-lighthouse-footer {
-            height: 180px;
-            min-height: 180px;
-            overflow: hidden;
-            position: relative;
-            margin-top: auto;
-            width: 100%;
-        }
-        
-        .sidebar-lighthouse-footer .fade-overlay {
-            background: linear-gradient(to bottom, var(--slpa-logo-blue) 0%, rgba(19, 49, 76, 0) 100%);
-            height: 50px;
-            width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 5;
-            pointer-events: none;
-        }
-        
-        .sidebar-lighthouse-footer img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.85;
-            filter: saturate(0.9) brightness(0.9);
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar-lighthouse-footer {
-                display: none !important;
-            }
         }
         
         /* Main content margin to account for fixed sidebar */
@@ -503,12 +470,6 @@
                         </a>
                     </li>
                 </ul>
-            </div>
-            
-            <!-- Fixed Lighthouse Graphic Footer -->
-            <div class="sidebar-lighthouse-footer">
-                <div class="fade-overlay"></div>
-                <img src="{{ asset('images/galle_lighthouse_sidebar.png') }}" alt="Galle Lighthouse">
             </div>
         </div>
 
