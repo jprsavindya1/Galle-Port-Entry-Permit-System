@@ -288,6 +288,18 @@
                     </div>
                 </a>
             </div>
+
+            <div class="col-md-4">
+                <a href="{{ route('admin.year_process.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <div class="icon-wrapper">
+                        <img src="{{ asset('images/checklist.gif') }}" class="card-icon" alt="Icon">
+                    </div>
+                        <h4>Year & Process</h4>
+                        <p>Configure year prefix and reset cycle</p>
+                    </div>
+                </a>
+            </div>
         @endif
         @endauth
     </div>

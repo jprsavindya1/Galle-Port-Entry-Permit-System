@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ReasonController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\BlacklistController;
 use App\Http\Controllers\Admin\CancelledPermitController;
+use App\Http\Controllers\Admin\YearProcessController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
@@ -125,6 +126,10 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
 
     });
 
+    // Year & Process Management Routes
+    Route::get('/year-process', [YearProcessController::class, 'index'])->name('admin.year_process.index');
+    Route::put('/year-process/update', [YearProcessController::class, 'update'])->name('admin.year_process.update');
+    Route::post('/year-process/start-new-year', [YearProcessController::class, 'startNewYear'])->name('admin.year_process.start_new_year');
 
 });
 

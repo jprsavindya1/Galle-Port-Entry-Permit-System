@@ -462,7 +462,26 @@ protected function isBlacklisted(array $data, string $type = null): ?string
         }
 
         if (!empty($company)) {
-            $q->orWhereRaw('LOWER(TRIM(company_name)) = ?', [$company]);
+            // A company is blacklisted only if the blacklist record represents a "Company Blacklist"
+            // (meaning the record has company_name filled, but nic, full_name, and vehicle_number are all empty/null)
+            $q->orWhere(function($sub) use ($company) {
+                $sub->whereRaw('LOWER(TRIM(company_name)) = ?', [$company])
+                    ->where(function($nullQ) {
+                        $nullQ->whereNull('nic')
+                              ->orWhere('nic', '')
+                              ->orWhereRaw('TRIM(nic) = ""');
+                    })
+                    ->where(function($nullQ) {
+                        $nullQ->whereNull('full_name')
+                              ->orWhere('full_name', '')
+                              ->orWhereRaw('TRIM(full_name) = ""');
+                    })
+                    ->where(function($nullQ) {
+                        $nullQ->whereNull('vehicle_number')
+                              ->orWhere('vehicle_number', '')
+                              ->orWhereRaw('TRIM(vehicle_number) = ""');
+                    });
+            });
         }
 
         if (!empty($vehicle)) {

@@ -7,6 +7,7 @@ use App\Models\TemporaryPermit;
 use App\Models\MonthlyPermit;
 use App\Models\VehiclePermit;
 use App\Models\Payment;
+use App\Models\Permit;
 
 class IdGeneratorHelper
 {
@@ -86,9 +87,17 @@ class IdGeneratorHelper
      */
     public static function generatePermitId(string $type): string
     {
-        $yearPrefix = now()->format('y');
+        $activeYear = \App\Models\SystemSetting::where('key', 'active_year')->value('value') ?? now()->format('Y');
+        $resetCycle = \App\Models\SystemSetting::where('key', 'permit_id_reset_cycle')->value('value') ?? 'yearly';
+
+        $yearPrefix = substr($activeYear, -2);
         $month = now()->format('m');
-        $searchPattern = $type . $yearPrefix . $month . '%';
+
+        if ($resetCycle === 'monthly') {
+            $searchPattern = $type . $yearPrefix . $month . '%';
+        } else {
+            $searchPattern = $type . $yearPrefix . '%';
+        }
 
         // Determine model based on type
         switch ($type) {
@@ -114,16 +123,24 @@ class IdGeneratorHelper
         }
 
         try {
-            // Get the latest permit ID for this type/year/month
-            $latest = $model::where('permit_id', 'like', $searchPattern)
-                ->orderBy('permit_id', 'desc')
+            // Get the maximum counter of all permits of this type in the current year (new separate table)
+            $latestNew = $model::where('permit_id', 'like', $searchPattern)
+                ->selectRaw('MAX(CAST(SUBSTRING(permit_id, -4) AS UNSIGNED)) as max_counter')
+                ->first();
+
+            // Also check the old permits table to prevent duplicate IDs with legacy records
+            $latestOld = Permit::where('permit_id', 'like', $searchPattern)
+                ->selectRaw('MAX(CAST(SUBSTRING(permit_id, -4) AS UNSIGNED)) as max_counter')
                 ->first();
 
             $nextNumber = 1;
 
-            if ($latest) {
-                $lastCounter = (int) substr($latest->permit_id, -4);
-                $nextNumber = $lastCounter + 1;
+            if ($latestNew && $latestNew->max_counter) {
+                $nextNumber = max($nextNumber, $latestNew->max_counter + 1);
+            }
+
+            if ($latestOld && $latestOld->max_counter) {
+                $nextNumber = max($nextNumber, $latestOld->max_counter + 1);
             }
 
             $permitId = $type . $yearPrefix . $month . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);

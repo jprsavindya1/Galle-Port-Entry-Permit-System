@@ -148,7 +148,7 @@ class PaymentController extends Controller
 
         // Save all permits
 foreach ($cart as $entry) {
-    $entry['permit_id'] = $this->generatePermitId($entry['type']);
+    $entry['permit_id'] = IdGeneratorHelper::generatePermitId($entry['type']);
 
     // Move files from temp to permanent storage
     $fileFields = ['photo_path', 'doc_nic_path', 'doc_passport_path', 'doc_driving_licence_path', 'doc_police_report_path'];
@@ -369,53 +369,6 @@ foreach ($cart as $entry) {
         return redirect()->route('payment.invoice', ['submission_id' => $submissionId]);
     }
 
-    private function generatePermitId($type)
-    {
-        $prefix = $type;
-        $yearMonth = now()->format('ym');
-
-        // Check both the new separate table AND the old permits table to avoid duplicates
-        switch ($type) {
-            case 'TP':
-                $latestNew = TemporaryPermit::where('permit_id', 'like', $prefix . $yearMonth . '%')
-                    ->orderBy('permit_id', 'desc')
-                    ->first();
-                break;
-            case 'MP':
-                $latestNew = MonthlyPermit::where('permit_id', 'like', $prefix . $yearMonth . '%')
-                    ->orderBy('permit_id', 'desc')
-                    ->first();
-                break;
-            case 'VH':
-                $latestNew = VehiclePermit::where('permit_id', 'like', $prefix . $yearMonth . '%')
-                    ->orderBy('permit_id', 'desc')
-                    ->first();
-                break;
-            default:
-                $latestNew = null;
-                break;
-        }
-
-        // Also check the old permits table
-        $latestOld = Permit::where('permit_id', 'like', $prefix . $yearMonth . '%')
-            ->orderBy('permit_id', 'desc')
-            ->first();
-
-        // Get the highest number from both tables
-        $nextNumber = 1;
-        
-        if ($latestNew) {
-            $lastCounter = (int)substr($latestNew->permit_id, -4);
-            $nextNumber = max($nextNumber, $lastCounter + 1);
-        }
-        
-        if ($latestOld) {
-            $lastCounter = (int)substr($latestOld->permit_id, -4);
-            $nextNumber = max($nextNumber, $lastCounter + 1);
-        }
-
-        return $prefix . $yearMonth . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-    }
 
     public function submitPayment(Request $request)
     {

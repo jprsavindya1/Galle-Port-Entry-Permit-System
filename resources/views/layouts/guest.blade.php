@@ -26,10 +26,7 @@
     <!-- Custom Styles -->
     <style>
         body {
-            /* Clearer daytime gradient: keeps the sky bright and daylight colors realistic */
-            background: linear-gradient(to bottom, rgba(15, 32, 67, 0.15) 0%, rgba(5, 16, 38, 0.4) 100%), 
-                        url('{{ asset("images/galle_port_bg.png") }}') no-repeat center center fixed;
-            background-size: cover;
+            background-color: #0a1120;
             color: #ffffff !important;
             font-family: 'Outfit', sans-serif;
             margin: 0;
@@ -37,6 +34,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            position: relative;
         }
         
         .auth-container {
@@ -46,7 +44,46 @@
             justify-content: center;
             align-items: center;
             padding: 2.5rem 1.5rem;
+            position: relative;
+            z-index: 10;
         }
+
+        /* Video Background Container */
+        .bg-video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-video-container video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            filter: brightness(1.1) contrast(1.05);
+        }
+
+        .bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(11, 23, 44, 0.22) 0%, rgba(7, 18, 36, 0.5) 100%);
+            z-index: 1;
+        }
+
+
 
         .auth-logo img {
             width: 140px !important;
@@ -165,6 +202,17 @@
     </style>
 </head>
 <body class="antialiased">
+    <!-- Real Port Video Background -->
+    <div class="bg-video-container">
+        <video autoplay loop muted playsinline>
+            <source src="{{ asset('videos/port_video.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <!-- Deep Ambient Tint Overlay -->
+        <div class="bg-overlay"></div>
+    </div>
+
+
     @if (request()->routeIs('login'))
         <div class="w-full min-h-screen flex items-center justify-center relative overflow-hidden p-6 md:p-12 z-10">
             <!-- Content Container -->

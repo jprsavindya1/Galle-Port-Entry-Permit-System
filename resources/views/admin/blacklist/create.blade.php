@@ -57,13 +57,13 @@
 
             <div class="mb-3">
                 <label for="nic" class="form-label">NIC</label>
-                <input type="text" name="nic" id="nic" class="form-control" value="{{ old('nic') }}" style="text-transform: uppercase;" placeholder="e.g., 123456789V" oninput="validateNic()" onblur="validateNic()">
+                <input type="text" name="nic" id="nic" class="form-control" value="{{ old('nic') }}" style="text-transform: uppercase;" placeholder="e.g., 123456789V" oninput="validateNic(); fetchAndAutofillDetails()" onblur="validateNic(); fetchAndAutofillDetails()">
                 <span id="nic_error" class="text-danger" style="font-size: 0.875rem;"></span>
             </div>
 
             <div class="mb-3">
                 <label for="full_name" class="form-label">Full Name</label>
-                <input type="text" name="full_name" class="form-control" value="{{ old('full_name') }}" style="text-transform: uppercase;">
+                <input type="text" name="full_name" id="full_name" class="form-control" value="{{ old('full_name') }}" style="text-transform: uppercase;" oninput="checkFormValidity()" onblur="checkFormValidity()">
             </div>
 
             <div class="mb-3">
@@ -96,6 +96,52 @@
 </div>
 
 <script>
+    let lastFetchedNic = '';
+    
+    // Autofill details based on NIC
+    function fetchAndAutofillDetails() {
+        const nicInput = document.getElementById('nic');
+        const nicValue = nicInput.value.trim().toUpperCase();
+        
+        // Validate NIC format: Old (9 digits + V) or New (12 digits)
+        const nicRegex = /^(?:\d{9}V|\d{12})$/;
+        
+        if (nicRegex.test(nicValue) && nicValue !== lastFetchedNic) {
+            lastFetchedNic = nicValue;
+            
+            fetch('/permits/fetch-person-details', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    id_number: nicValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.found && data.data) {
+                    const fullNameInput = document.getElementById('full_name');
+                    const companyInput = document.getElementById('company_name');
+                    
+                    if (fullNameInput && !fullNameInput.value.trim()) {
+                        fullNameInput.value = data.data.full_name.toUpperCase();
+                    }
+                    if (companyInput && !companyInput.value.trim()) {
+                        companyInput.value = (data.data.company_name || '').toUpperCase();
+                    }
+                    
+                    // Revalidate form since inputs changed
+                    checkFormValidity();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching person details:', error);
+            });
+        }
+    }
+
     // NIC validation function
     function validateNic() {
         const nicInput = document.getElementById('nic');
