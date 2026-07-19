@@ -300,6 +300,30 @@
                     </div>
                 </a>
             </div>
+
+            <div class="col-md-4">
+                <a href="{{ route('admin.activity_logs.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <div class="icon-wrapper">
+                        <img src="{{ asset('images/notes.gif') }}" class="card-icon" alt="Icon">
+                    </div>
+                        <h4>Activity Logs</h4>
+                        <p>View system and administrative audit logs</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="{{ route('admin.backup.index') }}" class="card dashboard-card text-center text-decoration-none text-dark shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <div class="icon-wrapper">
+                        <img src="{{ asset('images/settings.gif') }}" class="card-icon" alt="Icon">
+                    </div>
+                        <h4>Database Backup</h4>
+                        <p>Generate and download SQL database backups</p>
+                    </div>
+                </a>
+            </div>
         @endif
         @endauth
     </div>

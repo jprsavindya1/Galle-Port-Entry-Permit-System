@@ -391,7 +391,13 @@
                         </div>
                         <i class="bi bi-chevron-down text-white/60 ms-2" style="font-size: 0.75rem;"></i>
                     </div>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-lg mt-2 border-0" aria-labelledby="userProfileDropdown" style="border-radius: 12px; background: white; min-width: 160px; padding: 0.5rem 0;">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg mt-2 border-0" aria-labelledby="userProfileDropdown" style="border-radius: 12px; background: white; min-width: 180px; padding: 0.5rem 0;">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center py-2 px-3 text-[#13314C] font-semibold" href="{{ route('profile.edit') }}" style="border-radius: 8px; font-size: 0.88rem; transition: background-color 0.2s;">
+                                <i class="bi bi-person-gear me-2 text-primary fs-5"></i>Profile Settings
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}" id="logout-form" class="m-0">
                                 @csrf
@@ -470,6 +476,28 @@
                         </a>
                     </li>
                 </ul>
+
+                @auth
+                    @if(Auth::user()->role === 'admin' || Auth::user()->role === 'super-admin')
+                        <h5 class="sidebar-header">
+                            Admin Tools
+                        </h5>
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.activity_logs.index') ? 'active' : '' }}" href="{{ route('admin.activity_logs.index') }}">
+                                    <i class="bi bi-journal-text"></i>
+                                    <span>Activity Logs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.backup.index') ? 'active' : '' }}" href="{{ route('admin.backup.index') }}">
+                                    <i class="bi bi-cloud-arrow-down"></i>
+                                    <span>Database Backup</span>
+                                </a>
+                            </li>
+                        </ul>
+                    @endif
+                @endauth
             </div>
         </div>
 

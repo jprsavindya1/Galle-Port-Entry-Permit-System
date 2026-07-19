@@ -10,10 +10,12 @@
 .invoice-card {
     background: linear-gradient(135deg, #e3f2fd 0%, #f8fafc 100%);
     border-radius: 1rem;
-    box-shadow: 0 3px 15px rgba(0,0,0,0.08);
-    padding: 2rem; /* Adjusted padding */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 2.5rem;
     margin-bottom: 2rem;
     border: none;
+    width: 100%;
+    max-width: 1100px;
 }
 .invoice-header {
     display: flex;
@@ -40,18 +42,20 @@
     color: #1976d2;
     font-weight: 600;
     border-bottom: 2px solid #bbdefb;
-    font-size: 0.8rem; /* Smaller font for headers */
-    padding: 0.5rem;
+    font-size: 0.85rem;
+    padding: 0.75rem 0.5rem;
     text-align: center;
+    white-space: nowrap;
 }
 .invoice-table td {
     background: #fff;
     color: #333;
     vertical-align: middle;
-    font-size: 0.8rem;
-    padding: 0.5rem;
+    font-size: 0.85rem;
+    padding: 0.75rem 0.5rem;
     border-color: #ddd;
     text-align: center;
+    white-space: nowrap;
 }
 .invoice-table tbody tr:nth-child(even) td {
     background: #f8fafc; /* Subtle striping */
@@ -185,35 +189,49 @@
 }
 
 
-/* ===== Print Styles (80mm Thermal Paper) ===== */
+/* ===== Print Styles (A4/Portrait Optimized) ===== */
 @media print {
     body {
         margin: 0;
         padding: 0;
         -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
         visibility: hidden;
         background: white;
     }
 
-    #print-area {
+    #print-area, .container {
         visibility: visible;
         position: absolute;
         left: 0;
         top: 0;
-        width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
         background: white;
-        padding: 2mm; /* Minimal padding for thermal paper */
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
     }
 
     #print-area * {
         visibility: visible;
     }
 
-    /* Hide all navigation, header, footer, sidebar, and non-printable elements */
+    .invoice-card {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Hide non-printable elements */
     .btn, a.btn, button, .no-print, .print-controls,
     nav, header, footer, .navbar, .nav, .sidebar, 
     .sidebar-slpa-logo, .d-flex > .sidebar-slpa-logo,
-    .navigation, .menu, .header, .footer {
+    .navigation, .menu, .header, .footer, .batch-print-status {
         display: none !important;
         visibility: hidden !important;
     }
@@ -231,51 +249,43 @@
         display: block !important;
     }
 
-    /* Optimize header for dot-matrix paper */
+    /* Header Styling */
     .invoice-title {
-        font-size: 16pt !important;
+        font-size: 18pt !important;
         text-align: center;
-        margin-bottom: 5mm !important;
+        margin-bottom: 6mm !important;
         color: #000 !important;
+        font-weight: bold !important;
     }
 
     .mb-4 h6, .mb-4 p {
-        font-size: 10pt !important;
+        font-size: 11pt !important;
         margin-bottom: 2mm !important;
-        line-height: 1.3 !important;
+        line-height: 1.4 !important;
         color: #000 !important;
         font-weight: bold !important;
     }
 
-    .badge-status {
-        font-size: 9pt !important;
-        padding: 2px 5px !important;
+    .badge-status, .badge-free {
+        font-size: 10pt !important;
+        padding: 2px 6px !important;
         background: #fff !important;
         color: #000 !important;
-        border: 2px solid #000 !important;
+        border: 1px solid #000 !important;
         font-weight: bold !important;
-    }
-
-    .badge-free {
-        font-size: 9pt !important;
-        padding: 2px 5px !important;
-        background: #fff !important;
-        color: #000 !important;
-        border: 2px solid #000 !important;
-        font-weight: bold !important;
+        display: inline-block !important;
     }
     
     .bi-credit-card-fill, .bi-check-circle-fill {
         color: #000 !important;
     }
 
-    /* Table optimized for 8.5 inch dot-matrix paper */
-    table {
+    /* Table styles for printing */
+    table, .invoice-table {
         width: 100% !important;
-        table-layout: fixed !important; /* Fixed layout for consistent columns */
+        table-layout: auto !important; /* Dynamic sizing based on column content */
         border-collapse: collapse !important;
-        font-size: 9pt !important; /* Readable font for dot-matrix paper */
-        margin: 3mm 0 !important;
+        margin: 5mm 0 !important;
     }
 
     /* Hide print status column when printing */
@@ -284,35 +294,32 @@
         display: none !important;
     }
 
-    .invoice-table, .invoice-table tbody, .invoice-table tbody tr {
-        font-size: 9pt !important;
-    }
-
     .invoice-table th, .invoice-table td {
         border: 1px solid #000 !important;
-        padding: 1.5mm !important; /* Better padding for readability */
-        text-align: left !important;
+        padding: 2.5mm 3mm !important;
+        text-align: center !important;
+        vertical-align: middle !important;
         background-color: #fff !important;
-        line-height: 1.2 !important; /* Comfortable line height */
-        font-size: 9pt !important; /* Readable font size */
+        line-height: 1.3 !important;
+        font-size: 10pt !important;
         color: #000 !important;
         font-weight: bold !important;
-        
-        /* Text wrapping */
-        overflow: hidden;
-        white-space: normal;
+        white-space: normal !important;
         word-wrap: break-word; 
         word-break: break-word;
     }
 
     .invoice-table th {
-        background-color: #fff !important;
-        color: #000 !important;
-        font-weight: bold !important;
-        font-size: 9pt !important; /* Match table font size */
+        background-color: #f1f5f9 !important; /* Subtle background for table header */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
-    /* Remove min-width constraints for thermal paper */
+    thead {
+        display: table-header-group !important;
+    }
+
+    /* Remove min-width constraints for print */
     .invoice-table th[style*="min-width"],
     .invoice-table td[style*="min-width"] {
         min-width: auto !important;
@@ -320,37 +327,36 @@
 
     /* Override inline styles */
     .invoice-table td[style] {
-        font-size: 9pt !important;
+        font-size: 10pt !important;
     }
 
-    thead {
-        display: table-header-group !important;
-    }
-
-    /* Summary section optimization */
+    /* Summary section styles */
     .summary-card {
-        border: 2px solid #000 !important;
-        padding: 4mm !important;
-        margin-top: 5mm !important;
+        border: 1.5px solid #000 !important;
+        padding: 5mm !important;
+        margin-top: 6mm !important;
         background: #fff !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
     }
 
     .summary-card h5 {
-        font-size: 11pt !important;
+        font-size: 12pt !important;
         margin-bottom: 3mm !important;
         color: #000 !important;
         font-weight: bold !important;
     }
 
     .summary-card p {
-        font-size: 10pt !important;
+        font-size: 11pt !important;
         margin-bottom: 2mm !important;
         color: #000 !important;
         font-weight: bold !important;
     }
 
     .summary-card h4 {
-        font-size: 12pt !important;
+        font-size: 13pt !important;
         margin-top: 3mm !important;
         color: #000 !important;
         font-weight: bold !important;
@@ -361,20 +367,18 @@
     }
 
     html, body {
-        height: 100%;
+        height: auto;
         overflow: visible;
     }
 
-    /* 8.5 inch (216mm) continuous dot-matrix paper */
     @page {
-        size: 216mm auto; /* Width: 8.5 inches (216mm), Height: auto (continuous) */
-        margin: 0; /* No margins */
+        size: portrait;
+        margin: 15mm;
     }
-
 }
 </style>
 
-<div id="print-area" class="container py-4">
+<div id="print-area" class="container py-4 d-flex justify-content-center">
     <div class="invoice-card">
         <div class="invoice-header">
             <div class="invoice-title">

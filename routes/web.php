@@ -131,6 +131,12 @@ Route::middleware(['auth', 'role:admin,super-admin'])->group(function () {
     Route::put('/year-process/update', [YearProcessController::class, 'update'])->name('admin.year_process.update');
     Route::post('/year-process/start-new-year', [YearProcessController::class, 'startNewYear'])->name('admin.year_process.start_new_year');
 
+    // Admin Activity Logs Route
+    Route::get('/admin/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('admin.activity_logs.index');
+
+    // Admin Database Backup Routes
+    Route::get('/admin/backup', [App\Http\Controllers\Admin\BackupController::class, 'index'])->name('admin.backup.index');
+    Route::get('/admin/backup/download', [App\Http\Controllers\Admin\BackupController::class, 'download'])->name('admin.backup.download');
 });
 
 // ------------------------------
@@ -279,7 +285,10 @@ Route::middleware(['role:admin,staff'])->group(function () {
 
 require __DIR__.'/auth.php';
 
-Route::get('/profile/edit', fn () => 'Edit profile page coming soon')->name('profile.edit');
+Route::middleware('auth')->group(function () {
+    Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+});
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     
