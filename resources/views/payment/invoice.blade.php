@@ -306,7 +306,10 @@
         font-weight: bold !important;
         white-space: normal !important;
         word-wrap: break-word; 
-        word-break: break-word;
+    }
+
+    .invoice-table td.date-cell {
+        white-space: nowrap !important;
     }
 
     .invoice-table th {
@@ -534,8 +537,8 @@
                                 </td>
                             @endif
                             <td style="text-align: left;">{{ $permit->company_name ?? '-' }}</td>
-                            <td style="white-space: nowrap;">{{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</td>
-                            <td style="white-space: nowrap;">{{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}</td>
+                            <td class="date-cell" style="white-space: nowrap;">{{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</td>
+                            <td class="date-cell" style="white-space: nowrap;">{{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}</td>
                             @if($payment->permit_type !== 'VH')
                                 <td>{{ ucfirst($permit->pass_type ?? '-') }}</td>
                             @endif
