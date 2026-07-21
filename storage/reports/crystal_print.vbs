@@ -18,6 +18,9 @@ If permitType = "TP" Then
 ElseIf permitType = "MP" Then
     reportPath = "d:\New-GllePermitSystem\port-entry-permit\port-entry-permit\storage\reports\monthly_permit.rpt"
     tablePrefix = "monthly_permits"
+ElseIf permitType = "VH" Then
+    reportPath = "d:\New-GllePermitSystem\port-entry-permit\port-entry-permit\storage\reports\vehicle_permit.rpt"
+    tablePrefix = "vehicle_permits"
 Else
     WScript.Echo "ERROR: Invalid permit type: " & permitType
     WScript.Quit 1
