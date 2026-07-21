@@ -135,6 +135,12 @@
 
     <!-- Export Buttons -->
     <div class="mb-4 d-flex justify-content-end">
+        <a href="{{ route('reports.payment.crystal', ['date' => request('date', date('Y-m-d'))]) }}" 
+           target="_blank"
+           class="btn btn-sm btn-warning me-2 text-dark fw-bold"
+           style="background-color: #F6BA18; border-color: #F6BA18;">
+            <i class="fas fa-print me-1"></i> Daily Revenue (Crystal PDF)
+        </a>
         <a href="{{ route('reports.payment.pdf', request()->query()) }}" 
            class="btn btn-sm btn-danger me-2">
             <i class="fas fa-file-pdf"></i> Export PDF

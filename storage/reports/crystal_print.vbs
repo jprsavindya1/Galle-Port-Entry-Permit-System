@@ -29,6 +29,9 @@ ElseIf permitType = "MP" Then
 ElseIf permitType = "VH" Then
     reportPath = "d:\New-GllePermitSystem\port-entry-permit\port-entry-permit\storage\reports\vehicle_permit.rpt"
     tablePrefix = "vehicle_permits"
+ElseIf permitType = "DR" Then
+    reportPath = "d:\New-GllePermitSystem\port-entry-permit\port-entry-permit\storage\reports\daily_revenue.rpt"
+    tablePrefix = "payments"
 Else
     WScript.Echo "ERROR: Invalid permit type: " & permitType
     WScript.Quit 1
@@ -59,23 +62,37 @@ For Each table In creport.Database.Tables
     table.SetLogOnInfo "GallePortPermits", "port_entry_permit", "root", ""
 Next
 
+' Set date parameter value if permitType is DR
+If permitType = "DR" Then
+    Dim p
+    For Each p In creport.ParameterFields
+        If LCase(p.Name) = "{?enter date}" Then
+            p.AddCurrentValue CDate(permitIdsInput)
+        End If
+    Next
+End If
+
 ' Parse permit IDs (supports comma-separated values for batch printing)
 Dim idArray, formula, i
 idArray = Split(permitIdsInput, ",")
 
-If UBound(idArray) = 0 Then
-    ' Single permit filter
-    formula = "{" & tablePrefix & ".permit_id} = """ & Trim(idArray(0)) & """"
+If permitType = "DR" Then
+    formula = "{TPINVOICE.status} = ""Paid"" And DateValue({TPINVOICE.payment_date}) = Date(" & Replace(permitIdsInput, "-", ", ") & ")"
 Else
-    ' Batch permits filter using IN operator
-    formula = "{" & tablePrefix & ".permit_id} in ["
-    For i = 0 To UBound(idArray)
-        formula = formula & """" & Trim(idArray(i)) & """"
-        If i < UBound(idArray) Then
-            formula = formula & ", "
-        End If
-    Next
-    formula = formula & "]"
+    If UBound(idArray) = 0 Then
+        ' Single permit filter
+        formula = "{" & tablePrefix & ".permit_id} = """ & Trim(idArray(0)) & """"
+    Else
+        ' Batch permits filter using IN operator
+        formula = "{" & tablePrefix & ".permit_id} in ["
+        For i = 0 To UBound(idArray)
+            formula = formula & """" & Trim(idArray(i)) & """"
+            If i < UBound(idArray) Then
+                formula = formula & ", "
+            End If
+        Next
+        formula = formula & "]"
+    End If
 End If
 
 If permitType = "VH" Then

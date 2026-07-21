@@ -420,7 +420,43 @@ public function exportPaymentCsv(Request $request)
     return response()->stream($callback, 200, $headers);
 }
 
+    /**
+     * Generate Daily Revenue Report using Crystal Reports ActiveX components.
+     */
+    public function printDailyRevenueCrystal(Request $request)
+    {
+        $date = $request->query('date');
+        
+        // If date is not provided, default to today
+        if (!$date) {
+            $date = Carbon::today()->format('Y-m-d');
+        } else {
+            // Clean/parse date to ensure it is in YYYY-MM-DD format
+            $date = Carbon::parse($date)->format('Y-m-d');
+        }
 
+        $pdfFileName = 'daily_revenue_' . $date . '.pdf';
+        $pdfPath = storage_path('reports/' . $pdfFileName);
+
+        // Execute 32-bit cscript.exe with crystal_print.vbs
+        $vbsPath = storage_path('reports/crystal_print.vbs');
+        $cmd = 'C:\\Windows\\SysWOW64\\cscript.exe //NoLogo "' . $vbsPath . '" DR "' . $date . '" "' . $pdfPath . '"';
+
+        exec($cmd, $output, $returnVar);
+
+        if ($returnVar !== 0) {
+            \Log::error("Crystal Reports Daily Revenue PDF generation failed: " . implode("\n", $output));
+            return response()->json([
+                'error' => 'Failed to generate Daily Revenue Report PDF.',
+                'details' => $output
+            ], 500);
+        }
+
+        return response()->file($pdfPath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"'
+        ]);
+    }
 
 }
 
