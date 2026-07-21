@@ -32,6 +32,9 @@ ElseIf permitType = "VH" Then
 ElseIf permitType = "DR" Then
     reportPath = "d:\New-GllePermitSystem\port-entry-permit\port-entry-permit\storage\reports\daily_revenue.rpt"
     tablePrefix = "payments"
+ElseIf permitType = "RS" Then
+    reportPath = "d:\New-GllePermitSystem\port-entry-permit\port-entry-permit\storage\reports\revenue_summary.rpt"
+    tablePrefix = "payments"
 Else
     WScript.Echo "ERROR: Invalid permit type: " & permitType
     WScript.Quit 1
@@ -62,12 +65,24 @@ For Each table In creport.Database.Tables
     table.SetLogOnInfo "GallePortPermits", "port_entry_permit", "root", ""
 Next
 
-' Set date parameter value if permitType is DR
+' Set date parameter values if permitType is DR or RS
 If permitType = "DR" Then
     Dim p
     For Each p In creport.ParameterFields
         If LCase(p.Name) = "{?enter date}" Then
             p.AddCurrentValue CDate(permitIdsInput)
+        End If
+    Next
+ElseIf permitType = "RS" Then
+    Dim datesArray, startDate, endDate, pObj
+    datesArray = Split(permitIdsInput, ",")
+    startDate = Trim(datesArray(0))
+    endDate = Trim(datesArray(1))
+    For Each pObj In creport.ParameterFields
+        If LCase(pObj.Name) = "{?first date}" Then
+            pObj.AddCurrentValue CDate(startDate)
+        ElseIf LCase(pObj.Name) = "{?second date}" Then
+            pObj.AddCurrentValue CDate(endDate)
         End If
     Next
 End If
@@ -78,6 +93,12 @@ idArray = Split(permitIdsInput, ",")
 
 If permitType = "DR" Then
     formula = "{TPINVOICE.status} = ""Paid"" And DateValue({TPINVOICE.payment_date}) = Date(" & Replace(permitIdsInput, "-", ", ") & ")"
+ElseIf permitType = "RS" Then
+    Dim datesArr, sDate, eDate
+    datesArr = Split(permitIdsInput, ",")
+    sDate = Trim(datesArr(0))
+    eDate = Trim(datesArr(1))
+    formula = "{TPINVOICE.status} = ""Paid"" And DateValue({TPINVOICE.payment_date}) >= Date(" & Replace(sDate, "-", ", ") & ") And DateValue({TPINVOICE.payment_date}) <= Date(" & Replace(eDate, "-", ", ") & ")"
 Else
     If UBound(idArray) = 0 Then
         ' Single permit filter

@@ -267,6 +267,7 @@ Route::prefix('reports')->group(function () {
     Route::get('/payment/export/pdf', [ReportController::class, 'exportPaymentPdf'])->name('reports.payment.pdf');
     Route::get('/payment/export/csv', [ReportController::class, 'exportPaymentCsv'])->name('reports.payment.csv');
     Route::get('/payment/print/crystal', [ReportController::class, 'printDailyRevenueCrystal'])->name('reports.payment.crystal');
+    Route::get('/payment/print/crystal-summary', [ReportController::class, 'printRevenueSummaryCrystal'])->name('reports.payment.crystal_summary');
 
 });
 

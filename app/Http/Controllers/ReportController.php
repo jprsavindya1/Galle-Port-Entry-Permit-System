@@ -458,5 +458,50 @@ public function exportPaymentCsv(Request $request)
         ]);
     }
 
+    /**
+     * Generate Revenue Summary Report (Date Range) using Crystal Reports.
+     */
+    public function printRevenueSummaryCrystal(Request $request)
+    {
+        $date = $request->query('date');
+        $range = $request->query('range');
+
+        $refDate = $date ? Carbon::parse($date) : Carbon::today();
+
+        if ($range === 'week') {
+            $startDate = $refDate->copy()->startOfWeek()->format('Y-m-d');
+            $endDate = $refDate->copy()->endOfWeek()->format('Y-m-d');
+        } elseif ($range === 'month') {
+            $startDate = $refDate->copy()->startOfMonth()->format('Y-m-d');
+            $endDate = $refDate->copy()->endOfMonth()->format('Y-m-d');
+        } else {
+            // Default to single day
+            $startDate = $refDate->format('Y-m-d');
+            $endDate = $refDate->format('Y-m-d');
+        }
+
+        $pdfFileName = 'revenue_summary_' . $startDate . '_to_' . $endDate . '.pdf';
+        $pdfPath = storage_path('reports/' . $pdfFileName);
+
+        // Execute 32-bit cscript.exe with crystal_print.vbs
+        $vbsPath = storage_path('reports/crystal_print.vbs');
+        $cmd = 'C:\\Windows\\SysWOW64\\cscript.exe //NoLogo "' . $vbsPath . '" RS "' . $startDate . ',' . $endDate . '" "' . $pdfPath . '"';
+
+        exec($cmd, $output, $returnVar);
+
+        if ($returnVar !== 0) {
+            \Log::error("Crystal Reports Revenue Summary PDF generation failed: " . implode("\n", $output));
+            return response()->json([
+                'error' => 'Failed to generate Revenue Summary Report PDF.',
+                'details' => $output
+            ], 500);
+        }
+
+        return response()->file($pdfPath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"'
+        ]);
+    }
+
 }
 
