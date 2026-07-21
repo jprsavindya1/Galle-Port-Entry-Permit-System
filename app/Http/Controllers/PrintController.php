@@ -148,8 +148,11 @@ class PrintController extends Controller
                     @unlink($pdfPath);
                 }
 
-                // Run VBScript to export the batch of vehicle permits to PDF (pass "VH")
-                $command = sprintf('"%s" //NoLogo "%s" "VH" "%s" "%s"', $cscriptPath, $scriptPath, $permitIds, $pdfPath);
+                $tempId = \DB::table('temporary_permits')->value('id') ?: 1;
+                $monthlyId = \DB::table('monthly_permits')->value('id') ?: 1;
+
+                // Run VBScript to export the batch of vehicle permits to PDF (pass "VH" along with table constraint IDs)
+                $command = sprintf('"%s" //NoLogo "%s" "VH" "%s" "%s" "%d" "%d"', $cscriptPath, $scriptPath, $permitIds, $pdfPath, $tempId, $monthlyId);
                 $output = shell_exec($command);
                 
                 if (!$output || stripos($output, 'SUCCESS') === false) {
@@ -351,8 +354,11 @@ class PrintController extends Controller
                     @unlink($pdfPath);
                 }
 
-                // Execute the 32-bit cscript in the background to export the report to PDF (pass "VH")
-                $command = sprintf('"%s" //NoLogo "%s" "VH" "%s" "%s"', $cscriptPath, $scriptPath, $permit->permit_id, $pdfPath);
+                $tempId = \DB::table('temporary_permits')->value('id') ?: 1;
+                $monthlyId = \DB::table('monthly_permits')->value('id') ?: 1;
+
+                // Execute the 32-bit cscript in the background to export the report to PDF (pass "VH" along with table constraint IDs)
+                $command = sprintf('"%s" //NoLogo "%s" "VH" "%s" "%s" "%d" "%d"', $cscriptPath, $scriptPath, $permit->permit_id, $pdfPath, $tempId, $monthlyId);
                 $output = shell_exec($command);
                 
                 if (!$output || stripos($output, 'SUCCESS') === false) {

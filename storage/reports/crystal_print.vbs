@@ -6,10 +6,18 @@ If WScript.Arguments.Count < 3 Then
     WScript.Quit 1
 End If
 
-Dim permitType, permitIdsInput, pdfPath, reportPath, tablePrefix
+Dim permitType, permitIdsInput, pdfPath, reportPath, tablePrefix, tempId, monthlyId
 permitType = UCase(Trim(WScript.Arguments(0)))
 permitIdsInput = WScript.Arguments(1)
 pdfPath = WScript.Arguments(2)
+
+If WScript.Arguments.Count >= 5 Then
+    tempId = WScript.Arguments(3)
+    monthlyId = WScript.Arguments(4)
+Else
+    tempId = 1
+    monthlyId = 1
+End If
 
 ' Select the appropriate report template and table prefix based on permit type
 If permitType = "TP" Then
@@ -68,6 +76,10 @@ Else
         End If
     Next
     formula = formula & "]"
+End If
+
+If permitType = "VH" Then
+    formula = formula & " And {temporary_permits.id} = " & tempId & " And {monthly_permits.id} = " & monthlyId
 End If
 
 ' Set formula syntax and selection formula
