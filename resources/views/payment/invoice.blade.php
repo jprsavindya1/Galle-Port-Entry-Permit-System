@@ -512,16 +512,7 @@
                                 <td>{{ $permit->revenue_license_number ?? '-' }}</td>
                             @else
                                 <td style="text-align: left;">
-                                    <div class="d-flex align-items-center justify-content-start">
-                                        @if($permit->photo_path)
-                                            <img src="{{ asset('storage/' . $permit->photo_path) }}" alt="Photo" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover; border: 1px solid #bbdefb;">
-                                        @else
-                                            <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; background: #90caf9; color: #fff; border-radius: 50%;">
-                                                {{ strtoupper(substr($permit->full_name, 0, 1)) }}
-                                            </div>
-                                        @endif
-                                        <span>{{ $permit->full_name ?? '-' }}</span>
-                                    </div>
+                                    <span>{{ $permit->full_name ?? '-' }}</span>
                                 </td>
                                 <td>{{ $permit->id_type ?? '-' }}</td>
                                 <td>
@@ -543,8 +534,8 @@
                                 </td>
                             @endif
                             <td style="text-align: left;">{{ $permit->company_name ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}</td>
+                            <td style="white-space: nowrap;">{{ \Carbon\Carbon::parse($permit->from_date)->format('Y-m-d') }}</td>
+                            <td style="white-space: nowrap;">{{ \Carbon\Carbon::parse($permit->to_date)->format('Y-m-d') }}</td>
                             @if($payment->permit_type !== 'VH')
                                 <td>{{ ucfirst($permit->pass_type ?? '-') }}</td>
                             @endif
